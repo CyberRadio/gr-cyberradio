@@ -1,0 +1,190 @@
+#!/bin/bash
+#################################################################
+# make_all_debs
+#
+# Make all Debian installer packages for this project
+#
+# Author: DA
+# Company: CyberRadio Solutions, Inc.
+# Copyright: Copyright (c) 2015 CyberRadio Solutions, Inc.  All 
+#     rights reserved.
+#
+#################################################################
+
+#################################################################
+# 
+# usage: make_all_debs {options}
+#  
+# -s [PKGLIST],--skip=[PKGLIST]   Skip building packages in PKGLIST.
+#                                 PKGLIST is a comma-separated list
+#                                 of packages NOT to build.
+# -b,--build-only                 Build packages only; do NOT move
+#                                 them into the systemInstall tree.
+#
+#################################################################
+
+print_usage()
+{
+	echo "usage: $0 {options}"
+	echo " "
+	echo "-s [PKGLIST],--skip=[PKGLIST]   Skip building packages in PKGLIST."
+	echo "                                PKGLIST is a comma-separated list"
+	echo "                                of packages NOT to build."
+	echo "-b,--build-only                 Build packages only; do NOT move"
+	echo "                                them into the systemInstall tree."
+}
+
+exit_with_usage()
+{
+	# $1: Exit code
+	# $2: Error message to display
+	echo "ERROR: $2"
+	echo " "
+	print_usage
+	exit $1
+}
+
+exit_if_error()
+{
+	# $1: Exit code from prior command
+	if [ $1 -ne 0 ]
+	then
+		echo "ERROR condition detected.  Exiting script." | tee -a ./make_all_debs.log
+		exit $1
+	fi
+}
+
+#########################################################
+# Set options and variables
+#########################################################
+# DEB_PKG_BUILD_LIST: List of packages
+# This is a mapping of package source tree to subgroup to build.
+# If a package does not use subgrouping to build it, use an 
+# empty string for the subgroup name.
+# NOTE: For gr-cyberradio-* packages, which subgroup to build
+# is controlled by the individual rules files, so it is not
+# necessary to fill in the subgroups here.
+declare -A DEB_PKG_BUILD_LIST
+DEB_PKG_BUILD_LIST=(\
+                    ["cyberradiodriver"]= \
+                    ["gr-cyberradio-base"]= \
+                    ["gr-cyberradio-docs"]= \
+                    ["gr-cyberradio-ndr304"]= \
+                    ["gr-cyberradio-ndr651"]= \
+                  )
+# DEB_PKG_BUILDVER_LIST: List of version numbers for packages.
+# This is a mapping of package source tree to version number.  Packages
+# without an entry in this list use the default versioning scheme.
+declare -A DEB_PKG_BUILDVER_LIST
+# DEB_PKG_SKIP_LIST: List of packages not to build
+declare -a DEB_PKG_SKIP_LIST=()
+# DEB_PKG_BUILD_ONLY: Build only (1) or move them after build (0)
+DEB_PKG_BUILD_ONLY=0
+# Parse command-line options
+set -- `getopt -n $0 -o hs:b -l "help skip: build-only" -- "$@"`
+while [ $# -gt 0 ]
+do
+	case "$1" in
+		-s|--skip)
+			DEB_PKG_SKIP_LISTSTR=$(eval echo $2)
+			IFS="," read -a DEB_PKG_SKIP_LIST <<< "${DEB_PKG_SKIP_LISTSTR}"
+			shift
+			;;
+		-b|--build-only)
+			DEB_PKG_BUILD_ONLY=1
+			;;
+		-h|--help)
+			print_usage
+			exit 2
+			;;
+		-*)
+			break
+			;;
+		*)
+			break
+			;;
+	esac
+	shift
+done
+# 
+echo " " >> ./make_all_debs.log
+echo "==============================================================" >> ./make_all_debs.log
+echo " " >> ./make_all_debs.log
+# Modify the package build list based on the skip list
+echo "Candidate build packages:" | tee -a ./make_all_debs.log
+for BKEY in "${!DEB_PKG_BUILD_LIST[@]}"
+do
+	SKIPTHIS=0
+	for SIDX in "${!DEB_PKG_SKIP_LIST[@]}"
+	do
+		#echo "  * apply skip ${DEB_PKG_SKIP_LIST[SIDX]}"
+		if [[ $(basename "${BKEY}") == "${DEB_PKG_SKIP_LIST[SIDX]}" ]]
+		then
+			SKIPTHIS=1
+			break
+		fi
+	done
+	if [ ${SKIPTHIS} -eq 1 ]
+	then
+		echo -n "[SKIP]  " | tee -a ./make_all_debs.log
+	else
+		echo -n "[BUILD] " | tee -a ./make_all_debs.log
+	fi
+	echo "${BKEY}" | tee -a ./make_all_debs.log
+	if [ ${SKIPTHIS} -eq 1 ]
+	then
+		unset DEB_PKG_BUILD_LIST[BKEY]
+	fi
+done
+echo "Building packages:" | tee -a ./make_all_debs.log
+for BKEY in "${!DEB_PKG_BUILD_LIST[@]}"
+do
+	echo "-- ${BKEY}" | tee -a ./make_all_debs.log
+	VEROPT=""
+	SUBOPT=""
+	if [[ "${DEB_PKG_BUILDVER_LIST[${BKEY}]}" != "" ]]
+	then
+		VEROPT="-v ${DEB_PKG_BUILDVER_LIST[${BKEY}]}"
+	fi
+	if [[ "${DEB_PKG_BUILD_LIST[${BKEY}]}" != "" ]]
+	then
+		SUBOPT="-s ${DEB_PKG_BUILD_LIST[${BKEY}]}"
+	fi
+	./makedeb ${VEROPT} ${SUBOPT} ${BKEY} 2>&1 | tee -a ./make_all_debs.log
+	exit_if_error $?
+done
+# Move the built packages to the systemInstall tree
+if [ ${DEB_PKG_BUILD_ONLY} -ne 1 ]
+then
+	echo "Moving built packages to systemInstall tree" | tee -a ./make_all_debs.log
+	DEB_PKG_OS_VER=$(lsb_release -sr)
+	for DEBPKG in $(ls *.deb)
+	do
+		DEBPKGTGT=
+		if [[ "${DEBPKG}" == *"all.deb" ]]
+		then
+			DEBPKGTGT="./systemInstall/packages/${DEB_PKG_OS_VER}/all"
+			echo "* Arch-independent: ${DEBPKG} ==> ${DEBPKGTGT}" | tee -a ./make_all_debs.log
+		elif [[ "${DEBPKG}" == *"i686.deb" ]]
+		then
+			DEBPKGTGT="./systemInstall/packages/${DEB_PKG_OS_VER}/i686"
+			echo "* Arch-dependent: ${DEBPKG} ==> ${DEBPKGTGT}" | tee -a ./make_all_debs.log
+		elif [[ "${DEBPKG}" == *"x86_64.deb" ]]
+		then
+			DEBPKGTGT="./systemInstall/packages/${DEB_PKG_OS_VER}/x86_64"
+			echo "* Arch-dependent: ${DEBPKG} ==> ${DEBPKGTGT}" | tee -a ./make_all_debs.log
+		else
+			echo "* Architecture unknown, cannot move: ${DEBPKG}" | tee -a ./make_all_debs.log
+		fi
+		if [[ "${DEBPKGTGT}" != "" ]]
+		then
+			mkdir -p ${DEBPKGTGT}
+			exit_if_error $?
+			mv ${DEBPKG} ${DEBPKGTGT}
+			exit_if_error $?
+		fi
+	done
+else
+	echo "Build-only selected -- not moving built packages" | tee -a ./make_all_debs.log
+fi
+

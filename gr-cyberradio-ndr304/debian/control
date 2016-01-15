@@ -1,0 +1,27 @@
+#
+# Use placeholders for makedeb script:
+# * DEB_PKG_NAME for the package name
+# * DEB_PKG_VERSION for the version number
+# * DEB_PKG_ARCH for the package architecture
+#
+Source: DEB_PKG_NAME
+Section: devel
+Priority: extra
+Maintainer: CyberRadio Solutions, Inc. <sales@cyberradiosolutions.com>
+Build-Depends: debhelper (>= 8.0.0), python (>= 2.6.6.3~)
+Standards-Version: 3.9.2
+Homepage: http://www.cyberradiosolutions.com
+X-Python-Version: >= 2.6
+
+Package: DEB_PKG_NAME
+Architecture: any
+Depends: gr-cyberradio-base
+Breaks: gr-cyberradio
+Description: CRS Radio Control Blocks for GNU Radio (NDR304 Blocks)
+ This package provides blocks for controlling the CyberRadio Solutions, Inc. 
+ NDR304 radio using GNU Radio and GNU Radio Companion.
+ .
+ This package requires the Base Blocks package.
+ .
+ Requires GNU Radio (and its associated dependencies).
+

@@ -1,0 +1,11 @@
+#
+# Use placeholders for makedeb script:
+# * DEB_PKG_NAME for the package name
+# * DEB_PKG_VERSION for the version number
+#
+DEB_PKG_NAME (DEB_PKG_VERSION) unstable; urgency=low
+
+  * Initial release (Closes: #0001)  <0001 is the bug number of your ITP>
+
+ -- CyberRadio Solutions, Inc. <sales@cyberradiosolutions.com>  Mon, 29 Jun 2015 11:00:00 -0400
+

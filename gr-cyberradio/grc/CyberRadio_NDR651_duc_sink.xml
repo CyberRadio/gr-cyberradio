@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<!--
+###################################################
+# [CyberRadio] NDR651 DUC Sink
+#
+# Author: NH/DA
+#
+# Copyright: (c) 2015 CyberRadio Solutions, Inc.
+#    All rights reserved.
+###################################################
+ -->
+<block>
+  <name>[CyberRadio] NDR651 DUC Sink</name>
+  <key>CyberRadio_NDR651_duc_sink</key>
+  <category>CyberRadio/NDR651</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.NDR651_duc_sink(
+    radio_host_name=$radio_host_name, 
+    radio_tcp_port=$radio_tcp_port, 
+    tengig_iface_list=$tengig_iface_list,
+    iq_scale_factor=$iq_scale_factor,
+    duc_channel=$duc_channel, 
+    duc_iface_string=$duc_iface_string, 
+    duc_rate_index=$duc_rate_index, 
+    duc_frequency=$duc_frequency, 
+    duc_attenuation=$duc_attenuation, 
+    duc_tx_channels=$duc_tx_channels, 
+    duc_tx_frequency=$duc_tx_frequency,
+    duc_tx_attenuation=$duc_tx_attenuation,
+    duc_stream_id=$duc_stream_id,
+    config_tx=$config_tx,
+    debug=$debug,
+)</make>
+<!-- <callback>set_radio_params($radio_host_name, $radio_tcp_port, $tengig_iface_list)</callback> -->
+  <callback>set_iq_scale_factor($iq_scale_factor)</callback>
+  <callback>set_duc_channel($duc_channel)</callback>
+  <callback>set_duc_iface_string($duc_iface_string)</callback>
+  <callback>set_duc_rate_index($duc_rate_index)</callback>
+  <callback>set_duc_frequency($duc_frequency)</callback>
+  <callback>set_duc_attenuation($duc_attenuation)</callback>
+  <callback>set_duc_tx_channels($duc_tx_channels)</callback>
+  <callback>set_duc_tx_frequency($duc_tx_frequency)</callback>
+  <callback>set_duc_tx_attenuation($duc_tx_attenuation)</callback>
+  <callback>set_duc_stream_id($duc_stream_id)</callback>
+  <param>
+    <name>Radio Host Name</name>
+    <key>radio_host_name</key>
+    <value>ndr651</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Radio TCP Port</name>
+    <key>radio_tcp_port</key>
+    <value>8617</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>10GigE Interface List</name>
+    <key>tengig_iface_list</key>
+    <value>["eth10", "eth11"]</value>
+    <type>raw</type>
+  </param>
+  <param>
+	<name>I/Q Scale Factor</name>
+	<key>iq_scale_factor</key>
+	<value>2**15</value>
+	<type>float</type>
+	<hide>part</hide>
+  </param>
+  <param>
+    <name>DUC Channel</name>
+    <key>duc_channel</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>DUC Interface Name</name>
+    <key>duc_iface_string</key>
+    <value>eth10</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>DUC Rate Index</name>
+    <key>duc_rate_index</key>
+    <value>0</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>DUC Frequency</name>
+    <key>duc_frequency</key>
+    <value>0</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>DUC Attenuation</name>
+    <key>duc_attenuation</key>
+    <value>0</value>
+    <type>float</type>
+  </param>
+  <param>
+    <name>DUC TX Channels</name>
+    <key>duc_tx_channels</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>DUC TX Frequency (MHz)</name>
+    <key>duc_tx_frequency</key>
+    <value>900</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>DUC TX Attenuation</name>
+    <key>duc_tx_attenuation</key>
+    <value>0</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>DUC Stream ID</name>
+    <key>duc_stream_id</key>
+    <value>40001</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Configure Tx Channel</name>
+    <key>config_tx</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+  <param>
+    <name>Debug Mode</name>
+    <key>debug</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+  <sink>
+    <name>wbduc</name>
+    <type>complex</type>
+    <vlen>1</vlen>
+  </sink>
+  <doc>
+The NDR651_duc_sink block represents a single digital upconverter \
+(DUC) on an NDR651 radio, and transmits the signal sent to its \
+input.
+
+To use more than one DUC on the NDR651, use multiple sinks, \
+one for each DUC.  
+  </doc>
+</block>

@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+###################################################
+# [CyberRadio] NDR Driver Interface block
+#
+# Author: DA
+#
+# Copyright: (c) 2015 CyberRadio Solutions, Inc.
+#    All rights reserved.
+###################################################
+ -->
+<block>
+	<name>[CyberRadio] NDR Driver Interface</name>
+	<key>CyberRadio_NDR_driver_interface</key>
+	<category>CyberRadio/Base</category>
+	<import>import CyberRadio</import>
+	<make>CyberRadio.NDR_driver_interface(
+    radio_type=$radio_type,
+    verbose=$verbose,
+#if $log_file_block() != ""
+    log_file=self.$(log_file_block()),
+#else
+    log_file=$log_file,
+#end if
+    connect_mode=$connect_mode,
+#if $connect_mode() == "tty"
+    dev_name=$dev_name,
+    baud_rate=$baud_rate,
+#else if $connect_mode() in ["tcp", "udp"]
+    host_name=$host_name,
+    host_port=$host_port,
+#end if
+)</make>
+	<callback>set_radio_type($radio_type)</callback>
+	<callback>set_verbose($verbose)</callback>
+	<callback>set_log_file($log_file)</callback>
+	<callback>set_connect_mode($connect_mode)</callback>
+	<callback>set_dev_name($dev_name)</callback>
+	<callback>set_baud_rate($baud_rate)</callback>
+	<callback>set_host_name($host_name)</callback>
+	<callback>set_host_port($host_port)</callback>
+	<param>
+		<name>Radio Type</name>
+		<key>radio_type</key>
+		<value>ndr651</value>
+		<type>string</type>
+	</param>
+	<param>
+		<name>Verbose Mode</name>
+		<key>verbose</key>
+		<value>True</value>
+		<type>bool</type>
+	</param>
+	<param>
+		<name>Log File</name>
+		<key>log_file</key>
+		<value>None</value>
+		<type>raw</type>
+	</param>
+	<param>
+		<name>Log File Block</name>
+		<key>log_file_block</key>
+		<value></value>
+		<type>string</type>
+	</param>
+	<param>
+		<name>Connection Mode</name>
+		<key>connect_mode</key>
+		<value>tcp</value>
+		<type>string</type>
+		<option>
+			<name>No Connection</name>
+			<key></key>
+		</option>
+		<option>
+			<name>TCP</name>
+			<key>tcp</key>
+		</option>
+		<option>
+			<name>UDP</name>
+			<key>udp</key>
+		</option>
+		<option>
+			<name>TTY</name>
+			<key>tty</key>
+		</option>
+	</param>
+	<param>
+		<name>Radio Device Name</name>
+		<key>dev_name</key>
+		<value>/dev/ndr47x</value>
+		<type>string</type>
+		<hide>
+			#if $connect_mode() == ""
+				all
+			#else if $connect_mode() == "tty"
+				none
+			#else
+				all
+			#end if
+		</hide>
+	</param>
+	<param>
+		<name>Radio Baud Rate</name>
+		<key>baud_rate</key>
+		<value>921600</value>
+		<type>int</type>
+		<hide>
+			#if $connect_mode() == ""
+				all
+			#else if $connect_mode() == "tty"
+				none
+			#else
+				all
+			#end if
+		</hide>
+	</param>
+	<param>
+		<name>Radio Host Name</name>
+		<key>host_name</key>
+		<value>ndr651</value>
+		<type>string</type>
+		<hide>
+			#if $connect_mode() == ""
+				all
+			#else if $connect_mode() == "tty"
+				all
+			#else
+				none
+			#end if
+		</hide>
+	</param>
+	<param>
+		<name>Radio Host Port</name>
+		<key>host_port</key>
+		<value>8617</value>
+		<type>int</type>
+		<hide>
+			#if $connect_mode() == ""
+				all
+			#else if $connect_mode() == "tty"
+				all
+			#else
+				none
+			#end if
+		</hide>
+	</param>
+	<doc>
+The NDR_driver_interface block allows GNU Radio applications to \
+access the CyberRadio Solutions NDR Driver to configure an NDR-class \
+radio and query its capabilities. The block supports all of the \
+methods from the Driver's IRadio interface; the results of those \
+methods depend on which radio is being targeted.
+
+The Radio Type field defines what type of NDR radio we are interested in. \
+This field should be one of the name strings defined by the \
+Driver.  The Driver documentation lists which name strings are supported.
+
+Verbose mode determines how much logging data the Driver produces.
+
+The Log File field is a file-like object that handles logging output from \
+the Driver.  Setting this to None will disable log output entirely (unless \
+the Log File Block field is used -- see below).
+
+The Log File Block field is the name of another block in this flowgraph \
+that can act as a file-like object for collecting logging output (such as \
+the File-Like Object Source block).  If this field is filled in, then the \
+Log File field will be ignored.
+
+The Connection Mode specifies how user code connects to the radio. \
+This can be either no connection, TCP, UDP, or TTY (serial link).  \
+Note that different radios support different connection modes.  See \
+the Driver documentation for details.
+
+For radios supporting TTY connections, the Radio Device Name and Radio \
+Baud Rate provide the parameters for the serial connection.  For radios \
+supporting TCP or UDP connections, the Radio Host Name and Radio Host \
+Port provide the parameters for the network link to the radio. 
+	</doc>
+</block>

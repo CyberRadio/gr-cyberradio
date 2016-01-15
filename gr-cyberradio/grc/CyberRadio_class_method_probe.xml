@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<!--
+###################################################
+# [CyberRadio] Class Method Probe
+#
+# Author: DA
+#
+# Copyright: (c) 2015 CyberRadio Solutions, Inc.
+#    All rights reserved.
+###################################################
+ -->
+<block>
+	<name>[CyberRadio] Class Method Probe</name>
+	<key>variable_CyberRadio_class_method_probe</key>
+	<category>CyberRadio/Base</category>
+	<import>import time</import>
+	<import>import threading</import>
+	<var_make>self.$(id) = $(id) = $value</var_make>
+	<make>#slurp
+#if $poll_rate() > 0
+def _$(id)_probe():
+	while True:
+		val = self.$(block_id()).$(function_name())($(function_args()))
+		try: self.set_$(id)(val)
+		except AttributeError, e: pass
+		time.sleep(1.0/($poll_rate))
+_$(id)_thread = threading.Thread(target=_$(id)_probe)
+_$(id)_thread.daemon = True
+_$(id)_thread.start()
+#else
+self.$(id) = $(id) = self.$(block_id()).$(function_name())($(function_args()))
+#end if</make>
+	<callback>self.set_$(id)($value)</callback>
+	<param>
+		<name>Block ID</name>
+		<key>block_id</key>
+		<value>my_block_0</value>
+		<type>string</type>
+	</param>
+	<param>
+		<name>Function Name</name>
+		<key>function_name</key>
+		<value>get_number</value>
+		<type>string</type>
+	</param>
+	<param>
+		<name>Function Args</name>
+		<key>function_args</key>
+		<value></value>
+		<type>string</type>
+		<hide>#if $function_args() then 'none' else 'part'#</hide>
+	</param>
+	<param>
+		<name>Initial Value</name>
+		<key>value</key>
+		<value>0</value>
+		<type>raw</type>
+	</param>
+	<param>
+		<name>Poll Rate (Hz)</name>
+		<key>poll_rate</key>
+		<value>10</value>
+		<type>real</type>
+	</param>
+	<doc>
+Probe a class method on another block in the flowgraph and set its value to 
+this variable.
+
+This block is a drop-in replacement for the standard Function Probe block.
+
+Parameters:
+* Block ID is the ID of another block in this flow graph.
+* Function Name is the name of the class method to call on that block.
+* Function Args are the parameters passed into that function.  The provided \
+  arguments are used literally, so they must conform to valid Python syntax \
+  (strings quoted, arguments separated by commas, etc.)
+* Initial Value is the initial value of this variable.
+* Poll Rate (Hz) is the number of times to update this variable's value per \
+  second.  If this is 0 (zero), then the class method is only called once and \
+  is not updated again.
+	</doc>
+</block>
