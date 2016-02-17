@@ -77,7 +77,7 @@ name = "CyberRadioDriver"
 description = "CyberRadio Solutions NDR Driver"
 ##
 # \brief Driver version number (string).
-version = "16.01.05"
+version = "16.02.17"
 
 # This section of code inspects the "radio" module for radio handler
 # objects (objects derived from _radio, thus implementing the IRadio interface)
@@ -599,12 +599,16 @@ class IRadio(object):
     
     ##
     # \brief Sends a command to the radio.
-    #
-    # \param cmdString The command string to send.
+    # \note This method can be used to execute arbitrary commands.  The
+    #    user is responsible for interpreting the returned command
+    #    response.
+    # \param cmdString The command string to send.  This command string
+    #    should include any line delimiters as required by the radio.
     # \param timeout The timeout period, in seconds.  A timeout of None 
     #     uses the default timeout as determined by the transport.
     # \return The command response if command was successfully executed
-    #     (whether or not the command itself returned an error).  Returns
+    #     (whether or not the command itself returned an error), as a 
+    #     list of response lines (without line terminators).  Returns 
     #     None if the command could not be executed.
     def sendCommand(self,cmdString,timeout=None):
         raise NotImplementedError
@@ -1121,6 +1125,14 @@ class IRadio(object):
     #     order of their corresponding rate indices. 
     @classmethod
     def getDdcRateList(cls, wideband):
+        raise NotImplementedError
+
+    ##
+    # \brief Gets the ADC sample rate for the radio.
+    #
+    # \return The ADC sample rate, in samples per second. 
+    @classmethod
+    def getAdcRate(cls):
         raise NotImplementedError
 
     ##

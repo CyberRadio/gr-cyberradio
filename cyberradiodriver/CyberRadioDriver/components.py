@@ -311,18 +311,19 @@ class _tuner(_base):
 					self.configuration[configKeys.TUNER_ATTENUATION] = rfAttAdj
 					self.configuration[configKeys.TUNER_RF_ATTENUATION] = rfAttAdj
 				pass
-		if self.fifCmd is not None:
-			cmd = self.fifCmd(**{ "parent": self, 
-							       configKeys.INDEX: self.index,
-							       configKeys.TUNER_FILTER: confDict.get(configKeys.TUNER_FILTER, 0),
-	 						       "verbose": self.verbose, 
-	 						       "logFile": self.logFile })
-			ret &= cmd.send( self.callback, )
-			ret &= cmd.success
-			self._addLastCommandErrorInfo(cmd)
-			if ret:
-				self.configuration[configKeys.TUNER_FILTER] = getattr(cmd, configKeys.TUNER_FILTER)
-			pass
+		if configKeys.TUNER_FILTER in confDict:
+			if self.fifCmd is not None:
+				cmd = self.fifCmd(**{ "parent": self, 
+								       configKeys.INDEX: self.index,
+								       configKeys.TUNER_FILTER: confDict.get(configKeys.TUNER_FILTER, 0),
+		 						       "verbose": self.verbose, 
+		 						       "logFile": self.logFile })
+				ret &= cmd.send( self.callback, )
+				ret &= cmd.success
+				self._addLastCommandErrorInfo(cmd)
+				if ret:
+					self.configuration[configKeys.TUNER_FILTER] = getattr(cmd, configKeys.TUNER_FILTER)
+				pass
 		return ret
 
 

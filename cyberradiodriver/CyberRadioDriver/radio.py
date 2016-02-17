@@ -1141,6 +1141,14 @@ class _radio(log._logger, configKeys.Configurable):
 			return []
 
 	##
+	# \brief Gets the ADC sample rate for the radio.
+	#
+	# \copydetails CyberRadioDriver::IRadio::getAdcRate()
+	@classmethod
+	def getAdcRate(cls):
+		return cls.adcRate
+
+	##
 	# \brief Gets the VITA 49 header size for the radio.
 	#
 	# \copydetails CyberRadioDriver::IRadio::getVitaHeaderSize()
