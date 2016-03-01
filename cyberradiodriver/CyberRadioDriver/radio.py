@@ -2521,7 +2521,7 @@ class ndr308(ndr308_1):
 #      "tunerConfiguration": {
 #            1: {
 #               "frequency": [20000000.0-3000000000.0, step 1000000.0],
-#               "attenuation": [0.0-30.0, step 1.0],
+#               "attenuation": [0.0-46.0, step 1.0],
 #               "enable": [0, 1],
 #               "filter": [0, 1],
 #            },

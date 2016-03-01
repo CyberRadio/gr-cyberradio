@@ -339,6 +339,7 @@ class ndr304_tuner(_tuner):
 class ndr308_tuner(_tuner):
 	_name = "Tuner(NDR308)"
 	frqRange = (20e6,6e9)
+	attRange = (0.0,46.0)
 	fifCmd = command.fif
 	validConfigurationKeywords = [
 								  configKeys.TUNER_FREQUENCY, 
