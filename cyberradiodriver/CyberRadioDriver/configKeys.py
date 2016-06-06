@@ -73,6 +73,12 @@ CONFIG_DUC = "ducConfiguration"
 CONFIG_WBDUC = "wideband"
 ## Narrowband DUC configuration sub-dictionary.
 CONFIG_NBDUC = "narrowband"
+## DDC group configuration sub-dictionary.
+CONFIG_DDC_GROUP = "ddcGroupConfiguration"
+## Wideband DDC group configuration sub-dictionary.
+CONFIG_WBDDC_GROUP = "wideband"
+## Narrowband DDC group configuration sub-dictionary.
+CONFIG_NBDDC_GROUP = "narrowband"
 
 #------ Tuner Configuration Keys ----------------------------------------#
 ## Tuner index number.
@@ -113,6 +119,8 @@ TUNER_AGC_ATTACK_LIMIT = "aal"
 TUNER_AGC_DELAY_LIMIT = "adl"
 ## Tuner filter setting.
 TUNER_FILTER = "filter"
+## Timing adjustment, in clocks.
+TUNER_TIMING_ADJ = "timingAdjustment"
 
 #------ Transmitter Configuration Keys --------------------------------#
 TX_INDEX = "txIndex"
@@ -226,11 +234,13 @@ DUC_END_BLOCK = "endBlock"
 ## NBDDC RF index.
 NBDDC_RF_INDEX = "rfIndex"
 
+#------ DDC Group Configuration Keys ----------------------------------------#
+DDC_GROUP_MEMBER = "member"
+DDC_GROUP_MEMBERS = "members"
+
 #------ Time Configuration Keys ----------------------------------------#
 ## UTC time, in seconds past the Epoch.
 TIME_UTC = "utcTime"
-## Timing adjustment, in clocks.
-TIMING_ADJ = "clocks"
 
 #------ IP Configuration Keys ------------------------------------------#
 ## Source IP address.

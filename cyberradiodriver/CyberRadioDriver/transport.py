@@ -348,7 +348,7 @@ class radio_transport(log._logger):
 						break
 				else:
 					if timeout is not None and timeout>0:
-						self.log("**  Rx(%s)%s: %s" % ("TCP" if self.tcp is not None else "TTY",datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),"!! TIMEOUT  !!"))
+						self.logIfVerbose("**  Rx(%s)%s: %s" % ("TCP" if self.tcp is not None else "TTY",datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),"!! TIMEOUT  !!"))
 						rx.append( "\nTIMEOUT\n" )
 					break
 		except:

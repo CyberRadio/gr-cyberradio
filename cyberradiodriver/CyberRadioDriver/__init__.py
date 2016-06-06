@@ -36,8 +36,9 @@
 # (API) for all CyberRadio Solutions NDR-class radios.
 #
 # End-users of the driver should obtain a radio handler object for
-# their radio(s) by calling CyberRadioDriver.getRadioObject() with the name
-# string for the desired radio.  They can then use the methods provided 
+# their radio(s) by calling CyberRadioDriver.getRadioObject() with either
+# the name string for the desired radio or "auto" to automatically detect
+# the connected radio type.  They can then use the methods provided 
 # by the CyberRadioDriver.IRadio interface to manipulate their radio handler
 # object.
 #
@@ -55,6 +56,7 @@
 #    <tr><td>\link CyberRadioDriver::radio::ndr308_1 NDR308-1 \endlink</td><td>"ndr308_1"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radio::ndr308ts NDR308-TS \endlink</td><td>"ndr308ts"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radio::ndr308 NDR308 \endlink</td><td>"ndr308"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radio::ndr308_4 NDR308 4-tuner \endlink</td><td>"ndr308_4"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radio::ndr651 NDR651 \endlink</td><td>"ndr651"</td></tr>
 # </table>
 #
@@ -77,7 +79,7 @@ name = "CyberRadioDriver"
 description = "CyberRadio Solutions NDR Driver"
 ##
 # \brief Driver version number (string).
-version = "16.03.01"
+version = "16.06.06"
 
 # This section of code inspects the "radio" module for radio handler
 # objects (objects derived from _radio, thus implementing the IRadio interface)
@@ -90,29 +92,44 @@ for objname, obj in inspect.getmembers(radio):
         setattr(sys.modules[__name__], objname, obj)
         
 ##
-# \brief Returns the MAC address and IP address for a given Ethernet 
-#    interface.
+# \brief Returns the MAC address and IP address (and, optionally, the
+#    MTU) for a given Ethernet interface.
+#
+# \note The MTU query is optional in order to provide backward compatibility
+#    with CyberRadioDriver programs that do not use this value.
 #
 # \param ifname The name of the Ethernet system interface ("eth0", for 
 #    example).
-# \returns A 2-tuple: (MAC Address string, IP Address string).  If the
-#    given interface does not exist, then both returned strings will be
+# \param getMTU If True, return the MTU as well.
+# \returns If getMTU is False, a 2-tuple: (MAC Address string, IP Address string).
+#    If getMTU is True, a 3-tuple: (MAC address string, IP address string, MTU).  
+#    If the given interface does not exist, then both returned strings will be
 #    empty strings.
-def getInterfaceAddresses(ifname):
+def getInterfaceAddresses(ifname, getMTU=False):
     mac = ""
     ip = ""
+    mtu = 0
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', ifname[:15]))
+        ifr = struct.pack('256s', ifname[:15])
+        info = fcntl.ioctl(s.fileno(), 
+                           0x8927, # SIOCGIFHWADDR
+                           ifr)
         mac = ''.join(['%02x:' % ord(char) for char in info[18:24]])[:-1]
-        ip = socket.inet_ntoa(fcntl.ioctl(
-            s.fileno(),
-            0x8915,  # SIOCGIFADDR
-            struct.pack('256s', ifname[:15])
-            )[20:24])
+        ip = socket.inet_ntoa(fcntl.ioctl(s.fileno(),
+                                          0x8915,  # SIOCGIFADDR
+                                          ifr)[20:24])
+        if getMTU:
+            mtu = struct.unpack("<H", 
+                      fcntl.ioctl(s.fileno(), 
+                                  0x8921, # SIOCGIFMTU
+                                  ifr)[16:18])[0]
     except:
         pass
-    return mac,ip
+    if getMTU:
+        return mac, ip, mtu
+    else:
+        return mac,ip
 
 ##
 # \brief Gets the list of supported radios.
@@ -138,10 +155,44 @@ def getRadioClass(nameString):
 # of the radio.
 #
 # The name string used to identify the radio can be any string returned 
-# by getSupportedRadios(), but the check is not case-sensitive.  The 
-# returned radio handler object will support the CyberRadioDriver.IRadio interface.
+# by getSupportedRadios(), but the check is not case-sensitive.  The name
+# string can also be "auto", in which case the method will attempt to 
+# auto-detect the type of radio connected to the system.  Since radios can
+# operate over both TCP and TTY (serial) links, the user needs to supply 
+# keyword arguments to indicate which devices to scan ("host" to scan over TCP,
+# and/or "dev" to scan over TTY -- see below).  
 #
-# \param nameString The name string for the radio of interest.
+# This method uses keyword arguments to configure the returned radio handler
+# object.  It consumes the following keyword arguments:
+# <ul>
+# <li> "verbose": Verbose mode (Boolean)
+# <li> "logFile": An open file or file-like object to be used for log output.  
+#    If not provided, this defaults to standard output. 
+# <li> "setTime": Whether to set the time on the radio (Boolean)
+# <li> "logCtrl": A GUI control that receives log output (GUI-dependent)
+# <li> "host": For TCP-connected radios, this is the host name for the radio.
+#    If provided, this method will auto-detect a radio on this device if 
+#    requested, and automatically connect to it.
+# <li> "port": For TCP-connected radios, this is the command port for the radio.
+#    If not provided, this defaults to the standard port (8617). 
+# <li> "dev": For TTY-connected radios, this is the system device name for the 
+#    radio's serial (USB) link.  If provided, this method will auto-detect a radio 
+#    on this device if requested, and automatically connect to it.
+# <li> "baudrate": For TTY-connected radios, this is the baud rate for the serial
+#    connection.  If not provided, this defaults to the standard (921600). 
+# </ul>
+# If the "host" and "dev" keyword arguments are both provided, then the auto-
+# detection algorithm will try a TCP connection first before falling back to a 
+# TTY connection.
+#
+# Radio handler objects may consume other keyword arguments on a 
+# radio-by-radio basis.  See the documentation for the specific radio
+# for further details.
+#
+# The returned radio handler object will support the CyberRadioDriver.IRadio 
+# interface.
+#
+# \param nameString The name string for the radio of interest, or "auto".
 # \param args Variable-length list of positional arguments.  Positional
 #     arguments are ignored.
 # \param kwargs Dictionary of keyword arguments to pass to the radio
@@ -150,7 +201,46 @@ def getRadioClass(nameString):
 # \returns A radio handler object for the desired radio.
 # \throws RuntimeError if the desired radio is not supported.
 def getRadioObject(nameString, *args, **kwargs):
-    return getRadioClass(nameString)(*args, **kwargs)
+    if nameString == "auto":
+        radioType = ""
+        connModes = []
+        if kwargs.get("host", None) is not None:
+            connModes.append("tcp")
+        if kwargs.get("dev", None) is not None:
+            connModes.append("tty")
+        for connMode in connModes:
+            if connMode == "tcp":
+                # Grab a temporary handler object of the NDR308 class
+                tmpHandler = getRadioObject("ndr308", verbose=False, logFile=None)
+                tmpHandler.connect("tcp", kwargs.get("host"), kwargs.get("port", None))
+            elif connMode == "tty":
+                # Grab a temporary handler object of the NDR304 class
+                tmpHandler = getRadioObject("ndr304", verbose=False, logFile=None)
+                tmpHandler.connect("tty", kwargs.get("dev"), kwargs.get("baudrate", None))
+            if tmpHandler.isConnected():
+                radioType = tmpHandler.getVersionInfo()["model"]
+                radioType = str(radioType).lower()
+                radioType = radioType.replace("ts", "_ts")
+                radioType = radioType.replace("-", "_")
+                radioType = radioType.replace("__", "_")
+                tmpHandler.disconnect()
+            if radioType != "":
+                break
+        obj = getRadioClass(radioType)(*args, **kwargs)
+        if connMode == "tcp":
+            obj.connect("tcp", kwargs.get("host"), kwargs.get("port", None))
+        elif connMode == "tty":
+            obj.connect("tty", kwargs.get("dev"), kwargs.get("baudrate", None))
+        return obj
+    else:
+        obj = getRadioClass(nameString)(*args, **kwargs)
+        if kwargs.get("host", None) is not None and obj.isConnectionModeSupported("udp"):
+            obj.connect("udp", kwargs.get("host"), kwargs.get("port", None))
+        elif kwargs.get("host", None) is not None and obj.isConnectionModeSupported("tcp"):
+            obj.connect("tcp", kwargs.get("host"), kwargs.get("port", None))
+        elif kwargs.get("dev", None) is not None and obj.isConnectionModeSupported("tty"):
+            obj.connect("tty", kwargs.get("dev"), kwargs.get("baudrate", None))
+        return obj
 
 ##
 # \brief Factory method for obtaining a documentation string for a 
@@ -159,6 +249,9 @@ def getRadioObject(nameString, *args, **kwargs):
 # The name string used to identify the radio can be any string returned 
 # by getSupportedRadios(), but the check is not case-sensitive.  The 
 # documentation block returned is compatible with Doxygen. 
+#
+# \note The generated documentation does not contain all possible
+#    configuration options as of yet.
 #
 # \param nameString The name string for the radio of interest.
 # \returns A documentation block for the corresponding radio handler
@@ -518,6 +611,14 @@ class IRadio(object):
     def __init__(self, *args, **kwargs):
         raise NotImplementedError
     
+    ##
+    # \brief Destroys a radio handler object.
+    #
+    # The default action is to disconnect from the radio when the handler
+    # object is destroyed.
+    def __del__(self):
+        pass
+
     ##
     # \brief Indicates whether the radio is connected.
     #
@@ -898,6 +999,14 @@ class IRadio(object):
     # \return The number of tuners. 
     @classmethod
     def getNumTuner(cls):
+        raise NotImplementedError
+    
+    ##
+    # \brief Gets the number of tuner boards on the radio.
+    #
+    # \return The number of tuner boards. 
+    @classmethod
+    def getNumTunerBoards(cls):
         raise NotImplementedError
     
     ##
@@ -1517,4 +1626,20 @@ class IRadio(object):
     def wbducSupportsSnapshotTransmit(cls):
         raise NotImplementedError
 
+    ##
+    # \brief Gets the index range for the wideband DDC groups on the radio.
+    #
+    # \return The list of wideband DDC group indexes. 
+    @classmethod
+    def getWbddcGroupIndexRange(cls):
+        raise NotImplementedError
+    
+    ##
+    # \brief Gets the index range for the narrowband DDC groups on the radio.
+    #
+    # \return The list of narrowband DDC group indexes. 
+    @classmethod
+    def getNbddcGroupIndexRange(cls):
+        raise NotImplementedError
+    
     

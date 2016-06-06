@@ -13,7 +13,7 @@
 ###############################################################
 
 import json
-import ast
+# import ast
 import traceback 
 import string
 import log
@@ -129,9 +129,9 @@ class _commandBase(log._logger):
 		else:
 			self.cmd = ( "%s%s %s"%(self.mnemonic,"?" if self.query else "",", ".join(self.parameterList),) ).strip()
 			for parmName,parmType,parmOpt,parmDefault in self.queryParameters if self.query else self.setParameters:
-# 				self.log((parmName,parmType,parmOpt,parmDefault,repr(kwargs.get(parmName))))
+# 				self.logIfVerbose((parmName,parmType,parmOpt,parmDefault,repr(kwargs.get(parmName))))
 				if not kwargs.has_key(parmName):
-					#self.log(parmName,parmType,parmOpt)
+					#self.logIfVerbose(parmName,parmType,parmOpt)
 					if not parmOpt:
 						self.log( "MISSING MANDATORY PARAMETER %s" % repr(parmName) )
 					break
@@ -188,11 +188,11 @@ class _commandBase(log._logger):
 			self.parseResponse()
 			#if self.verbose:
 			if False:
-				self.log("\n\t"+"\n\t".join( ( repr(self.cmd), \
+				self.logIfVerbose("\n\t"+"\n\t".join( ( repr(self.cmd), \
 					repr(";".join(self.rsp) if self.rsp is not None else None), \
 					repr(self.success), repr(self.successInfo) ) ) ) 
 			else:
-				self.log( repr(self) )
+				self.logIfVerbose( repr(self) )
 			if not self.ok:
 				self.log( "SOMETHING WENT WRONG" )
 			elif self.error:
@@ -370,7 +370,7 @@ class _jsonCommandBase(log._logger):
 					parmDict.update({ self.argParamMap[key]: kwargs[key] })
 					setattr(self, key, kwargs[key])
 			self.cmd.update({ "params": parmDict, })
-		#self.log("jsonCommandBase init: cmd=%s" % str(self.cmd))
+		#self.logIfVerbose("jsonCommandBase init: cmd=%s" % str(self.cmd))
 		## A list of strings returned by the radio in response to the command.
 		self.rsp = None
 		## Whether the command completed successfully.
@@ -418,11 +418,11 @@ class _jsonCommandBase(log._logger):
 			self.parseResponse()
 			#if self.verbose:
 			if False:
-				self.log("\n\t"+"\n\t".join( ( repr(self.cmd), \
+				self.logIfVerbose("\n\t"+"\n\t".join( ( repr(self.cmd), \
 					repr(";".join(self.rsp) if self.rsp is not None else None), \
 					repr(self.success), repr(self.successInfo) ) ) ) 
 			else:
-				self.log( repr(self) )
+				self.logIfVerbose( repr(self) )
 			if self.error:
 				self.log( "ERROR DETECTED, %s"%( repr(self.errorInfo), ) )
 			elif not self.ok:
@@ -552,7 +552,6 @@ class att(_commandBase):
 						]
 
 ##--  Tuner Command  -----------------------------------------------------##
-					
 						
 #--  DDC Frequency Commands  ------------------------------------------------#
 
@@ -971,7 +970,13 @@ class hrev(_commandBase):
 class tadj(_commandBase):
 	mnemonic="TADJ"
 	setParameters = [ (configKeys.INDEX,int,True,None), \
-						(configKeys.TIMING_ADJ,int,True,0), \
+						(configKeys.TUNER_TIMING_ADJ,int,True,0), \
+						]
+	queryParameters = [ (configKeys.INDEX,int,True,None), \
+						]
+	queryResponseData = [ \
+						(configKeys.INDEX, int, False), \
+						(configKeys.TUNER_TIMING_ADJ, int, True), \
 						]
 
 #--  Calibration Frequency Command  ---------------------------------------------#
@@ -1070,7 +1075,20 @@ class fif(_commandBase):
 						(configKeys.TUNER_FILTER, int, True), \
 						]
 	
-
+##
+# Tuner filter setting command specific to the NDR304.
+#
+class fif304(_commandBase):
+	mnemonic = "FIF"
+	setParameters = [   (configKeys.INDEX,int,False,None), \
+						(configKeys.TUNER_FILTER,int,False,0), \
+						]
+	queryParameters = [ (configKeys.INDEX,int,True,None), \
+						]
+	queryResponseData = [ \
+						(configKeys.TUNER_FILTER, int, True), \
+						]
+	
 #--  Configuration Commands  -------------------------------------------------#
 
 ##
@@ -1157,6 +1175,10 @@ class stat308Values():
 	RT_TIMER = 0x20
 	GPS_FIX = 0x40
 	TUNER_OFF_OVER_TEMP = 0x80
+	REF_PIC = 0x100
+	FPGA_ERR = 0x200
+	MGT_REF = 0x400
+	UTC_COR = 0x800
 	text = {
 			RF_TUNER_UNLOCKED: "RF Tuner LOs Unlocked (check TSTAT?)", \
 			ADC_OVERFLOW: "ADC Overflow", \
@@ -1164,8 +1186,14 @@ class stat308Values():
 			POWER_FAILURE: "Power failure", \
 			OVER_TEMP: "Over-temp condition", \
 			RT_TIMER: "Retune timer not timed-out", \
-			GPS_FIX: "Valid GPS fix", \
+			GPS_FIX: "GPS has no valid fix", \
 			TUNER_OFF_OVER_TEMP: "Tuners turned off due to high-temp condition", \
+			REF_PIC: "Reference microcontroller has entered an inoperable state", \
+			FPGA_ERR: "FPGA firmware is not compatible with the TunerControl software", \
+			MGT_REF: "FPGA firmware and the digital board revision and MGT reference " \
+			         "oscillator frequency are not compatible", \
+			UTC_COR: "UTC correction value for leap seconds has not yet been received " \
+			         "by the GPS module", \
 			}
 
 
@@ -1537,5 +1565,73 @@ class lwf(_commandBase):
 
 
 #--  Miscellaneous Commands  -----------------------------------#
+
+#--  DDC Group Configuration Commands  --------------------------------------------#
+
+##
+# WBDDC group configuration command.
+#
+class wbg(_commandBase):
+	mnemonic = "WBG"
+	setParameters = [   (configKeys.INDEX, int, False, None), \
+						(configKeys.DDC_GROUP_MEMBER, int, False, 0), \
+						(configKeys.ENABLE, int, False, 0), \
+						]
+	queryParameters = [ (configKeys.INDEX,int,True,None), \
+					    (configKeys.DDC_GROUP_MEMBER,int,True,None), \
+						]
+	queryResponseData = [ \
+						(configKeys.INDEX, int, False), \
+						(configKeys.DDC_GROUP_MEMBER, int, True), \
+						(configKeys.ENABLE, int, True), \
+						]
+
+##
+# WBDDC group enable command.
+#
+class wbge(_commandBase):
+	mnemonic = "WBGE"
+	setParameters = [   (configKeys.INDEX, int, False, None), \
+						(configKeys.ENABLE, int, False, 0), \
+						]
+	queryParameters = [ (configKeys.INDEX,int,True,None), \
+						]
+	queryResponseData = [ \
+						(configKeys.INDEX, int, False), \
+						(configKeys.ENABLE, int, True), \
+						]
+
+##
+# NBDDC group configuration command.
+#
+class nbg(_commandBase):
+	mnemonic = "NBG"
+	setParameters = [   (configKeys.INDEX, int, False, None), \
+						(configKeys.DDC_GROUP_MEMBER, int, False, 0), \
+						(configKeys.ENABLE, int, False, 0), \
+						]
+	queryParameters = [ (configKeys.INDEX,int,True,None), \
+					    (configKeys.DDC_GROUP_MEMBER,int,True,None), \
+						]
+	queryResponseData = [ \
+						(configKeys.INDEX, int, False), \
+						(configKeys.DDC_GROUP_MEMBER, int, True), \
+						(configKeys.ENABLE, int, True), \
+						]
+
+##
+# NBDDC group enable command.
+#
+class nbge(_commandBase):
+	mnemonic = "NBGE"
+	setParameters = [   (configKeys.INDEX, int, False, None), \
+						(configKeys.ENABLE, int, False, 0), \
+						]
+	queryParameters = [ (configKeys.INDEX,int,True,None), \
+						]
+	queryResponseData = [ \
+						(configKeys.INDEX, int, False), \
+						(configKeys.ENABLE, int, True), \
+						]
 
 	

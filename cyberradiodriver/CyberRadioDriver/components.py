@@ -58,7 +58,8 @@ class _base(log._logger, configKeys.Configurable):
 	transport = None
 	## Callback function that executes commands on the transport
 	callback = None
-	
+	## Index
+	index = None
 	##
 	# Constructs a hardware component object.
 	#
@@ -170,6 +171,8 @@ class _tuner(_base):
 	tpwrCmd = command.tpwr
 	## Tuner filter set/query command.
 	fifCmd = None
+	## Timing adjustment set/query command.
+	tadjCmd = None
 	# OVERRIDE
 	##
 	# The list of valid configuration keywords supported by this
@@ -256,6 +259,17 @@ class _tuner(_base):
 			rspInfo = cmd.getResponseInfo()
 			if rspInfo is not None:
 				self.configuration[configKeys.TUNER_FILTER] = rspInfo.get(configKeys.TUNER_FILTER, None)
+		if self.tadjCmd is not None:
+			cmd = self.tadjCmd(**{ "parent": self, 
+							       configKeys.INDEX: self.index,
+							       "query": True,
+	 						       "verbose": self.verbose, 
+	 						       "logFile": self.logFile })
+			cmd.send( self.callback, )
+			self._addLastCommandErrorInfo(cmd)
+			rspInfo = cmd.getResponseInfo()
+			if rspInfo is not None:
+				self.configuration[configKeys.TUNER_TIMING_ADJ] = rspInfo.get(configKeys.TUNER_TIMING_ADJ, None)
 		pass
 
 	# OVERRIDE
@@ -324,6 +338,19 @@ class _tuner(_base):
 				if ret:
 					self.configuration[configKeys.TUNER_FILTER] = getattr(cmd, configKeys.TUNER_FILTER)
 				pass
+		if configKeys.TUNER_TIMING_ADJ in confDict:
+			if self.tadjCmd is not None:
+				cmd = self.tadjCmd(**{ "parent": self, 
+								       configKeys.INDEX: self.index,
+								       configKeys.TUNER_TIMING_ADJ: confDict.get(configKeys.TUNER_TIMING_ADJ, 0),
+		 						       "verbose": self.verbose, 
+		 						       "logFile": self.logFile })
+				ret &= cmd.send( self.callback, )
+				ret &= cmd.success
+				self._addLastCommandErrorInfo(cmd)
+				if ret:
+					self.configuration[configKeys.TUNER_TIMING_ADJ] = getattr(cmd, configKeys.TUNER_TIMING_ADJ)
+				pass
 		return ret
 
 
@@ -332,6 +359,17 @@ class _tuner(_base):
 #
 class ndr304_tuner(_tuner):
 	_name = "Tuner(NDR304)"
+	fifCmd = command.fif304
+	tadjCmd = command.tadj
+	validConfigurationKeywords = [
+								  configKeys.TUNER_FREQUENCY, 
+								  configKeys.TUNER_ATTENUATION, 
+								  configKeys.TUNER_RF_ATTENUATION,
+								  configKeys.ENABLE, 
+								  configKeys.TUNER_FILTER,
+								  configKeys.TUNER_TIMING_ADJ,
+								  ]
+
 
 ##
 # Tuner component class for the NDR308 (all flavors).
@@ -341,12 +379,14 @@ class ndr308_tuner(_tuner):
 	frqRange = (20e6,6e9)
 	attRange = (0.0,46.0)
 	fifCmd = command.fif
+	tadjCmd = command.tadj
 	validConfigurationKeywords = [
 								  configKeys.TUNER_FREQUENCY, 
 								  configKeys.TUNER_ATTENUATION, 
 								  configKeys.TUNER_RF_ATTENUATION,
 								  configKeys.ENABLE, 
 								  configKeys.TUNER_FILTER,
+								  configKeys.TUNER_TIMING_ADJ,
 								  ]
 
 ##
@@ -384,6 +424,7 @@ class _ddc(_base):
 	## DDC rate set.  This is a dictionary whose keys are rate index numbers and 
 	# whose values are DDC rates. 
 	rateSet = {}
+	bwSet = {}
 	dataFormat = {}
 	## DDC configuration query/set command.
 	cfgCmd = None
@@ -393,6 +434,9 @@ class _ddc(_base):
 	nbssCmd = None
 	## DDC data port (10GigE interface) query/set command.
 	dportCmd = None
+	## DDC demod query/set command.
+	demodCmd = None
+	otherCmdList = []
 	# OVERRIDE
 	##
 	# The list of valid configuration keywords supported by this
@@ -432,11 +476,54 @@ class _ddc(_base):
 	##
 	# Gets the list of available DDC rates.
 	#
-	# \return A list of DDC rates.  
-	def getDdcRates(self):
-		rateKeys = self.rateSet.keys()
+	# \return A list of DDC rates.
+	@classmethod
+	def getDdcRates(cls,index=None):
+		rateKeys = cls.getDdcRateSet(index).keys()
 		rateKeys.sort()
-		return [self.rateSet[k] for k in rateKeys]
+		return [cls.rateSet[k] for k in rateKeys]
+	
+	# EXTENSION
+	##
+	# Gets the list of available DDC rates.
+	#
+	# \return A list of DDC rates.
+	@classmethod
+	def getDdcRateList(cls,index=None):
+		rateDict = cls.getDdcRateSet(index)
+		rateKeys = rateDict.keys()
+		rateKeys.sort()
+		return [rateDict[k] for k in rateKeys]
+	
+	# EXTENSION
+	##
+	# Gets the list of available DDC rates.
+	#
+	# \return A list of DDC rates.
+	@classmethod
+	def getDdcRateSet(cls,index=None):
+		return cls.rateSet
+	
+	# EXTENSION
+	##
+	# Gets the list of available DDC bandwidths.
+	#
+	# \return A list of DDC rates.
+	@classmethod
+	def getDdcBwList(cls,index=None):
+		bwDict = cls.getDdcBwSet(index)
+		rateKeys = bwDict.keys()
+		rateKeys.sort()
+		return [bwDict[k] for k in rateKeys]
+	
+	# EXTENSION
+	##
+	# Gets the list of available DDC bandwidths.
+	#
+	# \return A list of DDC rates.
+	@classmethod
+	def getDdcBwSet(cls,index=None):
+		return cls.bwSet
 	
 	# OVERRIDE
 	##
@@ -592,6 +679,11 @@ class ndr308_wbddc(_wbddc):
 	rateSet = { 0: 51.2e6, \
 				1: 25.6e6, \
 				2: 12.8e6, \
+#				3: 102.4e6, \
+				 }
+	bwSet = { 0: 40e6, \
+				1: 0.8*25.6e6, \
+				2: 0.8*12.8e6, \
 #				3: 102.4e6, \
 				 }
 	dataFormat = { 3:"real" }
@@ -751,6 +843,15 @@ class ndr308_1_nbddc(_nbddc):
 				6: 25e3, \
 				7: 12.5e3, \
 				 }
+	bwSet = { 0: 0.8*1.6e6, \
+				1: 0.8*800e3, \
+				2: 0.8*400e3, \
+				3: 0.8*200e3, \
+				4: 0.8*100e3, \
+				5: 0.8*50e3, \
+				6: 0.8*25e3, \
+				7: 0.8*12.5e3, \
+				 }
 	frqRange = (-25.6e6,25.6e6,)
 	cfgCmd = command.nbddc308
 	frqCmd = None
@@ -865,11 +966,13 @@ class ndr308_nbddc(ndr308_1_nbddc):
 			rspInfo = cmd.getResponseInfo()
 			#self.logIfVerbose("rspInfo =", rspInfo)
 			if rspInfo is not None:
-				for key in [configKeys.ENABLE, 
-						    configKeys.DDC_RATE_INDEX, 
-						    configKeys.DDC_UDP_DESTINATION, 
-						    configKeys.DDC_VITA_ENABLE, 
-						    configKeys.DDC_STREAM_ID]:
+# 				for key in [configKeys.ENABLE, 
+# 						    configKeys.DDC_RATE_INDEX, 
+# 						    configKeys.DDC_UDP_DESTINATION, 
+# 						    configKeys.DDC_VITA_ENABLE, 
+# 						    configKeys.DDC_STREAM_ID]:
+				keys = [i[0] for i in self.cfgCmd.queryResponseData]
+				for key in keys:
 					self.configuration[key] = rspInfo.get(key, None)
 				freq = rspInfo.get(configKeys.DDC_FREQUENCY_OFFSET, 0)
 				self.configuration[configKeys.DDC_FREQUENCY_OFFSET] = None if freq is None else \
@@ -910,7 +1013,13 @@ class ndr308_nbddc(ndr308_1_nbddc):
 	# Sets the component's current configuration.  
 	def _setConfiguration(self, confDict):
 		ret = True
-		keys = [configKeys.ENABLE, 
+		if self.cfgCmd is not None:
+			keys = [ i[0] for i in self.cfgCmd.setParameters ]
+			#print repr(self),"setParameters =",keys
+			#print repr(self),"self.configuration =",self.configuration
+			#print repr(self),"confDict =",confDict
+		else:
+			keys = [configKeys.ENABLE, 
 				configKeys.DDC_RATE_INDEX, 
 				configKeys.DDC_UDP_DESTINATION, 
 				configKeys.DDC_VITA_ENABLE, 
@@ -976,6 +1085,10 @@ class ndr308_nbddc(ndr308_1_nbddc):
 # NBDDC component class for the NDR308-TS.
 class ndr308ts_nbddc(ndr308_nbddc):
 	_name = "NBDDC(NDR308-TS)"
+	# OVERRIDE
+	selectableSource = False
+	# OVERRIDE
+	nbssCmd = None
 	rateSet = { 0: 1.2*1.6e6, \
 				1: 1.2*800e3, \
 				2: 1.2*400e3, \
@@ -1532,5 +1645,235 @@ class ndr651_wbduc(_wbduc):
 	_name = "WBDUC(NDR651)"
 	snapshotLoadCmd = command.lwf
 	snapshotTxCmd = command.txsd
+
+
+#----------------------------------------------------------------------------#
+#--  DDC Group Objects  ---------------------------------------------------#
+
+##
+# Base DDC group component class.
+#
+# A DDC group component object maintains one DDC group on the radio.  
+#
+class ddc_group(_base):
+	_name = "DDCGroup"
+	## Whether this is a wideband DDC group.
+	wideband = True
+	## \brief Group member index base (what number indices start at) 
+	groupMemberIndexBase = 1
+	## \brief Number of potential group members 
+	numGroupMembers = 0
+	## DDC group member assignment command
+	groupMemberCmd = None
+	## DDC group enable command
+	groupEnableCmd = None
+
+	# OVERRIDE
+	##
+	# The list of valid configuration keywords supported by this
+	# object.  Override in derived classes as needed.
+	validConfigurationKeywords = [
+								  configKeys.ENABLE, 
+								  configKeys.DDC_GROUP_MEMBERS,
+								  ]
+	
+	##
+	# Constructs a DDC group component object.
+	#
+	# The constructor uses keyword arguments to configure the class.  It 
+	# consumes the following keyword arguments:
+	# <ul>
+	# <li> "verbose": Verbose mode (Boolean)
+	# <li> "logFile": An open file or file-like object to be used for log output.  
+	#	If not provided, this defaults to standard output. 
+	# <li> "parent": The radio handler object that manages this component object. 
+	# <li> "callback": A method that the component uses to send data over a
+	#   connected transport.
+	# <li> "index": The index number for this component. 
+	# </ul>
+	#
+	# \param args Variable-length list of positional arguments.  Positional
+	#	 arguments are ignored.
+	# \param kwargs Dictionary of keyword arguments for the component
+	#	 object.  Which keyword arguments are valid depends on the 
+	#	 specific component.  Unsupported keyword arguments will be ignored.
+	def __init__(self,*args,**kwargs):
+		_base.__init__(self, *args, **kwargs)
+	
+	# OVERRIDE
+	##
+	# \protected
+	# Queries hardware to determine the object's current configuration.  
+	def _queryConfiguration(self):
+		if self.groupMemberCmd is not None:
+			members = []
+			for memberIndex in xrange(self.groupMemberIndexBase,
+									  self.groupMemberIndexBase + self.numGroupMembers, 1):
+				cmd = self.groupMemberCmd(**{ "parent": self, 
+								       configKeys.INDEX: self.index,
+								       configKeys.DDC_GROUP_MEMBER: memberIndex,
+								       "query": True,
+		 						       "verbose": self.verbose, 
+		 						       "logFile": self.logFile })
+				cmd.send( self.callback, )
+				self._addLastCommandErrorInfo(cmd)
+				rspInfo = cmd.getResponseInfo()
+				if rspInfo is not None:
+					enabled = rspInfo.get(configKeys.ENABLE, False)
+					if enabled:
+						members.append(memberIndex)
+			self.configuration[configKeys.DDC_GROUP_MEMBERS] = members
+		if self.groupEnableCmd is not None:
+			cmd = self.groupEnableCmd(**{ "parent": self, 
+							       configKeys.INDEX: self.index,
+							       "query": True,
+	 						       "verbose": self.verbose, 
+	 						       "logFile": self.logFile })
+			cmd.send( self.callback, )
+			self._addLastCommandErrorInfo(cmd)
+			rspInfo = cmd.getResponseInfo()
+			if rspInfo is not None:
+				self.configuration[configKeys.ENABLE] = rspInfo.get(configKeys.ENABLE, 0)
+		pass
+
+	# OVERRIDE
+	##
+	# \protected
+	# Issues hardware commands to set the object's current configuration.  
+	def _setConfiguration(self, confDict):
+		ret = True
+		if self.groupMemberCmd is not None and \
+		   configKeys.DDC_GROUP_MEMBERS in confDict:
+			if confDict[configKeys.DDC_GROUP_MEMBERS] is None:
+				members = []
+			elif isinstance(confDict[configKeys.DDC_GROUP_MEMBERS], int):
+				members = [confDict[configKeys.DDC_GROUP_MEMBERS]]
+			else:
+				members = confDict[configKeys.DDC_GROUP_MEMBERS]
+			for member in xrange(self.groupMemberIndexBase, 
+								 self.groupMemberIndexBase + self.numGroupMembers):
+				enabled = 1 if member in members else 0
+				cDict = { "parent": self, 
+						  configKeys.INDEX: self.index,
+						  configKeys.DDC_GROUP_MEMBER: member,
+						  configKeys.ENABLE: enabled,
+		 				  "verbose": self.verbose, 
+		 				  "logFile": self.logFile }
+				cmd = self.groupMemberCmd(**cDict)
+				ret &= cmd.send( self.callback, )
+				ret &= cmd.success
+				self._addLastCommandErrorInfo(cmd)
+			if ret:
+				self.configuration[configKeys.DDC_GROUP_MEMBERS] = members
+			pass
+		if configKeys.ENABLE in confDict:
+			if self.groupEnableCmd is not None:
+				cmd = self.groupEnableCmd(**{ "parent": self, 
+								       configKeys.INDEX: self.index,
+								       configKeys.ENABLE: confDict.get(configKeys.ENABLE, 0),
+		 						       "verbose": self.verbose, 
+		 						       "logFile": self.logFile })
+				ret &= cmd.send( self.callback, )
+				ret &= cmd.success
+				self._addLastCommandErrorInfo(cmd)
+				if ret:
+					self.configuration[configKeys.ENABLE] = getattr(cmd, configKeys.ENABLE)
+				pass
+		return ret
+
+
+##
+# WBDDC group component class.
+#
+# A WBDDC group component object maintains one WBDDC group on the radio.  
+#
+class wbddc_group(ddc_group):
+	_name = "WBDDCGroup"
+	## Whether this is a wideband DDC group.
+	wideband = True
+	## DDC group member assignment command
+	groupMemberCmd = command.wbg
+	## DDC group enable command
+	groupEnableCmd = command.wbge
+
+
+##
+# NBDDC group component class.
+#
+# A NBDDC group component object maintains one NBDDC group on the radio.  
+#
+class nbddc_group(ddc_group):
+	_name = "NBDDCGroup"
+	## Whether this is a wideband DDC group.
+	wideband = False
+	## DDC group member assignment command
+	groupMemberCmd = command.nbg
+	## DDC group enable command
+	groupEnableCmd = command.nbge
+	
+
+##
+# WBDDC group component class specific to the NDR304.
+#
+# A WBDDC group component object maintains one WBDDC group on the radio.  
+#
+class ndr304_wbddc_group(wbddc_group):
+	_name = "WBDDCGroup(NDR304)"
+	## \brief Group member index base (what number indices start at) 
+	groupMemberIndexBase = 1
+	## \brief Number of potential group members 
+	numGroupMembers = 6
+
+
+##
+# WBDDC group component class specific to the NDR308.
+#
+# A WBDDC group component object maintains one WBDDC group on the radio.  
+#
+class ndr308_wbddc_group(wbddc_group):
+	_name = "WBDDCGroup(NDR308)"
+	## \brief Group member index base (what number indices start at) 
+	groupMemberIndexBase = 1
+	## \brief Number of potential group members 
+	numGroupMembers = 8
+
+
+##
+# NBDDC group component class specific to the NDR308.
+#
+# A NBDDC group component object maintains one NBDDC group on the radio.  
+#
+class ndr308_nbddc_group(nbddc_group):
+	_name = "NBDDCGroup(NDR308)"
+	## \brief Group member index base (what number indices start at) 
+	groupMemberIndexBase = 1
+	## \brief Number of potential group members 
+	numGroupMembers = 32
+
+
+##
+# WBDDC group component class specific to the NDR651.
+#
+# A WBDDC group component object maintains one WBDDC group on the radio.  
+#
+class ndr651_wbddc_group(wbddc_group):
+	_name = "WBDDCGroup(NDR651)"
+	## \brief Group member index base (what number indices start at) 
+	groupMemberIndexBase = 1
+	## \brief Number of potential group members 
+	numGroupMembers = 2
+
+
+##
+# NBDDC group component class specific to the NDR651.
+#
+# A NBDDC group component object maintains one NBDDC group on the radio.  
+#
+class ndr651_nbddc_group(nbddc_group):
+	_name = "NBDDCGroup(NDR651)"
+	## \brief Group member index base (what number indices start at) 
+	groupMemberIndexBase = 1
+	## \brief Number of potential group members 
+	numGroupMembers = 16
 
 
