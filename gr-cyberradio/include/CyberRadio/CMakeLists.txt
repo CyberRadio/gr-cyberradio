@@ -24,6 +24,8 @@ if(BUILD_SUBGROUP_BASE)
 	install(FILES
 	    api.h
 	    vita_iq_source.h
+	    vita_iq_source_2.h
+	    vita_iq_source_mk3.h
 	    DESTINATION include/CyberRadio
 	)
 endif(BUILD_SUBGROUP_BASE)
@@ -35,7 +37,7 @@ endif(BUILD_SUBGROUP_NDR304)
 if(BUILD_SUBGROUP_NDR651)
 	install(FILES
 	    NDR651_duc_sink.h
+	    NDR651_duc_sink_mk2.h
 	    DESTINATION include/CyberRadio
 	)
 endif(BUILD_SUBGROUP_NDR651)
-

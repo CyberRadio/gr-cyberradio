@@ -648,7 +648,7 @@ class nbddc308(nbddc):
 						(configKeys.DDC_VITA_ENABLE, int, True), \
 						(configKeys.DDC_STREAM_ID, int, True), \
 						]
-						
+
 						
 ##
 # NBDDC source select.

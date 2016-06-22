@@ -23,6 +23,8 @@ if(BUILD_SUBGROUP_BASE)
 		CyberRadio_file_like_object_source.xml
 		CyberRadio_NDR_driver_interface.xml
 		CyberRadio_vita_iq_source.xml
+		CyberRadio_vita_iq_source_2.xml
+		CyberRadio_vita_iq_source_mk3.xml
 		DESTINATION share/gnuradio/grc/blocks
 	)
 endif(BUILD_SUBGROUP_BASE)
@@ -42,6 +44,7 @@ if(BUILD_SUBGROUP_NDR651)
 	install(FILES
 		CyberRadio_NDR651_source.xml
 		CyberRadio_NDR651_duc_sink.xml
+		CyberRadio_NDR651_duc_sink_mk2.xml
 		CyberRadio_NDR651_sink.xml
 		DESTINATION share/gnuradio/grc/blocks
 	)

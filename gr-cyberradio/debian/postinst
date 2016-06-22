@@ -1,0 +1,20 @@
+#!/bin/bash
+#########################################################
+# postinst
+#
+# Post-installation script that is executed after the
+# Debian package is installed
+#
+# Original Author: DA
+# Copyright: (c) 2016 CyberRadio Solutions, Inc.  All rights
+#     reserved.
+#
+#########################################################
+
+# Change directory permissions on /public and /public/ndrDemoGui
+chmod 777 /public /public/ndrDemoGui
+
+# After installing replacement Python code modules, 
+# delete previously compiled *.pyc files in order to force
+# a recompile.
+rm -f $(find /usr/lib/python2.7/dist-packages/CyberRadio -name '*.pyc')

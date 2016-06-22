@@ -207,7 +207,6 @@ DDC_DGC_DECAY_TRIGGER = "ddt"
 ## DDC data port (that is, 10GigE interface number).
 DDC_DATA_PORT = "dataPort"
 
-
 #------ DUC Configuration Keys ----------------------------------------#
 ## DUC index.
 DUC_INDEX = "ducIndex"

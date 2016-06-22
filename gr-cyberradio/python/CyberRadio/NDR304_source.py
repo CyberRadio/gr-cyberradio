@@ -53,6 +53,7 @@ class NDR304_source(gr.hier_block2):
     # \param radio_baud_rate Radio baud rate.
     # \param gig_iface_to_use The name of the Gigabit Ethernet interface 
     #    used by the radio.
+    # \param coherent_mode Coherent mode setting on the radio.
     # \param num_tuners Number of tuners to use.
     # \param tuner1_param_list Tuner 1 parameter list. 
     # \param tuner2_param_list Tuner 2 parameter list.
@@ -73,6 +74,7 @@ class NDR304_source(gr.hier_block2):
                  radio_device_name="/dev/ndr47x", 
                  radio_baud_rate=921600, 
                  gig_iface_to_use="eth0",
+                 coherent_mode=0,
                  num_tuners=1,
                  tuner1_param_list=[False, 900e6, 0],
                  tuner2_param_list=[False, 900e6, 0],
@@ -92,30 +94,35 @@ class NDR304_source(gr.hier_block2):
         gr.hier_block2.__init__(
             self, "[CyberRadio] NDR304 Source",
             gr.io_signature(0, 0, 0),
-            gr.io_signaturev(num_wbddcs + 1, 
-                             num_wbddcs + 1, 
+            gr.io_signaturev((6 if coherent_mode & 0x02 > 0 else num_wbddcs) + 1, 
+                             (6 if coherent_mode & 0x02 > 0 else num_wbddcs) + 1, 
                              [gr.sizeof_char*1] +
-                             num_wbddcs * [gr.sizeof_gr_complex*1]), 
+                             (6 if coherent_mode & 0x02 > 0 else num_wbddcs) * [gr.sizeof_gr_complex*1]), 
         )
         self.verbose_mode = verbose_mode
         self.radio_device_name = radio_device_name
         self.radio_baud_rate = radio_baud_rate
         self.gig_iface_to_use = gig_iface_to_use
+        self.coherent_mode = coherent_mode
+        self.tuners_coherent = (self.coherent_mode & 0x01 > 0)
+        self.ddcs_coherent = (self.coherent_mode & 0x02 > 0)
         self.udp_host_name = CyberRadioDriver.getInterfaceAddresses(self.gig_iface_to_use)[1]
         self.num_tuners = num_tuners
         self.tuner1_param_list = tuner1_param_list
-        self.tuner2_param_list = tuner2_param_list
-        self.tuner3_param_list = tuner3_param_list
-        self.tuner4_param_list = tuner4_param_list
-        self.tuner5_param_list = tuner5_param_list
-        self.tuner6_param_list = tuner6_param_list
+        if not self.tuners_coherent:
+            self.tuner2_param_list = tuner2_param_list
+            self.tuner3_param_list = tuner3_param_list
+            self.tuner4_param_list = tuner4_param_list
+            self.tuner5_param_list = tuner5_param_list
+            self.tuner6_param_list = tuner6_param_list
         self.num_wbddcs = num_wbddcs
         self.wbddc1_param_list = wbddc1_param_list
-        self.wbddc2_param_list = wbddc2_param_list
-        self.wbddc3_param_list = wbddc3_param_list
-        self.wbddc4_param_list = wbddc4_param_list
-        self.wbddc5_param_list = wbddc5_param_list
-        self.wbddc6_param_list = wbddc6_param_list
+        if not self.ddcs_coherent:
+            self.wbddc2_param_list = wbddc2_param_list
+            self.wbddc3_param_list = wbddc3_param_list
+            self.wbddc4_param_list = wbddc4_param_list
+            self.wbddc5_param_list = wbddc5_param_list
+            self.wbddc6_param_list = wbddc6_param_list
         self.tagged = tagged
         self.CyberRadio_file_like_object_source_0 = CyberRadio.file_like_object_source()
         self.connect((self.CyberRadio_file_like_object_source_0, 0), (self, 0))
@@ -132,44 +139,55 @@ class NDR304_source(gr.hier_block2):
         self.vita_header_size = self.CyberRadio_NDR_driver_interface_0.getVitaHeaderSize()
         self.iq_swapped = self.CyberRadio_NDR_driver_interface_0.isIqSwapped()
         self.byte_swapped = self.CyberRadio_NDR_driver_interface_0.isByteswapped()
+        self._set_coherent_mode(self.coherent_mode)
         self._set_udp_dest_info()
         if self.num_tuners >= 1:
             self._set_tuner_param_list(1, tuner1_param_list)
-        if self.num_tuners >= 2:
-            self._set_tuner_param_list(2, tuner2_param_list)
-        if self.num_tuners >= 3:
-            self._set_tuner_param_list(3, tuner3_param_list)
-        if self.num_tuners >= 4:
-            self._set_tuner_param_list(4, tuner4_param_list)
-        if self.num_tuners >= 5:
-            self._set_tuner_param_list(5, tuner5_param_list)
-        if self.num_tuners >= 6:
-            self._set_tuner_param_list(6, tuner6_param_list)
+        if not self.tuners_coherent:
+            if self.num_tuners >= 2:
+                self._set_tuner_param_list(2, tuner2_param_list)
+            if self.num_tuners >= 3:
+                self._set_tuner_param_list(3, tuner3_param_list)
+            if self.num_tuners >= 4:
+                self._set_tuner_param_list(4, tuner4_param_list)
+            if self.num_tuners >= 5:
+                self._set_tuner_param_list(5, tuner5_param_list)
+            if self.num_tuners >= 6:
+                self._set_tuner_param_list(6, tuner6_param_list)
         self.wbddc_sources = {}
         if self.num_wbddcs >= 1:
             self.CyberRadio_vita_iq_source_wbddc_1 = self._get_configured_wbddc(1, wbddc1_param_list)
-            self.connect((self.CyberRadio_vita_iq_source_wbddc_1, 0), (self, 1))
+            if self.ddcs_coherent:
+                self.connect((self.CyberRadio_vita_iq_source_wbddc_1, 0), (self, 1))
+                self.connect((self.CyberRadio_vita_iq_source_wbddc_1, 1), (self, 2))
+                self.connect((self.CyberRadio_vita_iq_source_wbddc_1, 2), (self, 3))
+                self.connect((self.CyberRadio_vita_iq_source_wbddc_1, 3), (self, 4))
+                self.connect((self.CyberRadio_vita_iq_source_wbddc_1, 4), (self, 5))
+                self.connect((self.CyberRadio_vita_iq_source_wbddc_1, 5), (self, 6))
+            else:
+                self.connect((self.CyberRadio_vita_iq_source_wbddc_1, 0), (self, 1))
             self.wbddc_sources[1] = self.CyberRadio_vita_iq_source_wbddc_1
-        if self.num_wbddcs >= 2:
-            self.CyberRadio_vita_iq_source_wbddc_2 = self._get_configured_wbddc(2, wbddc2_param_list)
-            self.connect((self.CyberRadio_vita_iq_source_wbddc_2, 0), (self, 2))
-            self.wbddc_sources[2] = self.CyberRadio_vita_iq_source_wbddc_2
-        if self.num_wbddcs >= 3:
-            self.CyberRadio_vita_iq_source_wbddc_3 = self._get_configured_wbddc(3, wbddc3_param_list)
-            self.connect((self.CyberRadio_vita_iq_source_wbddc_3, 0), (self, 3))
-            self.wbddc_sources[3] = self.CyberRadio_vita_iq_source_wbddc_3
-        if self.num_wbddcs >= 4:
-            self.CyberRadio_vita_iq_source_wbddc_4 = self._get_configured_wbddc(4, wbddc4_param_list)
-            self.connect((self.CyberRadio_vita_iq_source_wbddc_4, 0), (self, 4))
-            self.wbddc_sources[4] = self.CyberRadio_vita_iq_source_wbddc_4
-        if self.num_wbddcs >= 5:
-            self.CyberRadio_vita_iq_source_wbddc_5 = self._get_configured_wbddc(5, wbddc5_param_list)
-            self.connect((self.CyberRadio_vita_iq_source_wbddc_5, 0), (self, 5))
-            self.wbddc_sources[5] = self.CyberRadio_vita_iq_source_wbddc_5
-        if self.num_wbddcs >= 6:
-            self.CyberRadio_vita_iq_source_wbddc_6 = self._get_configured_wbddc(6, wbddc6_param_list)
-            self.connect((self.CyberRadio_vita_iq_source_wbddc_6, 0), (self, 6))
-            self.wbddc_sources[6] = self.CyberRadio_vita_iq_source_wbddc_6
+        if not self.ddcs_coherent:
+            if self.num_wbddcs >= 2:
+                self.CyberRadio_vita_iq_source_wbddc_2 = self._get_configured_wbddc(2, wbddc2_param_list)
+                self.connect((self.CyberRadio_vita_iq_source_wbddc_2, 0), (self, 2))
+                self.wbddc_sources[2] = self.CyberRadio_vita_iq_source_wbddc_2
+            if self.num_wbddcs >= 3:
+                self.CyberRadio_vita_iq_source_wbddc_3 = self._get_configured_wbddc(3, wbddc3_param_list)
+                self.connect((self.CyberRadio_vita_iq_source_wbddc_3, 0), (self, 3))
+                self.wbddc_sources[3] = self.CyberRadio_vita_iq_source_wbddc_3
+            if self.num_wbddcs >= 4:
+                self.CyberRadio_vita_iq_source_wbddc_4 = self._get_configured_wbddc(4, wbddc4_param_list)
+                self.connect((self.CyberRadio_vita_iq_source_wbddc_4, 0), (self, 4))
+                self.wbddc_sources[4] = self.CyberRadio_vita_iq_source_wbddc_4
+            if self.num_wbddcs >= 5:
+                self.CyberRadio_vita_iq_source_wbddc_5 = self._get_configured_wbddc(5, wbddc5_param_list)
+                self.connect((self.CyberRadio_vita_iq_source_wbddc_5, 0), (self, 5))
+                self.wbddc_sources[5] = self.CyberRadio_vita_iq_source_wbddc_5
+            if self.num_wbddcs >= 6:
+                self.CyberRadio_vita_iq_source_wbddc_6 = self._get_configured_wbddc(6, wbddc6_param_list)
+                self.connect((self.CyberRadio_vita_iq_source_wbddc_6, 0), (self, 6))
+                self.wbddc_sources[6] = self.CyberRadio_vita_iq_source_wbddc_6
 
 
 # QT sink close method reimplementation
@@ -199,6 +217,12 @@ class NDR304_source(gr.hier_block2):
         return self.gig_iface_to_use
 
     ##
+    # \brief Gets the coherent mode setting.
+    # \return The coherent mode setting.
+    def get_coherent_mode(self):
+        return self.coherent_mode
+
+    ##
     # \brief Gets the number of tuners in use.
     # \return The the number of tuners in use.
     def get_num_tuners(self):
@@ -221,78 +245,98 @@ class NDR304_source(gr.hier_block2):
 
     ##
     # \brief Gets the parameter list for Tuner 2.
+    # \note This method returns the Tuner 1 parameter list if the radio 
+    #    is in tuner-coherent mode.
     # \return The tuner parameter list.  See the class documentation for 
     #    the meaning of the values returned in the list.
     def get_tuner2_param_list(self):
-        return self.tuner2_param_list
+        return self.tuner2_param_list if not self.tuners_coherent else self.tuner1_param_list
 
     ##
     # \brief Sets the parameter list for Tuner 2.
+    # \note This method does nothing if the radio is in tuner-coherent mode.
     # \param param_list The tuner parameter list.  See the class 
     #    documentation for the values to be provided in the list.
     def set_tuner2_param_list(self, param_list):
-        self.tuner2_param_list = param_list
-        self._set_tuner_param_list(2, param_list)
+        if not self.tuners_coherent:
+            self.tuner2_param_list = param_list
+            self._set_tuner_param_list(2, param_list)
 
     ##
     # \brief Gets the parameter list for Tuner 3.
+    # \note This method returns the Tuner 1 parameter list if the radio 
+    #    is in tuner-coherent mode.
     # \return The tuner parameter list.  See the class documentation for 
     #    the meaning of the values returned in the list.
     def get_tuner3_param_list(self):
-        return self.tuner3_param_list
+        return self.tuner3_param_list if not self.tuners_coherent else self.tuner1_param_list
 
     ##
     # \brief Sets the parameter list for Tuner 3.
+    # \note This method does nothing if the radio is in tuner-coherent mode.
     # \param param_list The tuner parameter list.  See the class 
     #    documentation for the values to be provided in the list.
     def set_tuner3_param_list(self, param_list):
-        self.tuner3_param_list = param_list
-        self._set_tuner_param_list(3, param_list)
+        if not self.tuners_coherent:
+            self.tuner3_param_list = param_list
+            self._set_tuner_param_list(3, param_list)
 
     ##
     # \brief Gets the parameter list for Tuner 4.
+    # \note This method returns the Tuner 1 parameter list if the radio 
+    #    is in tuner-coherent mode.
     # \return The tuner parameter list.  See the class documentation for 
     #    the meaning of the values returned in the list.
     def get_tuner4_param_list(self):
-        return self.tuner4_param_list
+        return self.tuner4_param_list if not self.tuners_coherent else self.tuner1_param_list
 
     ##
     # \brief Sets the parameter list for Tuner 4.
+    # \note This method does nothing if the radio is in tuner-coherent mode.
     # \param param_list The tuner parameter list.  See the class 
     #    documentation for the values to be provided in the list.
     def set_tuner4_param_list(self, param_list):
-        self.tuner4_param_list = param_list
-        self._set_tuner_param_list(4, param_list)
+        if not self.tuners_coherent:
+            self.tuner4_param_list = param_list
+            self._set_tuner_param_list(4, param_list)
 
     ##
     # \brief Gets the parameter list for Tuner 5.
+    # \note This method returns the Tuner 1 parameter list if the radio 
+    #    is in tuner-coherent mode.
     # \return The tuner parameter list.  See the class documentation for 
     #    the meaning of the values returned in the list.
     def get_tuner5_param_list(self):
-        return self.tuner5_param_list
+        return self.tuner5_param_list if not self.tuners_coherent else self.tuner1_param_list
 
     ##
     # \brief Sets the parameter list for Tuner 5.
+    # \note This method does nothing if the radio is in tuner-coherent mode.
     # \param param_list The tuner parameter list.  See the class 
     #    documentation for the values to be provided in the list.
     def set_tuner5_param_list(self, param_list):
-        self.tuner5_param_list = param_list
-        self._set_tuner_param_list(5, param_list)
+        if not self.tuners_coherent:
+            self.tuner5_param_list = param_list
+            self._set_tuner_param_list(5, param_list)
 
     ##
     # \brief Gets the parameter list for Tuner 6.
+    # \note This method returns the Tuner 1 parameter list if the radio 
+    #    is in tuner-coherent mode.
     # \return The tuner parameter list.  See the class documentation for 
     #    the meaning of the values returned in the list.
     def get_tuner6_param_list(self):
-        return self.tuner6_param_list
+        return self.tuner6_param_list if not self.tuners_coherent else self.tuner1_param_list
 
     ##
     # \brief Sets the parameter list for Tuner 6.
+    # \note This method does nothing if the radio is in tuner-coherent mode.
     # \param param_list The tuner parameter list.  See the class 
     #    documentation for the values to be provided in the list.
     def set_tuner6_param_list(self, param_list):
-        self.tuner6_param_list = param_list
-        self._set_tuner_param_list(6, param_list)
+        if not self.tuners_coherent:
+            self.tuner6_param_list = param_list
+            self._set_tuner_param_list(6, param_list)
 
     ##
     # \brief Gets the number of WBDDCs in use.
@@ -318,83 +362,103 @@ class NDR304_source(gr.hier_block2):
 
     ##
     # \brief Gets the parameter list for WBDDC 2.
+    # \note This method returns the WBDDC 1 parameter list if the radio 
+    #    is in DDC-coherent mode.
     # \return The WBDDC parameter list.  See the class documentation for 
     #    the meaning of the values returned in the list.
     def get_wbddc2_param_list(self):
-        return self.wbddc2_param_list
+        return self.wbddc2_param_list if not self.ddcs_coherent else self.wbddc1_param_list
 
     ##
     # \brief Sets the parameter list for WBDDC 2.
     # \note UDP port and VITA type cannot be changed at run-time.
+    # \note This method does nothing if the radio is in DDC-coherent mode.
     # \param param_list The WBDDC parameter list.  See the class 
     #    documentation for the values to be provided in the list.
     def set_wbddc2_param_list(self, param_list):
-        self.wbddc2_param_list = param_list
-        self._set_wbddc_param_list(2, param_list)
+        if not self.ddcs_coherent:
+            self.wbddc2_param_list = param_list
+            self._set_wbddc_param_list(2, param_list)
 
     ##
     # \brief Gets the parameter list for WBDDC 3.
+    # \note This method returns the WBDDC 1 parameter list if the radio 
+    #    is in DDC-coherent mode.
     # \return The WBDDC parameter list.  See the class documentation for 
     #    the meaning of the values returned in the list.
     def get_wbddc3_param_list(self):
-        return self.wbddc3_param_list
+        return self.wbddc3_param_list if not self.ddcs_coherent else self.wbddc1_param_list
 
     ##
     # \brief Sets the parameter list for WBDDC 3.
     # \note UDP port and VITA type cannot be changed at run-time.
+    # \note This method does nothing if the radio is in DDC-coherent mode.
     # \param param_list The WBDDC parameter list.  See the class 
     #    documentation for the values to be provided in the list.
     def set_wbddc3_param_list(self, param_list):
-        self.wbddc3_param_list = param_list
-        self._set_wbddc_param_list(3, param_list)
+        if not self.ddcs_coherent:
+            self.wbddc3_param_list = param_list
+            self._set_wbddc_param_list(3, param_list)
 
     ##
     # \brief Gets the parameter list for WBDDC 4.
+    # \note This method returns the WBDDC 1 parameter list if the radio 
+    #    is in DDC-coherent mode.
     # \return The WBDDC parameter list.  See the class documentation for 
     #    the meaning of the values returned in the list.
     def get_wbddc4_param_list(self):
-        return self.wbddc4_param_list
+        return self.wbddc4_param_list if not self.ddcs_coherent else self.wbddc1_param_list
 
     ##
     # \brief Sets the parameter list for WBDDC 4.
     # \note UDP port and VITA type cannot be changed at run-time.
+    # \note This method does nothing if the radio is in DDC-coherent mode.
     # \param param_list The WBDDC parameter list.  See the class 
     #    documentation for the values to be provided in the list.
     def set_wbddc4_param_list(self, param_list):
-        self.wbddc4_param_list = param_list
-        self._set_wbddc_param_list(4, param_list)
+        if not self.ddcs_coherent:
+            self.wbddc4_param_list = param_list
+            self._set_wbddc_param_list(4, param_list)
 
     ##
     # \brief Gets the parameter list for WBDDC 5.
+    # \note This method returns the WBDDC 1 parameter list if the radio 
+    #    is in DDC-coherent mode.
     # \return The WBDDC parameter list.  See the class documentation for 
     #    the meaning of the values returned in the list.
     def get_wbddc5_param_list(self):
-        return self.wbddc5_param_list
+        return self.wbddc5_param_list if not self.ddcs_coherent else self.wbddc1_param_list
 
     ##
     # \brief Sets the parameter list for WBDDC 5.
     # \note UDP port and VITA type cannot be changed at run-time.
+    # \note This method does nothing if the radio is in DDC-coherent mode.
     # \param param_list The WBDDC parameter list.  See the class 
     #    documentation for the values to be provided in the list.
     def set_wbddc5_param_list(self, param_list):
-        self.wbddc5_param_list = param_list
-        self._set_wbddc_param_list(5, param_list)
+        if not self.ddcs_coherent:
+            self.wbddc5_param_list = param_list
+            self._set_wbddc_param_list(5, param_list)
 
     ##
     # \brief Gets the parameter list for WBDDC 6.
+    # \note This method returns the WBDDC 1 parameter list if the radio 
+    #    is in DDC-coherent mode.
     # \return The WBDDC parameter list.  See the class documentation for 
     #    the meaning of the values returned in the list.
     def get_wbddc6_param_list(self):
-        return self.wbddc6_param_list
+        return self.wbddc6_param_list if not self.ddcs_coherent else self.wbddc1_param_list
 
     ##
     # \brief Sets the parameter list for WBDDC 6.
     # \note UDP port and VITA type cannot be changed at run-time.
+    # \note This method does nothing if the radio is in DDC-coherent mode.
     # \param param_list The WBDDC parameter list.  See the class 
     #    documentation for the values to be provided in the list.
     def set_wbddc6_param_list(self, param_list):
-        self.wbddc6_param_list = param_list
-        self._set_wbddc_param_list(6, param_list)
+        if not self.ddcs_coherent:
+            self.wbddc6_param_list = param_list
+            self._set_wbddc_param_list(6, param_list)
 
     ##
     # \brief Gets the nominal (expected) sample rate for a given WBDDC.
@@ -432,6 +496,9 @@ class NDR304_source(gr.hier_block2):
         self.CyberRadio_NDR_driver_interface_0.setConfiguration(configDict)
         #self.CyberRadio_file_like_object_source_0.write("Completed UDP Destination Info Config\n")
         
+    def _set_coherent_mode(self, coherent_mode):
+        self.CyberRadio_NDR_driver_interface_0.sendCommand("COH %d\n" % coherent_mode)
+    
     def _set_tuner_param_list(self, tuner_index, tuner_param_list):
         configDict = {
           "tunerConfiguration": {
@@ -472,7 +539,7 @@ class NDR304_source(gr.hier_block2):
     
     def _get_configured_wbddc(self, wbddc_index, wbddc_param_list):
         self._set_wbddc_param_list(wbddc_index, wbddc_param_list, atinit=True)
-        return CyberRadio.vita_iq_source(
+        return CyberRadio.vita_iq_source_mk3(
             vita_type=wbddc_param_list[1],
             payload_size=self.vita_payload_size,
             vita_header_size=self.vita_header_size,
@@ -481,9 +548,11 @@ class NDR304_source(gr.hier_block2):
             iq_swapped=self.iq_swapped,
             iq_scale_factor=2**-15,
             host=self.udp_host_name,
-            port_list=[wbddc_param_list[0]],
-            debug=False,
+            port=wbddc_param_list[0],
+            ddc_coherent=self.ddcs_coherent,
+            num_outputs=self.CyberRadio_NDR_driver_interface_0.getNumTuner() if self.ddcs_coherent else 1,
             tagged=self.tagged,
+            debug=False,
         )
     
     def _merge_dicts(self, a, b):

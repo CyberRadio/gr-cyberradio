@@ -19,6 +19,7 @@
     radio_device_name=$radio_device_name,
     radio_baud_rate=$radio_baud_rate,
     gig_iface_to_use=$gig_iface_to_use,
+    coherent_mode=$coherent_mode,
     num_tuners=$num_tuners,
     tuner1_param_list=$tuner1_param_list,
 #if $num_tuners() >= 2
@@ -93,6 +94,29 @@
     <hide>none</hide>
   </param>
   <param>
+    <name>Coherent Mode</name>
+    <key>coherent_mode</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>none</hide>
+    <option>
+       <name>0 (None)</name>
+       <key>0</key>
+    </option>
+    <option>
+       <name>1 (Tuners only)</name>
+       <key>1</key>
+    </option>
+    <option>
+       <name>2 (DDCs only)</name>
+       <key>2</key>
+    </option>
+    <option>
+       <name>3 (Tuners &amp; DDCs)</name>
+       <key>3</key>
+    </option>
+  </param>
+  <param>
     <name>Number of Tuners</name>
     <key>num_tuners</key>
     <value>1</value>
@@ -125,44 +149,44 @@
   <param>
     <name>Tuner 1 Parameter List</name>
     <key>tuner1_param_list</key>
-    <value>[False, 900e6, 0]</value>
+    <value>[True, 900e6, 0]</value>
     <type>raw</type>
 	<hide>#if $num_tuners() >= 1 then 'part' else 'all'#</hide>
   </param>
   <param>
     <name>Tuner 2 Parameter List</name>
     <key>tuner2_param_list</key>
-    <value>[False, 900e6, 0]</value>
+    <value>[True, 900e6, 0]</value>
     <type>raw</type>
-	<hide>#if $num_tuners() >= 2 then 'part' else 'all'#</hide>
+	<hide>#if $coherent_mode() in [0,2] and $num_tuners() >= 2 then 'part' else 'all'#</hide>
   </param>
   <param>
     <name>Tuner 3 Parameter List</name>
     <key>tuner3_param_list</key>
-    <value>[False, 900e6, 0]</value>
+    <value>[True, 900e6, 0]</value>
     <type>raw</type>
-	<hide>#if $num_tuners() >= 3 then 'part' else 'all'#</hide>
+	<hide>#if $coherent_mode() in [0,2] and $num_tuners() >= 3 then 'part' else 'all'#</hide>
   </param>
   <param>
     <name>Tuner 4 Parameter List</name>
     <key>tuner4_param_list</key>
-    <value>[False, 900e6, 0]</value>
+    <value>[True, 900e6, 0]</value>
     <type>raw</type>
-	<hide>#if $num_tuners() >= 4 then 'part' else 'all'#</hide>
+	<hide>#if $coherent_mode() in [0,2] and $num_tuners() >= 4 then 'part' else 'all'#</hide>
   </param>
   <param>
     <name>Tuner 5 Parameter List</name>
     <key>tuner5_param_list</key>
-    <value>[False, 900e6, 0]</value>
+    <value>[True, 900e6, 0]</value>
     <type>raw</type>
-	<hide>#if $num_tuners() >= 5 then 'part' else 'all'#</hide>
+	<hide>#if $coherent_mode() in [0,2] and $num_tuners() >= 5 then 'part' else 'all'#</hide>
   </param>
   <param>
     <name>Tuner 6 Parameter List</name>
     <key>tuner6_param_list</key>
-    <value>[False, 900e6, 0]</value>
+    <value>[True, 900e6, 0]</value>
     <type>raw</type>
-	<hide>#if $num_tuners() >= 6 then 'part' else 'all'#</hide>
+	<hide>#if $coherent_mode() in [0,2] and $num_tuners() >= 6 then 'part' else 'all'#</hide>
   </param>
   <param>
     <name>Number of WBDDCs</name>
@@ -197,44 +221,44 @@
   <param>
     <name>WBDDC 1 Parameter List</name>
     <key>wbddc1_param_list</key>
-    <value>[40001, 0, 0, False, 0e6]</value>
+    <value>[40001, 0, 0, True, 0e6]</value>
     <type>raw</type>
 	<hide>#if $num_wbddcs() >= 1 then 'part' else 'all'#</hide>
   </param>
   <param>
     <name>WBDDC 2 Parameter List</name>
     <key>wbddc2_param_list</key>
-    <value>[40002, 0, 0, False, 0e6]</value>
+    <value>[40002, 0, 0, True, 0e6]</value>
     <type>raw</type>
-	<hide>#if $num_wbddcs() >= 2 then 'part' else 'all'#</hide>
+	<hide>#if $coherent_mode() in [0,1] and $num_wbddcs() >= 2 then 'part' else 'all'#</hide>
   </param>
   <param>
     <name>WBDDC 3 Parameter List</name>
     <key>wbddc3_param_list</key>
-    <value>[40003, 0, 0, False, 0e6]</value>
+    <value>[40003, 0, 0, True, 0e6]</value>
     <type>raw</type>
-	<hide>#if $num_wbddcs() >= 3 then 'part' else 'all'#</hide>
+	<hide>#if $coherent_mode() in [0,1] and $num_wbddcs() >= 3 then 'part' else 'all'#</hide>
   </param>
   <param>
     <name>WBDDC 4 Parameter List</name>
     <key>wbddc4_param_list</key>
-    <value>[40004, 0, 0, False, 0e6]</value>
+    <value>[40004, 0, 0, True, 0e6]</value>
     <type>raw</type>
-	<hide>#if $num_wbddcs() >= 4 then 'part' else 'all'#</hide>
+	<hide>#if $coherent_mode() in [0,1] and $num_wbddcs() >= 4 then 'part' else 'all'#</hide>
   </param>
   <param>
     <name>WBDDC 5 Parameter List</name>
     <key>wbddc5_param_list</key>
-    <value>[40005, 0, 0, False, 0e6]</value>
+    <value>[40005, 0, 0, True, 0e6]</value>
     <type>raw</type>
-	<hide>#if $num_wbddcs() >= 5 then 'part' else 'all'#</hide>
+	<hide>#if $coherent_mode() in [0,1] and $num_wbddcs() >= 5 then 'part' else 'all'#</hide>
   </param>
   <param>
     <name>WBDDC 6 Parameter List</name>
     <key>wbddc6_param_list</key>
-    <value>[40006, 0, 0, False, 0e6]</value>
+    <value>[40006, 0, 0, True, 0e6]</value>
     <type>raw</type>
-	<hide>#if $num_wbddcs() >= 6 then 'part' else 'all'#</hide>
+	<hide>#if $coherent_mode() in [0,1] and $num_wbddcs() >= 6 then 'part' else 'all'#</hide>
   </param>
   <param>
     <name>Tagged Output Streams</name>
@@ -252,8 +276,8 @@
     <name>wbddc</name>
     <type>complex</type>
     <vlen>1</vlen>
-	<nports>$num_wbddcs()</nports>
-    <optional>1</optional>
+	<nports>#if $coherent_mode() in [2,3] then 6 else $num_wbddcs#</nports>
+    <optional>#if $coherent_mode() in [2,3] then 0 else 1#</optional>
   </source>
   <doc>
 I/Q data source block using the NDR304 radio.

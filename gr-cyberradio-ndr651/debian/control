@@ -8,14 +8,14 @@ Source: DEB_PKG_NAME
 Section: devel
 Priority: extra
 Maintainer: CyberRadio Solutions, Inc. <sales@cyberradiosolutions.com>
-Build-Depends: debhelper (>= 8.0.0), python (>= 2.6.6.3~)
+Build-Depends: debhelper (>= 8.0.0), python (>= 2.6.6.3~), libcyberradio
 Standards-Version: 3.9.2
 Homepage: http://www.cyberradiosolutions.com
 X-Python-Version: >= 2.6
 
 Package: DEB_PKG_NAME
 Architecture: any
-Depends: python-cyberradiodriver, gr-cyberradio-base
+Depends: python-cyberradiodriver, python-netifaces, libcyberradio, gr-cyberradio-base
 Breaks: gr-cyberradio
 Description: CRS Radio Control Blocks for GNU Radio (NDR651 Blocks)
  This package provides blocks for controlling the CyberRadio Solutions, Inc. 

@@ -17,7 +17,7 @@
 # -v [TAG],--version=[TAG]             Use version tag [TAG] rather than 
 #                                      tagging with the default (either
 #                                      today's date or the version number
-#                                      from a setup.py file)
+#                                      from a setup.py/configure.ac file)
 # -p [PACKAGE],--package=[PACKAGE]     Use PACKAGE as the package name 
 #                                      instead of basing the package name 
 #                                      off of the source folder name
@@ -39,7 +39,7 @@ print_usage()
 	echo "-v [TAG],--version=[TAG]             Use version tag [TAG] rather than "
 	echo "                                     tagging with the default (either "
 	echo "                                     today's date or the version number "
-	echo "                                     from a setup.py file)"
+	echo "                                     from a setup.py/configure.ac file)"
 	echo "-p [PACKAGE],--package=[PACKAGE]     Use PACKAGE as the package name "
 	echo "                                     instead of basing the package name "
 	echo "                                     off of the source folder name"
@@ -145,6 +145,22 @@ then
 	if [ -z ${DEB_PKG_NAME} ]
 	then
 		DEB_PKG_NAME=python-${ZZZ[0]}
+	fi
+	if [ -z ${DEB_PKG_VERSION} ]
+	then
+		DEB_PKG_VERSION=${ZZZ[1]}
+	fi
+fi
+# Or, if the source folder contains a configure.ac file, use the
+# package name and package version number provided by the AC_INIT line
+# in the setup.py file, if the user didn't override them on the command 
+# line
+if [ -e ${SRC_FOLDER_NAME}/configure.ac ]
+then
+	eval ZZZ=($(grep '^AC_INIT' ${SRC_FOLDER_NAME}/configure.ac | sed -e 's/AC_INIT(//g' -e 's/)//g' -e 's/,//g'))
+	if [ -z ${DEB_PKG_NAME} ]
+	then
+		DEB_PKG_NAME=${ZZZ[0]}
 	fi
 	if [ -z ${DEB_PKG_VERSION} ]
 	then

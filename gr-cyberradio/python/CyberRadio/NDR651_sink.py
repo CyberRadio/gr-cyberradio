@@ -419,7 +419,7 @@ class NDR651_sink(gr.hier_block2):
         if (duc_tx_channels & 2) == 2:
             duc_tx_frequency = self.transmitter_param_lists[2][TX_PARAM_FREQ]
             duc_tx_attenuation = self.transmitter_param_lists[2][TX_PARAM_ATTEN]
-        return CyberRadio.NDR651_duc_sink(
+        return CyberRadio.NDR651_duc_sink_mk2(
             radio_host_name=self.radio_host_name, 
             radio_tcp_port=self.radio_host_port, 
             tengig_iface_list=self.tengig_iface_list,

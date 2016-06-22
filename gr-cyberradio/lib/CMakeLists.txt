@@ -28,6 +28,8 @@ link_directories(${Boost_LIBRARY_DIRS})
 if(BUILD_SUBGROUP_BASE)
 	list(APPEND CyberRadio_sources
 	    vita_iq_source_impl.cpp
+	    vita_iq_source_2_impl.cpp
+	    vita_iq_source_mk3_impl.cpp
 	    CyberRadio/Vita49Packet.cpp
 	)
 	set(CyberRadio_lib_name gnuradio-CyberRadio-base)
@@ -35,6 +37,7 @@ endif(BUILD_SUBGROUP_BASE)
 if(BUILD_SUBGROUP_NDR651)
 	list(APPEND CyberRadio_sources
 	    NDR651_duc_sink_impl.cpp
+	    NDR651_duc_sink_mk2_impl.cpp
 	    CyberRadio/Pythonesque.cpp
 	    CyberRadio/Thread.cpp
 	    CyberRadio/NDR651/ClientSocket.cpp
@@ -56,7 +59,12 @@ if(NOT CyberRadio_sources)
 endif(NOT CyberRadio_sources)
 
 add_library(${CyberRadio_lib_name} SHARED ${CyberRadio_sources})
-target_link_libraries(${CyberRadio_lib_name} ${Boost_LIBRARIES} ${GNURADIO_ALL_LIBRARIES})
+# This call needs to add in libcyberradio 
+target_link_libraries(${CyberRadio_lib_name} 
+                      cyberradio 
+                      ${Boost_LIBRARIES} 
+                      ${GNURADIO_ALL_LIBRARIES}
+                      )
 set_target_properties(${CyberRadio_lib_name} PROPERTIES DEFINE_SYMBOL "gnuradio_CyberRadio_EXPORTS")
 
 if(APPLE)

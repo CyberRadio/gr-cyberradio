@@ -1313,7 +1313,7 @@ class NDR308_source(gr.hier_block2):
     def _get_configured_wbddc(self, wbddc_index, wbddc_param_list):
         self._set_wbddc_param_list(wbddc_index, wbddc_param_list, atinit=True)
         if wbddc_param_list[DDC_PARAM_IFACE] in self.tengig_iface_info:
-            return CyberRadio.vita_iq_source(
+            return CyberRadio.vita_iq_source_mk3(
                 vita_type=wbddc_param_list[DDC_PARAM_VITA],
                 payload_size=self.vita_payload_size,
                 vita_header_size=self.vita_header_size,
@@ -1322,9 +1322,11 @@ class NDR308_source(gr.hier_block2):
                 iq_swapped=self.iq_swapped,
                 iq_scale_factor=2**-15,
                 host=self.tengig_iface_info[wbddc_param_list[DDC_PARAM_IFACE]]["destIP"],
-                port_list=[wbddc_param_list[DDC_PARAM_STREAM]],
-                debug=self.debug,
+                port=wbddc_param_list[0],
+                ddc_coherent=False,
+                num_outputs=1,
                 tagged=self.tagged,
+                debug=False,
             )
         else:
             self.logger.error("WBDDC %d: Interface \"%s\" not found in interface list.  DDC not configured." % (wbddc_index, str(wbddc_param_list[DDC_PARAM_IFACE])))
@@ -1333,7 +1335,7 @@ class NDR308_source(gr.hier_block2):
     def _get_configured_nbddc(self, nbddc_index, nbddc_param_list):
         self._set_nbddc_param_list(nbddc_index, nbddc_param_list, atinit=True)
         if nbddc_param_list[DDC_PARAM_IFACE] in self.tengig_iface_info:
-            return CyberRadio.vita_iq_source(
+            return CyberRadio.vita_iq_source_mk3(
                 vita_type=nbddc_param_list[DDC_PARAM_VITA],
                 payload_size=self.vita_payload_size,
                 vita_header_size=self.vita_header_size,
@@ -1342,9 +1344,11 @@ class NDR308_source(gr.hier_block2):
                 iq_swapped=self.iq_swapped,
                 iq_scale_factor=2**-15,
                 host=self.tengig_iface_info[nbddc_param_list[DDC_PARAM_IFACE]]["destIP"],
-                port_list=[nbddc_param_list[DDC_PARAM_STREAM]],
-                debug=self.debug,
+                port=nbddc_param_list[0],
+                ddc_coherent=False,
+                num_outputs=1,
                 tagged=self.tagged,
+                debug=False,
             )
         else:
             self.logger.error("NBDDC %d: Interface \"%s\" not found in interface list.  DDC not configured." % (nbddc_index, str(nbddc_param_list[DDC_PARAM_IFACE])))

@@ -1,0 +1,153 @@
+<?xml version='1.0' encoding='ASCII'?>
+<!--
+###################################################
+# [CyberRadio] VITA I/Q Source Mk3
+#
+# Author: DA
+#
+# Copyright: (c) 2015 CyberRadio Solutions, Inc.
+#    All rights reserved.
+###################################################
+ -->
+<block>
+  <name>[CyberRadio] VITA I/Q Source Mk3</name>
+  <key>CyberRadio_vita_iq_source_mk3</key>
+  <category>CyberRadio/Base</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.vita_iq_source_mk3(
+    vita_type=$vita_type,
+    payload_size=$payload_size,
+    vita_header_size=$vita_header_size,
+    vita_tail_size=$vita_tail_size,
+    byte_swapped=$byte_swapped,
+    iq_swapped=$iq_swapped,
+    iq_scale_factor=$iq_scale_factor,
+    host=$host,
+    port=$port,
+    ddc_coherent=$ddc_coherent,
+    num_outputs=$num_outputs,
+    tagged=$tagged,
+    debug=$debug,
+)</make>
+  <param>
+    <name>VITA Type</name>
+    <key>vita_type</key>
+    <value>0</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Payload Size</name>
+    <key>payload_size</key>
+    <value>8192</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>VITA Header Size</name>
+    <key>vita_header_size</key>
+    <value>0</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>VITA Tail Size</name>
+    <key>vita_tail_size</key>
+    <value>0</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Byte-Swapped</name>
+    <key>byte_swapped</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+  <param>
+    <name>I/Q Swapped</name>
+    <key>iq_swapped</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+  <param>
+    <name>I/Q Scale Factor</name>
+    <key>iq_scale_factor</key>
+    <value>1.0</value>
+    <type>float</type>
+  </param>
+  <param>
+    <name>Host Name</name>
+    <key>host</key>
+    <value>0.0.0.0</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Port</name>
+    <key>port</key>
+    <value>41000</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>DDC-Coherent Mode</name>
+    <key>ddc_coherent</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+  <param>
+    <name>Number of Outputs</name>
+    <key>num_outputs</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Tagged Output Streams</name>
+    <key>tagged</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+  <param>
+    <name>Debug Mode</name>
+    <key>debug</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+  <source>
+    <name>out</name>
+    <type>complex</type>
+    <vlen>1</vlen>
+    <nports>$num_outputs</nports>
+    <optional>1</optional>
+  </source>
+  <doc>
+A generic VITA 49-compatible I/Q data source block.
+
+The vita_iq_source_mk3 block outputs VITA 49 or raw I/Q data coming \
+from an NDR-class radio.  The source block listens for incoming \
+I/Q data using UDP and dispatches it to its output port(s) \
+as needed.  This block uses multiple output ports, one per tuner, \
+if the incoming data is in DDC-coherent mode.  
+
+NOTE: When using this block in DDC-coherent mode, all output ports \
+MUST be connected.
+
+This class is designed to be as flexible as possible in dealing \
+with data streams, since each NDR-class radio varies in how it \
+packages data streams.
+
+The vita_iq_source_mk3 block can also produce stream tags at the \
+beginning of each received VITA 49 frame.  The block generates \
+the following stream tags, as appropriate for the radio:
+* absolute_sample_num -- The absolute sample number
+* frame_counter -- The VITA frame counter
+* frame_size -- The VITA frame size
+* packet_type -- The VITA packet type
+* packet_counter -- The VITA packet counter
+* packet_size -- The VITA packet size
+* stream_id -- The VITA stream ID
+* timestamp_int_type -- The VITA timestamp integer (TSI) field type
+* timestamp_int -- The VITA timestamp integer (TSI) field
+* timestamp_frac_type -- The VITA timestamp fractional (TSF) field type
+* timestamp_frac -- The VITA timestamp fractional (TSF) field
+* organizationally_unique_id -- The organizationally unique ID (OUI)
+* information_class_code -- The information class code (ICC)
+* packet_class_code -- The packet class code (PCC)
+If the radio is sending raw I/Q data instead of VITA 49 frames, this \
+block will not produce stream tags regardless of the tagged setting.
+  </doc>
+</block>

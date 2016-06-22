@@ -65,7 +65,8 @@ set(Boost_ADDITIONAL_VERSIONS
     "1.60.0" "1.60" "1.61.0" "1.61" "1.62.0" "1.62" "1.63.0" "1.63" "1.64.0" "1.64"
     "1.65.0" "1.65" "1.66.0" "1.66" "1.67.0" "1.67" "1.68.0" "1.68" "1.69.0" "1.69"
 )
-find_package(Boost "1.35" COMPONENTS filesystem system)
+# -- Make sure libboost_thread and its dependencies get linked in
+find_package(Boost "1.35" COMPONENTS filesystem system thread)
 
 if(NOT Boost_FOUND)
     message(FATAL_ERROR "Boost required to compile CyberRadio")
@@ -97,7 +98,8 @@ find_package(CppUnit)
 # components required to the list of GR_REQUIRED_COMPONENTS (in all
 # caps such as FILTER or FFT) and change the version to the minimum
 # API compatible version required.
-set(GR_REQUIRED_COMPONENTS RUNTIME)
+# -- Some of these required components ensure that libvolk gets linked in
+set(GR_REQUIRED_COMPONENTS RUNTIME ANALOG BLOCKS DIGITAL FFT PMT)
 find_package(Gnuradio "3.7.2" REQUIRED)
 
 if(NOT CPPUNIT_FOUND)

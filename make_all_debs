@@ -70,6 +70,7 @@ DEB_PKG_BUILD_LIST=(\
                     ["gr-cyberradio-base"]= \
                     ["gr-cyberradio-docs"]= \
                     ["gr-cyberradio-ndr304"]= \
+                    ["gr-cyberradio-ndr308"]= \
                     ["gr-cyberradio-ndr651"]= \
                   )
 # DEB_PKG_BUILDVER_LIST: List of version numbers for packages.
