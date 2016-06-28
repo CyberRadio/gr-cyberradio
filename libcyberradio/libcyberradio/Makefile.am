@@ -23,7 +23,11 @@ libcyberradio_la_SOURCES = \
                            NDR651/UdpStatusReceiver.cpp
 
 # Linker options for libcyberradio
-libcyberradio_la_LDFLAGS = -lboost_system -lboost_thread -lpthread 
+libcyberradio_la_LDFLAGS = $(BOOST_ASIO_LIB) \
+                           $(BOOST_CHRONO_LIB) \
+                           $(BOOST_THREAD_LIB) \
+                           $(BOOST_SYSTEM_LIB) \
+                           -lpthread 
 
 # Compiler options. Here we are adding the include directory
 # to be searched for headers included in the source code.

@@ -38,7 +38,12 @@ target_triplet = @target@
 subdir = libcyberradio
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_enable_debug.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_boost_asio.m4 \
+	$(top_srcdir)/m4/ax_boost_base.m4 \
+	$(top_srcdir)/m4/ax_boost_chrono.m4 \
+	$(top_srcdir)/m4/ax_boost_system.m4 \
+	$(top_srcdir)/m4/ax_boost_thread.m4 \
+	$(top_srcdir)/m4/ax_check_enable_debug.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
 	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/acinclude.m4 \
@@ -117,6 +122,12 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BOOST_ASIO_LIB = @BOOST_ASIO_LIB@
+BOOST_CHRONO_LIB = @BOOST_CHRONO_LIB@
+BOOST_CPPFLAGS = @BOOST_CPPFLAGS@
+BOOST_LDFLAGS = @BOOST_LDFLAGS@
+BOOST_SYSTEM_LIB = @BOOST_SYSTEM_LIB@
+BOOST_THREAD_LIB = @BOOST_THREAD_LIB@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -284,7 +295,12 @@ libcyberradio_la_SOURCES = \
 
 
 # Linker options for libcyberradio
-libcyberradio_la_LDFLAGS = -lboost_system -lboost_thread -lpthread 
+libcyberradio_la_LDFLAGS = $(BOOST_ASIO_LIB) \
+                           $(BOOST_CHRONO_LIB) \
+                           $(BOOST_THREAD_LIB) \
+                           $(BOOST_SYSTEM_LIB) \
+                           -lpthread 
+
 
 # Compiler options. Here we are adding the include directory
 # to be searched for headers included in the source code.

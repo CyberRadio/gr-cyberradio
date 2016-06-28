@@ -21,10 +21,10 @@ ACLOCAL_AMFLAGS=-I ../m4
 testvitaiq_SOURCES= testvitaiq.cpp
 
 # Libraries for a.out
-testvitaiq_LDADD = $(top_srcdir)/libcyberradio/libcyberradio.la
+testvitaiq_LDADD = ../libcyberradio/libcyberradio.la
 
 # Linker options for a.out
-testvitaiq_LDFLAGS = -rpath `cd $(top_srcdir);pwd`/libcyberradio/.libs -lboost_system
+testvitaiq_LDFLAGS = -rpath `cd ..;pwd`/libcyberradio/.libs $(BOOST_SYSTEM_LIB)
 
 # Compiler options for a.out
 testvitaiq_CPPFLAGS = -I$(top_srcdir)/include

@@ -20,6 +20,18 @@ AM_PROG_CC_C_O
 dnl Initialize Libtool
 LT_INIT
 
+dnl Check for Boost and required components of Boost that we need.  Since we depend
+dnl on the Boost::Chrono library, Boost must be at least version 1.47.
+AX_BOOST_BASE([1.47], [], [AC_MSG_ERROR([Boost libraries (1.47 or newer) are required but could not be found])])
+AX_BOOST_ASIO
+test "x$BOOST_ASIO_LIB" = "x" && AC_MSG_ERROR([Boost::ASIO library is required but could not be found])
+AX_BOOST_CHRONO
+test "x$BOOST_CHRONO_LIB" = "x" && AC_MSG_ERROR([Boost::Chrono library is required but could not be found])
+AX_BOOST_SYSTEM
+test "x$BOOST_SYSTEM_LIB" = "x" && AC_MSG_ERROR([Boost::System library is required but could not be found])
+AX_BOOST_THREAD
+test "x$BOOST_THREAD_LIB" = "x" && AC_MSG_ERROR([Boost::Thread library is required but could not be found])
+
 dnl Doxygen support
 dnl NOTE: Automake files that need Doxygen support must include doxygen.am
 dnl       to get the appropriate build rules.
