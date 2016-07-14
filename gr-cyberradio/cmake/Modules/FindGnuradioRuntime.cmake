@@ -9,7 +9,8 @@ if(PC_GNURADIO_RUNTIME_FOUND)
     HINTS $ENV{GNURADIO_RUNTIME_DIR}/include
           ${PC_GNURADIO_RUNTIME_INCLUDE_DIRS}
           ${CMAKE_INSTALL_PREFIX}/include
-    PATHS /usr/local/include
+    PATHS ${CMAKE_SOURCE_DIR}/../tmp-gnuradio/usr/include
+          /usr/local/include
           /usr/include
     )
 
@@ -21,7 +22,8 @@ if(PC_GNURADIO_RUNTIME_FOUND)
           ${PC_GNURADIO_RUNTIME_LIBDIR}
           ${CMAKE_INSTALL_PREFIX}/lib/
           ${CMAKE_INSTALL_PREFIX}/lib64/
-    PATHS /usr/local/lib
+    PATHS ${CMAKE_SOURCE_DIR}/../tmp-gnuradio/usr/lib
+          /usr/local/lib
           /usr/local/lib64
           /usr/lib
           /usr/lib64

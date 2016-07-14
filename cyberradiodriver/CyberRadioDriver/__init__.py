@@ -79,7 +79,7 @@ name = "CyberRadioDriver"
 description = "CyberRadio Solutions NDR Driver"
 ##
 # \brief Driver version number (string).
-version = "16.06.20"
+version = "16.07.14"
 
 # This section of code inspects the "radio" module for radio handler
 # objects (objects derived from _radio, thus implementing the IRadio interface)
@@ -688,9 +688,10 @@ class IRadio(object):
     #     support setting the time.
     # \param initDdc Whether or not to initialize the DDCs on the radio.
     # \param reset Whether to reset the radio immediately after connecting to it.
+    # \param fcState None (take no action) or boolean used to set 10GbE flow control.
     # \return True if connection was successful, False otherwise.
     def connect(self,mode,host_or_dev,port_or_baudrate=None,setTime=True,initDdc=True,
-                reset=False):
+                reset=False, fcState=None,):
         raise NotImplementedError
             
     ##
@@ -1642,4 +1643,31 @@ class IRadio(object):
     def getNbddcGroupIndexRange(cls):
         raise NotImplementedError
     
+    ##
+    # \brief Disables ethernet flow control on the radio.
+    #
+    # \return Boolean value to indicate success
+    def disableTenGigFlowControl(self,):
+        raise NotImplementedError
     
+    ##
+    # \brief Enables ethernet flow control on the radio.
+    #
+    # \return Boolean value to indicate success
+    def enableTenGigFlowControl(self,):
+        raise NotImplementedError
+    
+    ##
+    # \brief method to enable or disable ethernet flow control on the radio.
+    #
+    # \return Boolean value to indicate success
+    def setTenGigFlowControlStatus(self,enable=False):
+        raise NotImplementedError
+    
+    ##
+    # \brief Queries status of flow control handling.
+    #
+    # \return A dictionary of flow control statuses, keyed by 10GigE 
+    #    port number.
+    def getTenGigFlowControlStatus(self,):
+        raise NotImplementedError

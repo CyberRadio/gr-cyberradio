@@ -248,6 +248,8 @@ class _radio(log._logger, configKeys.Configurable):
 	gpioStaticCmd = None
 	## \brief Command: GPIO output (sequence) set/query
 	gpioSeqCmd = None
+	## \brief Command: Gigabit Ethernet interface flow control set/query
+	tgfcCmd = None
 	# Mode settings
 	## \brief Supported reference modes 
 	refModes = {}
@@ -267,6 +269,7 @@ class _radio(log._logger, configKeys.Configurable):
 								  configKeys.FNR_MODE, \
 								  configKeys.GPS_ENABLE, \
 								  configKeys.REF_TUNING_VOLT, \
+								  configKeys.GIGE_FLOW_CONTROL, \
 								 ]
 	## \brief Default "set time" value
 	setTimeDefault = False
@@ -410,7 +413,7 @@ class _radio(log._logger, configKeys.Configurable):
 	#
 	# \copydetails CyberRadioDriver::IRadio::connect()
 	def connect(self,mode,host_or_dev,port_or_baudrate=None,setTime=False,initDdc=False,
-			    reset=False):
+			    reset=False, fcState=None):
 		if mode in self.connectionModes:
 			self.mode = mode
 			self.host_or_dev = host_or_dev
@@ -438,6 +441,11 @@ class _radio(log._logger, configKeys.Configurable):
 				if initDdc:
 					self.setDdcConfiguration(wideband=True,)
 					self.setDdcConfiguration(wideband=False,)
+				if fcState is not None:
+					try:
+						self.setTenGigFlowControlStatus(fcState)
+					except:
+						pass
 				return True
 			else:
 				self.connectError = self.transport.connectError
@@ -1971,6 +1979,22 @@ class _radio(log._logger, configKeys.Configurable):
 								else:
 									self.cmdErrorInfo.extend(cmd.errorInfo)
 								pass
+					# Set flow control for this GigE port
+					if self.tgfcCmd is not None and self.tgfcCmd.settable and \
+					   configKeys.GIGE_FLOW_CONTROL in confDict[gigEPortNum]:
+						cDict = { "parent": self, \
+								  "verbose": self.verbose, \
+								  "logFile": self.logFile, \
+								  configKeys.GIGE_PORT_INDEX: gigEPortNum, \
+								  configKeys.GIGE_FLOW_CONTROL: confDict[gigEPortNum][configKeys.GIGE_FLOW_CONTROL], \
+								 }
+						cmd = self.tgfcCmd(**cDict)
+						success &= cmd.send( self.sendCommand, )
+						if success and cmd.success:
+							self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.GIGE_FLOW_CONTROL] = \
+							        getattr(cmd, configKeys.GIGE_FLOW_CONTROL)
+						else:
+							self.cmdErrorInfo.extend(cmd.errorInfo)
 			pass
 		return success
 
@@ -2327,6 +2351,34 @@ class _radio(log._logger, configKeys.Configurable):
 														configKeys.DDC_STREAM_ID: streamId,
 														} )
 		return success
+	
+	##
+	# \brief Disables ethernet flow control on the radio.
+	#
+	# \copydetails CyberRadioDriver::IRadio::disableTenGigFlowControl()
+	def disableTenGigFlowControl(self,):
+		return self.setTenGigFlowControlStatus(False)
+	
+	##
+	# \brief Enables ethernet flow control on the radio.
+	#
+	# \copydetails CyberRadioDriver::IRadio::enableTenGigFlowControl()
+	def enableTenGigFlowControl(self,):
+		return self.setTenGigFlowControlStatus(True)
+	
+	##
+	# \brief method to enable or disable ethernet flow control on the radio.
+	#
+	# \copydetails CyberRadioDriver::IRadio::getTenGigFlowControlStatus()
+	def setTenGigFlowControlStatus(self,enable=False):
+		return False
+	
+	##
+	# \brief Queries status of flow control handling.
+	#
+	# \copydetails CyberRadioDriver::IRadio::getTenGigFlowControlStatus()
+	def getTenGigFlowControlStatus(self,):
+		return {}
 
 
 ##
@@ -2628,6 +2680,36 @@ class ndr308_1(_radio):
 		else:
 			return self.dipTable.get(ifIndex,{}).get(dipIndex,{})
 
+	def disableTenGigFlowControl(self,):
+		return self.setTenGigFlowControlStatus(False)
+	
+	def enableTenGigFlowControl(self,):
+		return self.setTenGigFlowControlStatus(True)
+	
+	def setTenGigFlowControlStatus(self,enable=False):
+		success = False
+		if self.tgfcCmd is not None and self.tgfcCmd.settable:
+			confDict = {
+					configKeys.CONFIG_IP: {
+						}
+				}
+			for gigEPortNum in xrange(self.gigEIndexBase, 
+									  self.gigEIndexBase + self.numGigE, 1):
+				confDict[configKeys.CONFIG_IP][gigEPortNum] = {
+						configKeys.GIGE_FLOW_CONTROL: 1 if enable else 0,
+					}
+			success = self.setConfiguration(confDict)
+		return success
+	
+	def getTenGigFlowControlStatus(self,):
+		status = {}
+		if self.tgfcCmd is not None:
+			confDict = self.getConfiguration()[configKeys.CONFIG_IP]
+			for gigEPortNum in xrange(self.gigEIndexBase, 
+									  self.gigEIndexBase + self.numGigE, 1):
+				if configKeys.GIGE_FLOW_CONTROL in confDict[gigEPortNum]:
+					status |= (confDict[gigEPortNum][configKeys.GIGE_FLOW_CONTROL]	== 1)
+		return status
 
 ##
 # \brief Radio handler class for the NDR308.
@@ -2712,6 +2794,7 @@ class ndr308_1(_radio):
 #                   },
 #                ...31 (repeat for each DIP table entry)
 #               },
+#               "flowControl": [0, 1],
 #            },
 #         ...2 (repeat for each Gigabit Ethernet port)
 #      },
@@ -2756,6 +2839,7 @@ class ndr308(ndr308_1):
 	numNbddc = 32
 	wbddcType = components.ndr308_wbddc
 	nbddcType = components.ndr308_nbddc
+	tgfcCmd = command.tgfc
 
 
 ##
@@ -2841,6 +2925,7 @@ class ndr308(ndr308_1):
 #                   },
 #                ...31 (repeat for each DIP table entry)
 #               },
+#               "flowControl": [0, 1],
 #            },
 #         ...2 (repeat for each Gigabit Ethernet port)
 #      },
@@ -2969,6 +3054,7 @@ class ndr308_4(ndr308):
 #                   },
 #                ...31 (repeat for each DIP table entry)
 #               },
+#               "flowControl": [0, 1],
 #            },
 #         ...2 (repeat for each Gigabit Ethernet port)
 #      },
@@ -3097,6 +3183,7 @@ class ndr308_ts(ndr308):
 #                   },
 #                ...31 (repeat for each DIP table entry)
 #               },
+#               "flowControl": [0, 1],
 #            },
 #         ...2 (repeat for each Gigabit Ethernet port)
 #      },

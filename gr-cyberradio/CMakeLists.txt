@@ -100,7 +100,10 @@ find_package(CppUnit)
 # API compatible version required.
 # -- Some of these required components ensure that libvolk gets linked in
 set(GR_REQUIRED_COMPONENTS RUNTIME ANALOG BLOCKS DIGITAL FFT PMT)
-find_package(Gnuradio "3.7.2" REQUIRED)
+# -- The actual package search is done by our alternate algorithm, which
+#    takes temporary gnuradio and libcyberradio directories into account
+#    (for supporting automated builds through Jenkins)
+find_package(GnuradioAlt "3.7.8" REQUIRED)
 
 if(NOT CPPUNIT_FOUND)
     message(FATAL_ERROR "CppUnit required to compile CyberRadio")
@@ -108,8 +111,16 @@ endif()
 
 ########################################################################
 # Setup the include and linker paths
+#
+# Include and linker paths have been expanded to include the following:
+# (1) The libcyberradio library tree extracted from the Debian installer 
+#     (this is intended to support automated builds through Jenkins)
+# (2) The libcyberradio library build tree (if the libcyberradio package
+#     was built from source)
 ########################################################################
 include_directories(
+    ${CMAKE_SOURCE_DIR}/../tmp-libcyberradio/usr/include
+    ${CMAKE_SOURCE_DIR}/../libcyberradio/include
     ${CMAKE_SOURCE_DIR}/lib
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_BINARY_DIR}/lib
@@ -119,7 +130,10 @@ include_directories(
     ${GNURADIO_ALL_INCLUDE_DIRS}
 )
 
+# Add two link directories: 
 link_directories(
+    ${CMAKE_SOURCE_DIR}/../tmp-libcyberradio/usr/lib
+    ${CMAKE_SOURCE_DIR}/../libcyberradio/.libs
     ${Boost_LIBRARY_DIRS}
     ${CPPUNIT_LIBRARY_DIRS}
     ${GNURADIO_RUNTIME_LIBRARY_DIRS}

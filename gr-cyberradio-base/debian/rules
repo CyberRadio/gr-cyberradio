@@ -22,3 +22,10 @@
 # Override configure step to pass package version and package subgroup to CMake
 override_dh_auto_configure:
 	dh_auto_configure -- -DPACKAGE_VERSION=DEB_PKG_VERSION -DPACKAGE_SUBGROUP=BASE
+
+# Override shared library dependency step to turn it off.  Instead, we will rely on
+# the control file and the user installing the needed libraries (admittedly a dangerous
+# proposition).
+override_dh_shlibdeps:
+	:
+

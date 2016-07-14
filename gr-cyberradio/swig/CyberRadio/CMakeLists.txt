@@ -54,13 +54,13 @@ if(BUILD_SUBGROUP_ALL)
 endif(BUILD_SUBGROUP_ALL)
 
 set(GR_SWIG_LIBRARIES ${CyberRadio_lib_name})
-set(GR_SWIG_DOC_FILE ${CMAKE_CURRENT_BINARY_DIR}/CyberRadio_swig_doc.i)
 set(GR_SWIG_DOC_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
 ########################################################################
 # Build and install by active subgroup
 ########################################################################
 if(BUILD_SUBGROUP_BASE)
+	#set(GR_SWIG_DOC_FILE ${CMAKE_CURRENT_BINARY_DIR}/CyberRadio_base_swig_doc.i)
 	GR_SWIG_MAKE(CyberRadio_base_swig CyberRadio_base_swig.i)
 	GR_SWIG_INSTALL(TARGETS CyberRadio_base_swig 
 	                DESTINATION ${GR_PYTHON_DIR}/CyberRadio)
@@ -71,6 +71,7 @@ if(BUILD_SUBGROUP_BASE)
 	)
 endif(BUILD_SUBGROUP_BASE)
 if(BUILD_SUBGROUP_NDR651)
+	#set(GR_SWIG_DOC_FILE ${CMAKE_CURRENT_BINARY_DIR}/CyberRadio_NDR651_swig_doc.i)
 	GR_SWIG_MAKE(CyberRadio_NDR651_swig CyberRadio_NDR651_swig.i)
 	GR_SWIG_INSTALL(TARGETS CyberRadio_NDR651_swig 
 	                DESTINATION ${GR_PYTHON_DIR}/CyberRadio)

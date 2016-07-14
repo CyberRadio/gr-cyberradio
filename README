@@ -51,6 +51,7 @@ gr-cyberradio-base       python-cyberradiodriver, GNU Radio control blocks (base
                          libcyberradio
 gr-cyberradio-docs       gr-cyberradio-base       GNU Radio control block documentation
 gr-cyberradio-ndr304     gr-cyberradio-base       GNU Radio control blocks (NDR304)
+gr-cyberradio-ndr308     gr-cyberradio-base       GNU Radio control blocks (NDR308)
 gr-cyberradio-ndr651     gr-cyberradio-base       GNU Radio control blocks (NDR651)
 
 

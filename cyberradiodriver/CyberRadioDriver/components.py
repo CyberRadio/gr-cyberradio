@@ -679,12 +679,12 @@ class ndr308_wbddc(_wbddc):
 	rateSet = { 0: 51.2e6, \
 				1: 25.6e6, \
 				2: 12.8e6, \
-#				3: 102.4e6, \
+				3: 102.4e6, \
 				 }
 	bwSet = { 0: 40e6, \
 				1: 0.8*25.6e6, \
 				2: 0.8*12.8e6, \
-#				3: 102.4e6, \
+				3: 40e6, \
 				 }
 	dataFormat = { 3:"real" }
 #	cfgCmd = command.wbddc308
@@ -711,7 +711,7 @@ class ndr308ts_wbddc(ndr308_wbddc):
 				2: 1.2*12.8e6, \
 #				3: 1.2*102.4e6, \
 				 }
-	dataFormat = { 3:"real" }
+# 	dataFormat = { 3:"real" }
 #	cfgCmd = command.wbddc308
 	frqCmd = None
 
@@ -719,6 +719,19 @@ class ndr308ts_wbddc(ndr308_wbddc):
 # WBDDC component class for the NDR651.
 class ndr651_wbddc(ndr308_wbddc):
 	_name = "WBDDC(NDR651)"
+	rateSet = { 0: 51.2e6, \
+				1: 25.6e6, \
+				2: 12.8e6, \
+				3: 6.4e6, \
+				4: 3.2e6, \
+				 }
+	dataFormat = {}
+	bwSet = { 0: 40e6, \
+				1: 0.8*25.6e6, \
+				2: 0.8*12.8e6, \
+				3: 0.8*6.4e6, \
+				4: 0.8*3.2e6, \
+				 }
 
 #--  NBDDC Objects  ---------------------------------------------------------#
 

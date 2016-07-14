@@ -5,7 +5,7 @@
 %include "gnuradio.i"			// the common stuff
 
 //load generated python docstrings
-%include "CyberRadio_swig_doc.i"
+#%include "CyberRadio_swig_doc.i"
 
 %{
 #include "CyberRadio/NDR651_duc_sink.h"

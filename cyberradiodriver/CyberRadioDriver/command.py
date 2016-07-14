@@ -775,6 +775,22 @@ class sip308(_commandBase):
 						]
 	
 ##
+# Flow control configuration command.
+#
+# Supports radios which have dedicated Gigabit Ethernet ports.
+class tgfc(_commandBase):
+	mnemonic="TGFC"
+	setParameters = [ (configKeys.GIGE_PORT_INDEX, int, True, None), \
+                      (configKeys.GIGE_FLOW_CONTROL, int, True, None), \
+                     ]
+	queryParameters = [ (configKeys.GIGE_PORT_INDEX, int, True, None), \
+						]
+	queryResponseData = [ \
+						(configKeys.GIGE_PORT_INDEX, int, False), \
+						(configKeys.GIGE_FLOW_CONTROL, int, False), \
+						]
+	
+##
 # Source MAC address configuration command.
 #
 # Supports radios which do not have dedicated Gigabit Ethernet ports.

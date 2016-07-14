@@ -5,7 +5,7 @@
 %include "gnuradio.i"			// the common stuff
 
 //load generated python docstrings
-%include "CyberRadio_swig_doc.i"
+#%include "CyberRadio_swig_doc.i"
 
 %{
 #include "CyberRadio/vita_iq_source.h"

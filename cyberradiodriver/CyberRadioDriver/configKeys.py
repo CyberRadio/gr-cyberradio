@@ -266,6 +266,8 @@ GIGE_SOURCE_PORT = "sourcePort"
 GIGE_DEST_PORT = "destPort"
 ## Gigabit Ethernet Address Resolution Protocol (ARP) enabled.
 GIGE_ARP = "arp"
+## Gigabit Ethernet flow control enabled.
+GIGE_FLOW_CONTROL = "flowControl"
 
 #--  Calibration Frequency Keys  ---------------------------------------#
 ## Calibration frequency.
