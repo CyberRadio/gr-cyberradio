@@ -7,6 +7,7 @@ INTRODUCTION
 This document describes the CRS Control Shared Library and
 how to build it.
 
+
 REQUIRED SOFTWARE
 -----------------
 The Shared Library requires the following software to build
@@ -15,6 +16,7 @@ successfully:
   later
 * Boost headers and libraries, version 1.47 or later
 * Doxygen for automatic documentation generation
+
 
 BUILDING AND INSTALLING (UBUNTU)
 --------------------------------
@@ -48,6 +50,7 @@ BUILDING AND INSTALLING (UBUNTU)
 In addition, this package supports constructing a Debian installer package 
 (*.deb) using the "makedeb" script.  However, the "makedeb" script does not 
 support using a custom version of Boost.
+
 
 BUILDING AND INSTALLING (CENTOS)
 --------------------------------
