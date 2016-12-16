@@ -494,15 +494,15 @@ namespace LibCyberRadio
 
 								_651freeSpace = _tbsSpace;
 								_fcMutex.unlock();
-								if (_tbsOverrunFlag || _tbsFullFlag)
-								{
+								//~ if (_tbsOverrunFlag || _tbsFullFlag)
+								//~ {
 									//~ this->debug(" O_%d@%lu_O\n", _ducChannel, _utc);
 									//~ std::cerr << (boost::format(" O_%d@%lu_O\n") % _ducChannel % _utc).str();
-									std::cerr << "O" << _ducChannel << "@" << _utc << "o " << std::flush;
-								}
-								if (_tbsUnderrunFlag || _tbsEmptyFlag) {
-									std::cerr << "U" << _ducChannel << "@" << _utc << "u " << std::flush;
-								}
+									//~ std::cerr << "O" << _ducChannel << "@" << _utc << "o " << std::flush;
+								//~ }
+								//~ if (_tbsUnderrunFlag || _tbsEmptyFlag) {
+									//~ std::cerr << "U" << _ducChannel << "@" << _utc << "u " << std::flush;
+								//~ }
 								_sendStatusFrame();
 								break;
 							}

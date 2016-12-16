@@ -12,17 +12,14 @@ REQUIRED SOFTWARE
 -----------------
 The Shared Library requires the following software to build
 successfully:
-* GNU Autotools suite, with autoconf 2.64 or later and autoreconf 2.64 or 
-  later
+* CMake 2.6 or later
 * Boost headers and libraries, version 1.47 or later
 * Doxygen for automatic documentation generation
 
 
 BUILDING AND INSTALLING (UBUNTU)
 --------------------------------
-* Execute autoreconf to perform an auto-reconfiguration.
-      autoreconf -i
-* Create a build directory and then change into it.
+* Create a build folder and change into it.
       mkdir build
       cd build
 * Determine which version of Boost to use (either the default version 
@@ -35,12 +32,11 @@ BUILDING AND INSTALLING (UBUNTU)
       Boost libraries have been installed into /usr/local/lib, then this path 
 	  is /usr/local/lib.
 * Configure the build.  
-  If using the OS-installed Boost libraries, no arguments to the configure 
-  script are needed.
-      ../configure
-  However, if using a custom version, supply the configure script with the 
-  two paths determined in the prior step.
-      ../configure --with-boost=/usr/local --with-boost-libdir=/usr/local/lib
+  If using the OS-installed Boost libraries, no arguments to CMake are needed.
+      cmake ..
+  However, if using a custom version, supply CMake with the two paths deter-
+  mined in the prior step.
+      cmake -DBOOST_INCLUDEDIR=/usr/local -DBOOST_LIBRARYDIR=/usr/local/lib ..
 * Make the package.
       make
 * Install the library, its headers, and its documentation (if Doxygen is 

@@ -67,7 +67,7 @@
 ###############################################################
 
 import inspect, sys
-import socket, fcntl, struct
+import socket, struct
 from command import radio_command
 import radio, configKeys
 
@@ -79,7 +79,7 @@ name = "CyberRadioDriver"
 description = "CyberRadio Solutions NDR Driver"
 ##
 # \brief Driver version number (string).
-version = "16.07.14"
+version = "16.12.15"
 
 # This section of code inspects the "radio" module for radio handler
 # objects (objects derived from _radio, thus implementing the IRadio interface)
@@ -91,45 +91,53 @@ for objname, obj in inspect.getmembers(radio):
         # Import that object into this module's namespace.
         setattr(sys.modules[__name__], objname, obj)
         
-##
-# \brief Returns the MAC address and IP address (and, optionally, the
-#    MTU) for a given Ethernet interface.
-#
-# \note The MTU query is optional in order to provide backward compatibility
-#    with CyberRadioDriver programs that do not use this value.
-#
-# \param ifname The name of the Ethernet system interface ("eth0", for 
-#    example).
-# \param getMTU If True, return the MTU as well.
-# \returns If getMTU is False, a 2-tuple: (MAC Address string, IP Address string).
-#    If getMTU is True, a 3-tuple: (MAC address string, IP address string, MTU).  
-#    If the given interface does not exist, then both returned strings will be
-#    empty strings.
-def getInterfaceAddresses(ifname, getMTU=False):
-    mac = ""
-    ip = ""
-    mtu = 0
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        ifr = struct.pack('256s', ifname[:15])
-        info = fcntl.ioctl(s.fileno(), 
-                           0x8927, # SIOCGIFHWADDR
-                           ifr)
-        mac = ''.join(['%02x:' % ord(char) for char in info[18:24]])[:-1]
-        ip = socket.inet_ntoa(fcntl.ioctl(s.fileno(),
-                                          0x8915,  # SIOCGIFADDR
-                                          ifr)[20:24])
+# BEGIN NON-WINDOWS METHODS
+if sys.platform != "win32":
+    
+    import fcntl
+
+    ##
+    # \brief Returns the MAC address and IP address (and, optionally, the
+    #    MTU) for a given Ethernet interface.
+    #
+    # \note The MTU query is optional in order to provide backward compatibility
+    #    with CyberRadioDriver programs that do not use this value.
+    # \note This method is not defined under Windows.
+    #
+    # \param ifname The name of the Ethernet system interface ("eth0", for 
+    #    example).
+    # \param getMTU If True, return the MTU as well.
+    # \returns If getMTU is False, a 2-tuple: (MAC Address string, IP Address string).
+    #    If getMTU is True, a 3-tuple: (MAC address string, IP address string, MTU).  
+    #    If the given interface does not exist, then both returned strings will be
+    #    empty strings.
+    def getInterfaceAddresses(ifname, getMTU=False):
+        mac = ""
+        ip = ""
+        mtu = 0
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            ifr = struct.pack('256s', ifname[:15])
+            info = fcntl.ioctl(s.fileno(), 
+                               0x8927, # SIOCGIFHWADDR
+                               ifr)
+            mac = ''.join(['%02x:' % ord(char) for char in info[18:24]])[:-1]
+            ip = socket.inet_ntoa(fcntl.ioctl(s.fileno(),
+                                              0x8915,  # SIOCGIFADDR
+                                              ifr)[20:24])
+            if getMTU:
+                mtu = struct.unpack("<H", 
+                          fcntl.ioctl(s.fileno(), 
+                                      0x8921, # SIOCGIFMTU
+                                      ifr)[16:18])[0]
+        except:
+            pass
         if getMTU:
-            mtu = struct.unpack("<H", 
-                      fcntl.ioctl(s.fileno(), 
-                                  0x8921, # SIOCGIFMTU
-                                  ifr)[16:18])[0]
-    except:
-        pass
-    if getMTU:
-        return mac, ip, mtu
-    else:
-        return mac,ip
+            return mac, ip, mtu
+        else:
+            return mac,ip
+
+# END NON-WINDOWS METHODS
 
 ##
 # \brief Gets the list of supported radios.
@@ -209,16 +217,16 @@ def getRadioObject(nameString, *args, **kwargs):
         if kwargs.get("dev", None) is not None:
             connModes.append("tty")
         for connMode in connModes:
+            # Grab a temporary handler object of the identifier class
+            tmpHandler = radio._radio_identifier(verbose=False, logFile=None)
             if connMode == "tcp":
-                # Grab a temporary handler object of the NDR308 class
-                tmpHandler = getRadioObject("ndr308", verbose=False, logFile=None)
                 tmpHandler.connect("tcp", kwargs.get("host"), kwargs.get("port", None))
             elif connMode == "tty":
-                # Grab a temporary handler object of the NDR304 class
-                tmpHandler = getRadioObject("ndr304", verbose=False, logFile=None)
                 tmpHandler.connect("tty", kwargs.get("dev"), kwargs.get("baudrate", None))
             if tmpHandler.isConnected():
                 radioType = tmpHandler.getVersionInfo()["model"]
+                if "\\" in radioType:
+                    radioType = radioType[0:radioType.find("\\")]
                 radioType = str(radioType).lower()
                 radioType = radioType.replace("ts", "_ts")
                 radioType = radioType.replace("-", "_")
@@ -786,6 +794,17 @@ class IRadio(object):
     #    Use getLastCommandErrorInfo() to retrieve any error information.  
     def setConfiguration(self, configDict={}):
         raise NotImplementedError
+
+    ##
+    # \brief Sets the radio configuration based on a sequence of configuration
+    #    dictionary keys.
+    #
+    # \param value The value to set in the configuration dictionary.
+    # \param keys List of keys used to access the value in the dictionary.
+    # \return True if all commands completed successfully, False otherwise.
+    #    Use getLastCommandErrorInfo() to retrieve any error information.  
+    def setConfigurationByKeys(self, value=None, *keys):
+        raise NotImplementedError
     
     ##
     # \brief Gets the radio configuration.
@@ -795,6 +814,36 @@ class IRadio(object):
     #
     # \return The dictionary of radio settings.
     def getConfiguration(self):
+        raise NotImplementedError
+    
+    ##
+    # \brief Gets radio configuration information based on a sequence of configuration
+    #    dictionary keys.
+    #
+    # \param keys List of keys used to access the value in the dictionary.
+    # \return The radio setting(s) at the given level, or None if the configuration
+    #    does not have data accessible by the given keys.
+    def getConfigurationByKeys(self, *keys):
+        raise NotImplementedError
+    
+    ##
+    # \brief Queries the radio hardware to get its configuration.
+    #
+    # See setConfiguration() for the format of the returned
+    # dictionary.
+    #
+    # \return The dictionary of radio settings.
+    def queryConfiguration(self):
+        raise NotImplementedError
+
+    ##
+    # \brief Queries radio configuration information based on a sequence of configuration
+    #    dictionary keys.
+    #
+    # \param keys List of keys used to access the value in the dictionary.
+    # \return The radio setting(s) at the given level, or None if the configuration
+    #    does not have data accessible by the given keys.
+    def queryConfigurationByKeys(self, *keys):
         raise NotImplementedError
     
     ##

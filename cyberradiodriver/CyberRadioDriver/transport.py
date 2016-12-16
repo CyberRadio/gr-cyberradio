@@ -38,7 +38,7 @@ class radio_transport(log._logger):
 	# \param verbose Verbose mode (Boolean)
 	# \param logCtrl A GUI control that receives log output (GUI-dependent)
 	# \param json Whether the transport should expect JSON-formatted commands
-	#    and responses (Boolean).
+	#	and responses (Boolean).
 	# \param logFile An open file or file-like object to be used for log output.  
 	#	If not provided, this defaults to standard output. 
 	def __init__(self,parent,verbose=False,logCtrl=None,json=False, 
@@ -83,11 +83,11 @@ class radio_transport(log._logger):
 	#
 	# \param mode One of "tty", "tcp", or "udp".
 	# \param host_or_dev If mode is "tcp" or "udp", this parameter is the 
-	#     hostname for the remote device.  If mode is "tty", this parameter is the
-	#     name of the TTY device on the system.
+	#	 hostname for the remote device.  If mode is "tty", this parameter is the
+	#	 name of the TTY device on the system.
 	# \param port_or_baudrate If mode is "tcp" or "udp", this parameter is the 
-	#     port for the remote device.  If mode is "tty", this parameter is the
-	#     baud rate of the TTY device on the system.
+	#	 port for the remote device.  If mode is "tty", this parameter is the
+	#	 baud rate of the TTY device on the system.
 	# \return True if connection was successful, False otherwise.
 	def connect(self,mode,host_or_dev,port_or_baudrate):
 		mode = str(mode).strip().lower()
@@ -103,7 +103,7 @@ class radio_transport(log._logger):
 				self.connectTty(str(host_or_dev),int(port_or_baudrate) if port_or_baudrate is not None else self.defaultBaudrate,)
 		if mode in ("tcp","tty",):
 			testCmd = command.radio_command(parent=self, verbose=self.verbose, 
-										    logFile=self.logFile)
+											logFile=self.logFile)
 			testCmd.send( self.sendCommandAndReceive )
 			if any((not testCmd.ok, testCmd.error)):
 				self.disconnect()
@@ -173,7 +173,7 @@ class radio_transport(log._logger):
 	# is performed.
 	#
 	# \param mode One of "tty", "tcp", or "udp".  Supported connection 
-	#     modes vary by radio.
+	#	 modes vary by radio.
 	# \param dev The name of the TTY device on the system.
 	# \param baudrate The baud rate of the TTY device on the system.
 	# \return True if connection was successful, False otherwise.
@@ -228,7 +228,7 @@ class radio_transport(log._logger):
 	#
 	# \param cmd The command string to send out.
 	# \param clearRx Whether to make sure that the receive buffer is clear before
-	#    sending the command.
+	#	sending the command.
 	# \return Whether the transport is still connected.
 	def sendCommand(self,cmd,clearRx=True):
 		try:
@@ -277,7 +277,7 @@ class radio_transport(log._logger):
 	# Receives a JSON-formatted string over the transport.
 	#
 	# \param timeout The timeout value to use for receiving data.  If None,
-	#     use the default timeout value for the transport.
+	#	 use the default timeout value for the transport.
 	# \return The received string.
 	def receiveJson(self,timeout=None):
 		rxString = ""
@@ -288,7 +288,7 @@ class radio_transport(log._logger):
 			else:
 				delta = datetime.datetime.now() - self.lastRx
 				self.lastRx = datetime.datetime.now()
-			ins,outs,excepts = select.select(self.selectInput,[],[],float(timeout) if timeout is not None else self.defaultTimeout)
+			ins,outs,excepts = self.select(self.selectInput,[],[],float(timeout) if timeout is not None else self.defaultTimeout)
 			if ins and self.udp is not None:
 				rxString,address = self.udp.recvfrom(8192)
 				if len(rxString)>0:
@@ -310,7 +310,7 @@ class radio_transport(log._logger):
 	# Receives client-formatted data over the transport.
 	#
 	# \param timeout The timeout value to use for receiving data.  If None,
-	#     use the default timeout value for the transport.
+	#	 use the default timeout value for the transport.
 	# \return The list of received data strings.
 	def receiveCli(self,timeout=None):
 		rx = []
@@ -323,7 +323,7 @@ class radio_transport(log._logger):
 				else:
 					delta = datetime.datetime.now() - self.lastRx
 					self.lastRx = datetime.datetime.now()
-				ins,outs,excepts = select.select(self.selectInput,[],[],float(timeout) if timeout is not None else self.defaultTimeout)
+				ins,outs,excepts = self.select(self.selectInput,[],[],float(timeout) if timeout is not None else self.defaultTimeout)
 				if ins:
 					if self.tcp is not None:
 						inString = self.tcp.recv(8192)
@@ -373,9 +373,9 @@ class radio_transport(log._logger):
 	# was set at construction time.
 	#
 	# \param timeout The timeout value to use for receiving data.  If None,
-	#     use the default timeout value for the transport.
+	#	 use the default timeout value for the transport.
 	# \return If json=True, a JSON-formatted string; if json=False, a list of 
-	#     received data strings.
+	#	 received data strings.
 	def receive(self,timeout=None):
 		return self.rxFunction(timeout=timeout)
 	
@@ -387,12 +387,51 @@ class radio_transport(log._logger):
 	#
 	# \param cmd The command string to send out over the transport.
 	# \param timeout The timeout value to use for receiving data.  If None,
-	#     use the default timeout value for the transport.
+	#	 use the default timeout value for the transport.
 	# \return If json=True, a JSON-formatted string; if json=False, a list of 
-	#     received data strings.
+	#	 received data strings.
 	def sendCommandAndReceive(self,cmd,timeout=None):
 		if self.sendCommand(str(cmd)):
 			return self.receive(timeout)
+
+	##
+	# \internal
+	# \brief Wraps select() call so that it properly handles serial device read 
+	#	selection under Windows.
+	# \param rlist List of file-like objects to check for read availability.
+	# \param wlist List of file-like objects to check for write availability.
+	# \param xlist List of file-like objects to check for exception conditions.
+	# \param timeout Time to wait, or None if the call should wait forever.
+	# \returns A 3-tuple: (reads, writes, excepts)
+	def select(self, rlist, wlist, xlist, timeout=None):
+		if sys.platform == "win32":
+			#print "[DBG][select] rlist=", rlist
+			#print "[DBG][select] wlist=", wlist
+			#print "[DBG][select] xlist=", xlist
+			# Get start time
+			startTime = time.time()
+			# Do standard select call on socket devices only -- but skip this call if
+			# all three socket list is empty, as Windows select() errors out in this case.
+			sock_rlist = [q for q in rlist if isinstance(q, socket.socket)]
+			#print "[DBG][select] sock_rlist=", sock_rlist
+			sock_rlist_hit, wlist_hit, xlist_hit = ([], [], [])
+			if any([len(q) > 0 for q in [sock_rlist, wlist, xlist]]):
+				sock_rlist_hit, wlist_hit, xlist_hit = select.select(sock_rlist, wlist, xlist, timeout)
+			#print "[DBG][select] sock_rlist_hit=", sock_rlist_hit
+			# Use remaining time to poll serial devices for devices in waiting
+			ser_rlist = [q for q in rlist if isinstance(q, serial.Serial)]
+			ser_rlist_hit = []
+			while len(ser_rlist_hit) == 0:
+				ser_rlist_hit += [ser for ser in ser_rlist if ser.inWaiting() > 0]
+				if len(ser_rlist_hit) == 0 and (timeout is None or \
+											   time.time() - startTime <= timeout):
+					time.sleep(0.1)
+				else:
+					break
+			#print "[DBG][select] ser_rlist_hit=", ser_rlist_hit
+			return sock_rlist_hit + ser_rlist_hit, wlist_hit, xlist_hit
+		else:
+			return select.select(rlist, wlist, xlist, timeout)
 
 
 if __name__=="__main__":

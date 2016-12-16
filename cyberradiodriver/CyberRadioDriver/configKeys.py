@@ -108,15 +108,15 @@ TUNER_AGC_LOWER_LIMIT = "all"
 ## Tuner AGC attack time setting.
 TUNER_AGC_ATTACK_TIME = "aat"
 ## Tuner AGC delay time setting.
-TUNER_AGC_DELAY_TIME = "adt"
+TUNER_AGC_DECAY_TIME = "adt"
 ## Tuner AGC attack step setting.
 TUNER_AGC_ATTACK_STEP = "aas"
 ## Tuner AGC delay step setting.
-TUNER_AGC_DELAY_STEP = "ads"
+TUNER_AGC_DECAY_STEP = "ads"
 ## Tuner AGC attack limit range setting.
 TUNER_AGC_ATTACK_LIMIT = "aal"
 ## Tuner AGC delay limit range setting.
-TUNER_AGC_DELAY_LIMIT = "adl"
+TUNER_AGC_DECAY_LIMIT = "adl"
 ## Tuner filter setting.
 TUNER_FILTER = "filter"
 ## Timing adjustment, in clocks.
@@ -228,6 +228,16 @@ DUC_SAMPLES = "samples"
 DUC_START_BLOCK = "startBlock"
 ## DUC snapshot end block.
 DUC_END_BLOCK = "endBlock"
+## DUC data port (that is, 10GigE interface number).
+DUC_DATA_PORT = "dataPort"
+## DUC frequency offset.
+DUC_FREQUENCY = "frequency"
+## DUC attenuation.
+DUC_ATTENUATION = "attenuation"
+## DUC mode.
+DUC_MODE = "mode"
+## DUC Single playback mode
+DUC_SINGLE_PLAYBACK = "singlePlayback"
 
 #------ NBDDC Configuration Keys ----------------------------------------# 
 ## NBDDC RF index.
@@ -240,6 +250,8 @@ DDC_GROUP_MEMBERS = "members"
 #------ Time Configuration Keys ----------------------------------------#
 ## UTC time, in seconds past the Epoch.
 TIME_UTC = "utcTime"
+## Timing adjustment, in clocks.
+TIMING_ADJ = "clocks"
 
 #------ IP Configuration Keys ------------------------------------------#
 ## Source IP address.

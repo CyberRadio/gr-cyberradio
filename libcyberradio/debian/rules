@@ -11,3 +11,8 @@
 
 %:
 	dh $@ --with python2
+
+# Override dh_auto_configure so that it runs autoreconf first
+#override_dh_auto_configure:
+#	autoreconf -i
+#	dh_auto_configure

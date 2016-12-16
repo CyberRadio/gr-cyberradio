@@ -80,7 +80,7 @@ namespace LibCyberRadio
 			_ducAtten(0),
 			_txFreq(0),
 			_txAtten(0),
-			_streamId(0),
+			_streamId(streamId),
 			_config_tx(config_tx),
 			_txSock(NULL),
 			_fcClient(NULL),
@@ -164,7 +164,7 @@ namespace LibCyberRadio
 				if ( _txSock != NULL )
 					delete _txSock;
 				_ifname = ifname;
-				_txSock = new TransmitSocket(_ifname, false);
+				_txSock = new TransmitSocket(_ifname, _streamId);
 			}
 			_tenGigIndex = tenGigIndex;
 			this->debug("duc interface set ok\n");
@@ -348,17 +348,22 @@ namespace LibCyberRadio
 			// failed to make our control objects!
 			if ( (_txSock != NULL) && (_fcClient != NULL) )
 			{
-				_sMac = _txSock->getMacAddress();
-				this->debug("-- source mac = %s\n", _sMac.c_str());
-				_dMac = _fcClient->getRadioMac(tenGigIndex);
-				this->debug("-- dest mac = %s\n", _dMac.c_str());
-				setEthernetHeader(_sMac, _dMac);
-				_sIp = _txSock->getIpAddress();
-				this->debug("-- source ip = %s\n", _sIp.c_str());
-				_dIp = _fcClient->getRadioIp(tenGigIndex);
-				this->debug("-- dest ip = %s\n", _dIp.c_str());
-				setIpHeader(_sIp, _dIp);
-				setUdpHeader(_streamId, _streamId);
+				if (_txSock->isUsingRawSocket()) {
+					_sMac = _txSock->getMacAddress();
+					this->debug("-- source mac = %s\n", _sMac.c_str());
+					_dMac = _fcClient->getRadioMac(tenGigIndex);
+					this->debug("-- dest mac = %s\n", _dMac.c_str());
+					setEthernetHeader(_sMac, _dMac);
+					_sIp = _txSock->getIpAddress();
+					this->debug("-- source ip = %s\n", _sIp.c_str());
+					_dIp = _fcClient->getRadioIp(tenGigIndex);
+					this->debug("-- dest ip = %s\n", _dIp.c_str());
+					setIpHeader(_sIp, _dIp);
+					setUdpHeader(_streamId, _streamId);
+				} else {
+					_frameStart = (unsigned char*)(&_frame.v49.frameStart);
+					_frameLength = sizeof(TxFrame)-( sizeof(ethhdr) + sizeof(iphdr) + sizeof(udphdr) );
+				}
 				setVitaHeader(_streamId);
 				this->debug("-- enabling duc\n");
 				ret = _fcClient->enableDuc(_ducRate, _ducTxChannels,

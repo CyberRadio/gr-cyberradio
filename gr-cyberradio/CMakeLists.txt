@@ -23,13 +23,21 @@
 ########################################################################
 cmake_minimum_required(VERSION 2.6)
 
+# Import package version if specified externally
+# NOTE: Update this default package version string when there is a 
+#    new library release!
 if("${PACKAGE_VERSION}" STREQUAL "")
-   set(PACKAGE_VERSION "1.0.0")
+   set(PACKAGE_VERSION "16.06.20"
+       CACHE STRING "Package version number" FORCE)
 endif("${PACKAGE_VERSION}" STREQUAL "")
 
+# Set the project name and version
 project(gr-cyberradio CXX C)
-set(PROJECT_NAME "CyberRadio")
-set(PROJECT_VERSION ${PACKAGE_VERSION})
+set(PROJECT_NAME "gr-cyberradio"
+    CACHE STRING "Project name" FORCE)
+set(PROJECT_VERSION ${PACKAGE_VERSION}
+    CACHE STRING "Project version number" FORCE)
+
 enable_testing()
 
 #select the release build type by default to get optimization flags

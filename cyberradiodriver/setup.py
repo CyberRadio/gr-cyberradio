@@ -13,7 +13,8 @@
 # -----
 # Under Win32, we can use the py2exe package to create a Windows 
 # executable from the Python code.  To do this, specify "py2exe" 
-# as an argument to the script.
+# as an argument to the script.  We can also build an MSI installer
+# using the built-in "bdist_msi" argument.
 #
 # Under Linux, use the script argument to determine how to package 
 # it (tarball using "bdist_dumb" or RPM using "bdist_rpm").  RPM 
@@ -69,6 +70,7 @@ WINDOWS_MATPLOTLIB_SUPPORT=False
 if sys.platform == 'win32':
     # Under Win32, we can use the py2exe package to create a Windows executable from the
     # Python code.  To do this, specify "py2exe" as an argument to the script.
+    py2exeOpts = {}
     if "py2exe" in sys.argv:
         py2exeOpts = {'py2exe': {'bundle_files': 1, \
                                  "dll_excludes": ["mswsock.dll", "MSWSOCK.dll"], \
@@ -99,6 +101,8 @@ if sys.platform == 'win32':
             import py2exe
         except:
             raise RuntimeError("Cannot build executable using py2exe because the package is not installed")
+    # We can also build an MSI installer by specifying "bdist_msi" as an argument to the script.
+    # This is built-in functionality.
     setup(name=NAME, \
           version=VERSION, \
           description=DESCRIPTION, \

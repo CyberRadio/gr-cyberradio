@@ -37,7 +37,7 @@ namespace LibCyberRadio
 				 * \param ifname Ethernet interface name
 				 * \param useRingBuffer Whether or not to use a ring buffer
 				 */
-				TransmitSocket(const std::string& ifname, bool useRingBuffer);
+				TransmitSocket(const std::string& ifname, unsigned int sport);
 				/*!
 				 * \brief Destroys a TransmitSocket object.
 				 */
@@ -53,24 +53,34 @@ namespace LibCyberRadio
 				 */
 				std::string getIpAddress();
 				/*!
+				 * \brief Gets the IP broadcast address.
+				 * \returns The IP broadcast address string.
+				 */
+				std::string getIpBroadcastAddress();
+				/*!
 				 * \brief Sends a frame of data.
 				 * \param frame The data to send
 				 * \param frameLen The length of the data
 				 * \returns True if the action succeeds, false otherwise.
 				 */
 				bool sendFrame(unsigned char * frame, const int & frameLen);
+				bool isUsingRawSocket(void) { return _isRaw; };
+				bool isUsingUdpSocket(void) { return !_isRaw; };
 			//	bool sendFrame(std::vector<short> frame);
 			//	int sendFrame(std::vector<std::complex>);
 
 			private:
 				int _sockfd;
 				std::string _ifname;
-				bool _usingRingBuffer;
+				bool _isRaw, _isBroadcast;
 				boost::mutex _txMutex;
 				int _txBytes;
 				long unsigned int _sendCount, _byteCount;
+				unsigned int _sport;
 
 				bool _makeSocket();
+				bool _makeRawSocket();
+				bool _makeUdpSocket();
 
 		};
 

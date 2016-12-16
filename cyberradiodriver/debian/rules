@@ -11,3 +11,10 @@
 
 %:
 	dh $@ --with python2
+
+# To keep the Debian build scripts from complaining about installing
+# things in /usr/local, override dh_usrlocal processing so that it
+# does nothing instead.
+override_dh_usrlocal:
+	:
+	
