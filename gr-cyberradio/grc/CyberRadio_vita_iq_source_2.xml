@@ -2,7 +2,7 @@
 <block>
   <name>[CyberRadio] VITA I/Q Source v2</name>
   <key>CyberRadio_vita_iq_source_2</key>
-  <category>CyberRadio/Base</category>
+  <category>[CyberRadio]/Base</category>
   <import>import CyberRadio</import>
 <!--
 	<name>Vita49 I/Q Source v2</name>

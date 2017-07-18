@@ -12,7 +12,7 @@
 <block>
   <name>[CyberRadio] VITA I/Q Source</name>
   <key>CyberRadio_vita_iq_source</key>
-  <category>CyberRadio/Base</category>
+  <category>[CyberRadio]/Base</category>
   <import>import CyberRadio</import>
   <make>CyberRadio.vita_iq_source(
     vita_type=$vita_type,

@@ -12,7 +12,7 @@
 <block>
 	<name>[CyberRadio] File-Like Object Source</name>
 	<key>CyberRadio_file_like_object_source</key>
-	<category>CyberRadio/Base</category>
+	<category>[CyberRadio]/Base</category>
 	<import>import CyberRadio</import>
 	<make>CyberRadio.file_like_object_source()</make>
 	<source>

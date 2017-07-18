@@ -12,7 +12,7 @@
 <block>
   <name>[CyberRadio] NDR651 DUC Sink (Mk2)</name>
   <key>CyberRadio_NDR651_duc_sink_mk2</key>
-  <category>CyberRadio/NDR651</category>
+  <category>[CyberRadio]/NDR651</category>
   <import>import CyberRadio</import>
   <make>CyberRadio.NDR651_duc_sink_mk2(
     radio_host_name=$radio_host_name, 

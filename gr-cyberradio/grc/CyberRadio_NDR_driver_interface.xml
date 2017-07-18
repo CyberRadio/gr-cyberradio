@@ -12,7 +12,7 @@
 <block>
 	<name>[CyberRadio] NDR Driver Interface</name>
 	<key>CyberRadio_NDR_driver_interface</key>
-	<category>CyberRadio/Base</category>
+	<category>[CyberRadio]/Base</category>
 	<import>import CyberRadio</import>
 	<make>CyberRadio.NDR_driver_interface(
     radio_type=$radio_type,

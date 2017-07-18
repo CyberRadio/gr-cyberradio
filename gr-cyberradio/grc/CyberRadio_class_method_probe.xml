@@ -12,7 +12,7 @@
 <block>
 	<name>[CyberRadio] Class Method Probe</name>
 	<key>variable_CyberRadio_class_method_probe</key>
-	<category>CyberRadio/Base</category>
+	<category>[CyberRadio]/Base</category>
 	<import>import time</import>
 	<import>import threading</import>
 	<var_make>self.$(id) = $(id) = $value</var_make>

@@ -12,7 +12,7 @@
 <block>
   <name>[CyberRadio] NDR308 Source</name>
   <key>CyberRadio_NDR308_source</key>
-  <category>CyberRadio/NDR308</category>
+  <category>[CyberRadio]/NDR308</category>
   <import>import CyberRadio</import>
   <make>CyberRadio.NDR308_source(
     verbose_mode=$verbose_mode,
