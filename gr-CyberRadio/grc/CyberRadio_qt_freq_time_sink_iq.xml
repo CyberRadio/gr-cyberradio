@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] QT GUI Freq and Time Sink (IQ)</name>
+  <key>qt_freq_time_sink_iq</key>
+  <category>[CyberRadio]/Misc</category>
+  <flags>need_qt_gui</flags>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.qt_freq_time_sink_iq(
+    label=$label,
+    sampRate=$sampRate,
+    centerFreq=$centerFreq,
+    fftPlotRange=$fftPlotRange,
+    fftSizeN=$fftSizeN,
+    rmsGainRange=$rmsGainRange,
+    enableSpectrum=$enableSpectrum,
+    enableWaterfall=$enableWaterfall,
+    enableTimeWaveform=$enableTimeWaveform,
+    enableRssiDisplay=$enableRssiDisplay,
+    enableRssi=$enableRssi, 
+    fftGainLog=$fftGainLog, 
+    rssiPollRate=$rssiPollRate, 
+    updatePeriod=$updatePeriod,
+    rmsAvgGainExpInit=$rmsAvgGainExpInit,
+)
+#set $win = 'self.%s' % $id
+${gui_hint()($win)}</make>
+  <callback>set_centerFreq($centerFreq)</callback>
+  <callback>set_fftGainLog($fftGainLog)</callback>
+  <callback>set_rmsAvgGainExpInit($rmsAvgGainExpInit)</callback>
+  <callback>set_sampRate($sampRate)</callback>
+  <param>
+    <name>Center Frequency (Hz)</name>
+    <key>centerFreq</key>
+    <value>0.0</value>
+    <type>real</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>FFT y-axis Range</name>
+    <key>fftPlotRange</key>
+    <value>[-120,0]</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>FFT Size Exponent (2^N)</name>
+    <key>fftSizeN</key>
+    <value>10</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Label</name>
+    <key>label</key>
+    <value>"IQ"</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>RMS Avg Gain Exp</name>
+    <key>rmsAvgGainExpInit</key>
+    <value>5</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>RMS Avg. Gain Range</name>
+    <key>rmsGainRange</key>
+    <value>[0,11]</value>
+    <type>raw</type>
+  </param>
+  <param>
+    <name>Sample Rate (Hz)</name>
+    <key>sampRate</key>
+    <value>1.0</value>
+    <type>real</type>
+  </param>
+  <param>
+    <name>Spectrum</name>
+    <key>enableSpectrum</key>
+    <value>True</value>
+    <type>enum</type>
+    <option>
+      <name>Disable</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Enable</name>
+      <key>True</key>
+    </option>
+  </param><param>
+    <name>Waterfall</name>
+    <key>enableWaterfall</key>
+    <value>True</value>
+    <type>enum</type>
+    <option>
+      <name>Disable</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Enable</name>
+      <key>True</key>
+    </option>
+  </param>
+  <param>
+    <name>Time Waveform</name>
+    <key>enableTimeWaveform</key>
+    <value>True</value>
+    <type>enum</type>
+    <option>
+      <name>Disable</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Enable</name>
+      <key>True</key>
+    </option>
+  </param>
+  <param>
+    <name>RSSI Display</name>
+    <key>enableRssiDisplay</key>
+    <value>True</value>
+    <type>enum</type>
+    <option>
+      <name>Enable</name>
+      <key>True</key>
+    </option>
+    <option>
+      <name>Disable</name>
+      <key>False</key>
+    </option>
+  </param>
+  <param>
+    <name>Enable RSSI Calculation</name>
+    <key>enableRssi</key>
+    <value>True</value>
+    <type>enum</type>
+    <option>
+      <name>Enable</name>
+      <key>True</key>
+    </option>
+    <option>
+      <name>Disable</name>
+      <key>False</key>
+    </option>
+  </param>
+  <param>
+    <name>FFT Gain (dB)</name>
+    <key>fftGainLog</key>
+    <value>0.0</value>
+    <type>real</type>
+    <hide>all</hide>
+  </param>
+  <param>
+    <name>RSSI Poll Rate (Hz)</name>
+    <key>rssiPollRate</key>
+    <value>1.0</value>
+    <type>real</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Update Period</name>
+    <key>updatePeriod</key>
+    <value>0.1</value>
+    <type>real</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>GUI Hint</name>
+    <key>gui_hint</key>
+    <value></value>
+    <type>gui_hint</type>
+    <hide>part</hide>
+  </param>
+  <sink>
+    <name>in</name>
+    <type>complex</type>
+    <vlen>1</vlen>
+  </sink>
+  <sink>
+    <name>freq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  <source>
+    <name>freq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+</block>

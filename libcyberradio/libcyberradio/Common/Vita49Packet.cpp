@@ -139,7 +139,7 @@ namespace LibCyberRadio
 			// Decode fractional-seconds timestamp if the type indicates that one is present
 			if (timestampFracType > 0)
 			{
-				timestampFrac = ((uint64_t)rawDataWord(currentWord) << 32)
+				timestampFrac = (((uint64_t)rawDataWord(currentWord)) << 32)
 							  + rawDataWord(currentWord + 1);
 //					std::cerr << "[DBG] TFRAC"
 //							  << " msw=" << rawDataWord(currentWord)

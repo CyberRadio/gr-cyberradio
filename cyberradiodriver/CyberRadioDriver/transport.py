@@ -6,15 +6,28 @@
 #
 # \author NH
 # \author DA
-# \copyright Copyright (c) 2014 CyberRadio Solutions, Inc.  All rights 
-# reserved.
+# \author MN
+# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
+#	 All rights reserved.
 #
 ###############################################################
 
-import socket, select, serial, traceback, time, sys
-import command, log
-from time import gmtime, strftime
+# Imports from other modules in this package
+import command
+import log
+# Imports from external modules
+import serial
+# Python standard library imports
 import datetime
+import select
+import socket
+import sys
+import time
+import traceback
+#from time import gmtime, strftime
+import requests
+import ndrcert
+import json
 
 ##
 # Radio transport class.
@@ -53,6 +66,7 @@ class radio_transport(log._logger):
 		self.tcp = None
 		self.tty = None
 		self.udp = None
+		self.https = None
 		self.fd = None
 		self.logCtrl = logCtrl
 		self.selectInput = []
@@ -65,6 +79,7 @@ class radio_transport(log._logger):
 		else:
 			self.rxFunction = self.receiveCli
 		self.connectError = ""
+		self.httpStr = ""
 	
 	##
 	# \internal
@@ -92,7 +107,7 @@ class radio_transport(log._logger):
 	def connect(self,mode,host_or_dev,port_or_baudrate):
 		mode = str(mode).strip().lower()
 		self.log("Connecting (%s,%s,%s)..."%(repr(mode),repr(host_or_dev),repr(port_or_baudrate)))
-		if mode in ("tcp","tty","udp"):
+		if mode in ("tcp","tty","udp","https"):
 			if self.connected:
 				self.disconnect()
 			if mode == "tcp":
@@ -101,6 +116,8 @@ class radio_transport(log._logger):
 				self.connectUdp(str(host_or_dev),int(port_or_baudrate) if port_or_baudrate is not None else self.defaultPort,)
 			elif mode == "tty":
 				self.connectTty(str(host_or_dev),int(port_or_baudrate) if port_or_baudrate is not None else self.defaultBaudrate,)
+			elif mode == "https":
+				self.connectHttps(str(host_or_dev),int(port_or_baudrate) if port_or_baudrate is not None else 8617,)
 		if mode in ("tcp","tty",):
 			testCmd = command.radio_command(parent=self, verbose=self.verbose, 
 											logFile=self.logFile)
@@ -113,6 +130,8 @@ class radio_transport(log._logger):
 		elif mode in ("udp",):
 			#TODO: Add some sort of connection test here.
 			self.log("...Connected! (w/o connection test)")
+		elif mode in ("https",) and self.connected:
+			self.log("...Connected!")
 		return self.connected
 	
 	##
@@ -128,6 +147,7 @@ class radio_transport(log._logger):
 	def connectUdp(self,host,port):
 		self.log("Connecting via UDP (%s,%s)..."%(repr(host),repr(port)))
 		self._name = "transportUDP"
+		self.parent.ipAddr = host
 		try:
 			self.udp = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
 			self.udp.connect((str(host),int(port)))
@@ -135,7 +155,8 @@ class radio_transport(log._logger):
 			self.connected = True
 		except:
 			self.connectError = sys.exc_info()[1]
-			self.log(traceback.format_exc())
+			self.log("EXCEPTION:", self.connectError)
+			self.logIfVerbose(traceback.format_exc())
 			#traceback.print_exc()
 			self.disconnect()
 		return self.connected
@@ -160,8 +181,46 @@ class radio_transport(log._logger):
 			self.connected = True
 		except:
 			self.connectError = sys.exc_info()[1]
-			self.log(traceback.format_exc())
+			self.log("EXCEPTION:", self.connectError)
+			self.logIfVerbose(traceback.format_exc())
 			#traceback.print_exc()
+			self.disconnect()
+		return self.connected
+	
+	##
+	# \internal
+	# Connects the transport via HTTPS.
+	#
+	# This method just connects the transport.  No connection testing
+	# is performed.
+	#
+	# \param host The hostname for the remote device.
+	# \param port The port for the remote device.
+	# \return True if connection was successful, False otherwise.
+	def connectHttps(self,host,port):
+		self.log("Connecting via HTTPS (%s,%s)..."%(repr(host),repr(port)))
+		self._name = "transportHTTPS"
+		self.parent.ipAddr = host
+		try:
+			self.https = requests.Session()
+			self.httpsUrl = "https://{0}:{1}/api/command".format(host,port)
+			from requests.packages.urllib3.exceptions import InsecureRequestWarning
+			requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+			from requests.packages.urllib3.exceptions import InsecurePlatformWarning
+			requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
+			from requests.packages.urllib3.exceptions import SNIMissingWarning
+			requests.packages.urllib3.disable_warnings(SNIMissingWarning)
+			rsp = self.https.get("https://{0}:{1}".format(host,port), verify=False)
+			if (rsp.status_code != 200):
+				self.disconnect()
+# 			self.https = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+# 			self.https.connect((str(host),int(port)))
+# 			self.selectInput.append(self.https)
+			self.connected = True
+		except:
+			self.connectError = sys.exc_info()[1]
+			self.log("EXCEPTION:", self.connectError)
+			self.logIfVerbose(traceback.format_exc())
 			self.disconnect()
 		return self.connected
 	
@@ -188,7 +247,8 @@ class radio_transport(log._logger):
 			self.connected = True
 		except:
 			self.connectError = sys.exc_info()[1]
-			self.log(traceback.format_exc())
+			self.log("EXCEPTION:", self.connectError)
+			self.logIfVerbose(traceback.format_exc())
 			#traceback.print_exc()
 			self.disconnect()
 		return self.connected
@@ -203,25 +263,29 @@ class radio_transport(log._logger):
 			try:
 				self.tcp.close()
 			except:
-				self.log(traceback.format_exc())
+				self.logIfVerbose(traceback.format_exc())
 				#traceback.print_exc()
 		elif self.tty is not None:
 			self.log("TTY... ")
 			try:
 				self.tty.close()
 			except:
-				self.log(traceback.format_exc())
+				self.logIfVerbose(traceback.format_exc())
 				#traceback.print_exc()
+		elif self.https is not None:
+			self.log("HTTPS... ")
 		self.log("...Disconnected!")
 		self.connected = False
 		self.tcp = None
 		self.tty = None
+		self.udp = None
+		self.https = None
 		self.selectInput = []
 	
 	##
 	# Gets whether the transport is connected.
 	def isConnected(self,):
-		return any( conn is not None for conn in (self.tty,self.tcp,self.udp,) )
+		return any( conn is not None for conn in (self.tty,self.tcp,self.udp,self.https,) )
 	
 	##
 	# Sends a command over the the transport.
@@ -230,7 +294,8 @@ class radio_transport(log._logger):
 	# \param clearRx Whether to make sure that the receive buffer is clear before
 	#	sending the command.
 	# \return Whether the transport is still connected.
-	def sendCommand(self,cmd,clearRx=True):
+	#def sendCommand(self,cmd,clearRx=True):
+	def sendCommand(self,cmd,clearRx=False):
 		try:
 			delta = datetime.timedelta(seconds=0,microseconds=0)
 			if self.lastTx == 0:
@@ -241,33 +306,63 @@ class radio_transport(log._logger):
 			if clearRx:
 				rx = self.receive(timeout=0.0)
 				if len(rx)>0:
-					self.logIfVerbose("**  Rx(%s)%s: %s" % ( "TCP" if self.tcp is not None else "UDP" if self.udp is not None else "TTY",\
+					self.logIfVerbose("**  Rx(%s)%s: %s" % ( self.transportIdent(), \
 													datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), \
 													"!! Data waiting before sending a command %s  !!"%repr(rx), \
 													 ))
+			logCmd = str(cmd)
 			if self.tcp is not None:
 				self.tcp.send( str(cmd) )
 			elif self.tty is not None:
 				self.tty.write( str(cmd) )
 			elif self.udp is not None:
-				self.udp.send( str(cmd) )
+				self.udp.send(cmd)
+			elif self.https is not None:
+				if isinstance(cmd, str):
+					jsonCmd = json.loads(cmd)
+				elif isinstance(cmd, dict):
+					jsonCmd = cmd
+				else:
+					jsonCmd = None
+				self.logIfVerbose("cmd is : %r"%(str(jsonCmd),))
+				if jsonCmd is not None:
+					httprsp = self.https.post(self.httpsUrl, json=jsonCmd, verify=False)
+					self.logIfVerbose("HTTPS rsp: code=%d  %r" % (httprsp.status_code, httprsp.text) )
+					# Radios return HTTP 400 (Bad Request) when commands don't work. These may have
+					# valid JSON responses.
+# 					if httprsp.status_code==200:
+# 						self.httpStr = httprsp.text
+# 					else:
+# 						self.httpStr = None
+					self.httpStr = httprsp.text
+# 				hname = self.parent.ipAddr
+# 				cmdurl = 'https://' + hname + '/api/command'
+# 				loadcmd = json.loads(cmd)
+# 				logCmd = str(loadcmd)
+# 				self.logIfVerbose("cmd is : %r", str(loadcmd))
+# 				try:
+# 					httprsp = requests.post(cmdurl,json=loadcmd,verify=ndrcert.crt)
+# 					self.httpStr = httprsp.text
+# 					print "http response text is ", self.httpStr
+# 				except:
+# 					print "could not post http command to radio"
 			self.logIfVerbose("**  Tx(%s)%s delta %s.%s: %r" % ( \
-												"TCP" if self.tcp is not None else "UDP" if self.udp is not None else "TTY", \
+												self.transportIdent(), \
 												datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), \
 												delta.seconds, \
 												delta.microseconds, \
-												str(cmd), \
+												logCmd, \
 												 ))
 			if self.logCtrl is not None:
 				self.logCtrl.addTransaction( txTime="%s" % ( \
 												datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")),\
-												txString=str(cmd), \
+												txString=logCmd, \
 												rxTime=None, \
 												rxString=None, \
 												 )
 
 		except:
-			self.log(traceback.format_exc())
+			self.logIfVerbose(traceback.format_exc())
 			#traceback.print_exc()
 			self.disconnect()
 		return self.connected
@@ -280,6 +375,51 @@ class radio_transport(log._logger):
 	#	 use the default timeout value for the transport.
 	# \return The received string.
 	def receiveJson(self,timeout=None):
+		if self.udp is not None:
+			return self.receiveJsonUdp(timeout)
+		elif self.https is not None:
+			return self.receiveJsonHttps(timeout)
+	
+	##
+	# \internal
+	# Receives a JSON-formatted string over the HTTPS transport.
+	#
+	# \param timeout The timeout value to use for receiving data.  If None,
+	#	 use the default timeout value for the transport.
+	# \return The received string.
+	def receiveJsonHttps(self,timeout=None):
+# 		self.logIfVerbose("Transport.py - Receive JSON over HTTPS")
+		delta = datetime.timedelta(seconds=0)
+		if self.lastRx == 0:
+			self.lastRx = datetime.datetime.now()
+		else:
+			delta = datetime.datetime.now() - self.lastRx
+			self.lastRx = datetime.datetime.now()
+
+# 		self.logIfVerbose("HTTP response text while response processing is %s" % self.httpStr)
+		rxString = self.httpStr
+
+		if (rxString is not None) and (len(rxString)>0):
+			self.logIfVerbose("**  Rx(HTTPS)%s delta %s.%s: %s" % ( \
+								datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), \
+								delta.seconds,delta.microseconds, \
+								repr(rxString), \
+								 ))
+		else:
+			rxString = "Empty Read"
+			self.disconnect()
+
+		return rxString
+	
+	##
+	# \internal
+	# Receives a JSON-formatted string over the UDP transport.
+	#
+	# \param timeout The timeout value to use for receiving data.  If None,
+	#	 use the default timeout value for the transport.
+	# \return The received string.
+	def receiveJsonUdp(self,timeout=None):
+		self.logIfVerbose("Transport.py - Receive JSON over UDP")
 		rxString = ""
 		try:
 			delta = datetime.timedelta(seconds=0)
@@ -298,9 +438,10 @@ class radio_transport(log._logger):
 										repr(rxString), \
 										 ))
 				else:
+					rxString = "Empty Read"
 					self.disconnect()
 		except:
-			self.log(traceback.format_exc())
+			self.logIfVerbose(traceback.format_exc())
 			#traceback.print_exc()
 			rxString = "Exception"
 		return rxString
@@ -334,7 +475,7 @@ class radio_transport(log._logger):
 					else:
 						inString = ""
 					if len(inString)>0:
-						self.logIfVerbose("**  Rx(%s)%s delta %s.%s: %s" % ("TCP" if self.tcp is not None else "TTY",datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),delta.seconds,delta.microseconds,repr(inString)))
+						self.logIfVerbose("**  Rx(%s)%s delta %s.%s: %s" % (self.transportIdent(),datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),delta.seconds,delta.microseconds,repr(inString)))
 #						if self.logCtrl is not None:
 #							self.logCtrl.addTransaction(txTime=None,txString=None,rxTime="%s"%(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")), \
 #													rxString="%r"%(repr(inString)))
@@ -348,11 +489,11 @@ class radio_transport(log._logger):
 						break
 				else:
 					if timeout is not None and timeout>0:
-						self.logIfVerbose("**  Rx(%s)%s: %s" % ("TCP" if self.tcp is not None else "TTY",datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),"!! TIMEOUT  !!"))
+						self.logIfVerbose("**  Rx(%s)%s: %s" % (self.transportIdent(),datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),"!! TIMEOUT  !!"))
 						rx.append( "\nTIMEOUT\n" )
 					break
 		except:
-			self.log(traceback.format_exc())
+			self.logIfVerbose(traceback.format_exc())
 			#traceback.print_exc()
 			self.disconnect()
 			rx.append( "\nEXCEPTION\n" )
@@ -432,6 +573,22 @@ class radio_transport(log._logger):
 			return sock_rlist_hit + ser_rlist_hit, wlist_hit, xlist_hit
 		else:
 			return select.select(rlist, wlist, xlist, timeout)
+
+	##
+	# \internal
+	# \brief Brief identifier for the active transport method
+	# \returns A string identifying the transport.
+	def transportIdent(self):
+		ret = "<unknown>"
+		if self.tcp is not None:
+			ret = "TCP"
+		elif self.tty is not None:
+			ret = "TTY"
+		elif self.udp is not None:
+			ret = "UDP"
+		elif self.https is not None:
+			ret = "HTTPS"
+		return ret
 
 
 if __name__=="__main__":

@@ -11,6 +11,7 @@
 #include "LibCyberRadio/NDR651/TransmitPacketizer.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
+#include <unistd.h>
 
 #define BOOL_DEBUG(x) (x ? "true" : "false")
 
@@ -59,11 +60,12 @@ namespace LibCyberRadio
 				unsigned int ducChannel,
 				const std::string& ifname,
 				unsigned int tenGigIndex,
+				int dipIndex,
 				unsigned int ducRate,
 				unsigned int ducTxChannels,
 				float ducFreq,
 				float ducAtten,
-				float txFreq,
+				double txFreq,
 				float txAtten,
 				unsigned int streamId,
 				bool config_tx,
@@ -74,6 +76,7 @@ namespace LibCyberRadio
 			_ducChannel(0),
 			_ifname(""),
 			_tenGigIndex(0),
+			_dipIndex(-1),
 			_ducRate(0),
 			_ducTxChannels(0),
 			_ducFreq(0),
@@ -83,6 +86,7 @@ namespace LibCyberRadio
 			_streamId(streamId),
 			_config_tx(config_tx),
 			_txSock(NULL),
+			_numSock(8),
 			_fcClient(NULL),
 			_frameStart((unsigned char*)(&_frame)),
 			_frameLength(sizeof(TxFrame)),
@@ -93,25 +97,39 @@ namespace LibCyberRadio
 			_dIp(""),
 			_sPort(0),
 			_dPort(0),
+			_updatePE(false),
+			_duchsPfThresh(61*(67108862/64)),
+			_duchsPeThresh(58*(67108862/64)),
+			_duchsPeriod(10),
+			_samplesPerFrame(SAMPLES_PER_FRAME),
 			//_waiting(false),
 			_firstFrame(true),
-			_constructing(true)
+			_running(false),
+			_constructing(true),
+			_frameCount(0),
+			_pauseCount(64)
 		{
 			this->debug("construction\n");
+			std::cout << "using local lib" << std::endl;
 			memset(&_frame, 0, sizeof(TxFrame));
-			_fcClient = new FlowControlClient(ducChannel, _config_tx, 16, d_debug);
+			_fcClient = new FlowControlClient(ducChannel, _config_tx, 4, d_debug);
+			_statusRx = new UdpStatusReceiver(ifname, 65500+ducChannel, d_debug, _updatePE);
+
 			setRadioParameters(radioHostName, radioTcpPort);
 			setDucInterface(ifname, tenGigIndex);
 			setDucParameters(tenGigIndex, ducRate, ducTxChannels,
 							 ducFreq, ducAtten, txFreq, txAtten,
 							 streamId);
-			_statusRx = new UdpStatusReceiver("lo", streamId, d_debug);
 			_constructing = false;
+			_delayTime.tv_sec = 0;
+			_delayTime.tv_nsec = 100;
+
 		}
 
 		TransmitPacketizer::~TransmitPacketizer()
 		{
 			// TODO Auto-generated destructor stub
+
 			this->debug("destruction\n");
 			if ( _fcClient != NULL )
 				delete _fcClient;
@@ -161,10 +179,18 @@ namespace LibCyberRadio
 			// use a different interface.
 			if ( ifname != _ifname )
 			{
-				if ( _txSock != NULL )
+				if ( _txSock != NULL ) {
 					delete _txSock;
+					_txSockVec.clear();
+				}
 				_ifname = ifname;
-				_txSock = new TransmitSocket(_ifname, _streamId);
+				//~ _txSock = new TransmitSocket(_ifname, _streamId);
+				for (int i=0; i<_numSock; i++) {
+					_txSockVec.push_back(new TransmitSocket(_ifname, _streamId));
+				}
+				std::cout << "# sockets = " << _txSockVec.size() << std::endl;
+				_currentSockIndex = 0;
+				_txSock = _txSockVec[_currentSockIndex];
 			}
 			_tenGigIndex = tenGigIndex;
 			this->debug("duc interface set ok\n");
@@ -212,6 +238,19 @@ namespace LibCyberRadio
 			return ret;
 		}
 
+		bool TransmitPacketizer::setDucTxinvMode(unsigned int txinvMode)
+		{
+			bool ret = true;
+			_configuring = true;
+			_txinvMode = txinvMode;
+			if (_fcClient != NULL)
+			{
+				ret = _fcClient->setDucTxinvMode(txinvMode, true);
+			}
+			_configuring = false;
+			return ret;
+		}
+
 		bool TransmitPacketizer::setDucAtten(float ducAtten)
 		{
 			bool ret = true;
@@ -225,14 +264,55 @@ namespace LibCyberRadio
 			return ret;
 		}
 
-		bool TransmitPacketizer::setTxFreq(float txFreq)
+
+		void TransmitPacketizer::setDuchsParameters(unsigned int duchsPfThresh, unsigned int duchsPeThresh, unsigned int duchsPeriod, bool updatePE) {
+			bool change = false;
+			if (_updatePE != updatePE) {
+				_updatePE = updatePE;
+				if (updatePE) {
+					std::cerr << "setDuchsParameters: Updating on PE packet" << std::endl;
+				} else {
+					std::cerr << "setDuchsParameters: Updating on periodic packet" << std::endl;
+				}
+				_statusRx->setUpdatePE(_updatePE);
+			}
+			if (_duchsPfThresh != duchsPfThresh) {
+				std::cerr << "setDuchsParameters: Modify duchsPfThresh " << _duchsPfThresh << "->" << duchsPfThresh << std::endl;
+				_duchsPfThresh = duchsPfThresh;
+				change = true;
+			}
+			if (_duchsPeThresh != duchsPeThresh) {
+				std::cerr << "setDuchsParameters: Modify duchsPeThresh " << _duchsPeThresh << "->" << duchsPeThresh << std::endl;
+				_duchsPeThresh = duchsPeThresh;
+				change = true;
+			}
+			if (_duchsPeriod != duchsPeriod) {
+				std::cerr << "setDuchsParameters: Modify duchsPeriod " << _duchsPeriod << "->" << duchsPeriod << std::endl;
+				_duchsPeriod = duchsPeriod;
+				change = true;
+			}
+			if (change && _running) {
+				_fcClient->setDuchsParameters(_duchsPfThresh, _duchsPeThresh, _duchsPeriod);
+			}
+		}
+
+		bool TransmitPacketizer::setTxFreq(double txFreq)
 		{
 			bool ret = true;
+			bool shfChange = (_txFreq != txFreq) && (((_txFreq >= 200.0)&&(txFreq < 200.0))||((_txFreq < 200.0)&&(txFreq >= 200.0)));
 			_configuring = true;
 			_txFreq = txFreq;
 			if (_fcClient != NULL)
 			{
-				ret = _fcClient->setTxFrequency((int)_txFreq, true);
+				//~ if (shfChange) {
+					//~ ret = _fcClient->enableDuc(_ducRate, _ducTxChannels,
+										   //~ _streamId, _tenGigIndex,
+										   //~ _ducAtten, _txFreq,
+										   //~ (long)_ducFreq,
+										   //~ (unsigned int)_txAtten);
+				//~ } else {
+					ret = _fcClient->setTxFrequency(_txFreq, true); // Allow double input
+				//~ }
 			}
 			_configuring = false;
 			return ret;
@@ -325,7 +405,7 @@ namespace LibCyberRadio
 								unsigned int ducTxChannels,
 								float ducFreq,
 								float ducAtten,
-								float txFreq,
+								double txFreq,
 								float txAtten,
 								unsigned int streamId)
 		{
@@ -348,13 +428,13 @@ namespace LibCyberRadio
 			// failed to make our control objects!
 			if ( (_txSock != NULL) && (_fcClient != NULL) )
 			{
+				_sMac = _txSock->getMacAddress();
+				_sIp = _txSock->getIpAddress();
 				if (_txSock->isUsingRawSocket()) {
-					_sMac = _txSock->getMacAddress();
 					this->debug("-- source mac = %s\n", _sMac.c_str());
 					_dMac = _fcClient->getRadioMac(tenGigIndex);
 					this->debug("-- dest mac = %s\n", _dMac.c_str());
 					setEthernetHeader(_sMac, _dMac);
-					_sIp = _txSock->getIpAddress();
 					this->debug("-- source ip = %s\n", _sIp.c_str());
 					_dIp = _fcClient->getRadioIp(tenGigIndex);
 					this->debug("-- dest ip = %s\n", _dIp.c_str());
@@ -384,29 +464,38 @@ namespace LibCyberRadio
 
 		void TransmitPacketizer::start()
 		{
-			this->debug("Starting flow control threads.\n");
-			if ( _fcClient != NULL )
-				_fcClient->start();
+			_running = true;
+			//~ if ( _fcClient != NULL )
+				//~ _fcClient->start();
+			_fcClient->setDucDipStatusEntry(-1, _sIp, _sMac, _statusRx->getUdpPort());
+			_statusRx->setUpdatePE(_updatePE);
+			_fcClient->setDuchsParameters(_duchsPfThresh, _duchsPeThresh, _duchsPeriod);
 			if ( _statusRx != NULL )
 				_statusRx->start();
 		}
 
 		void TransmitPacketizer::stop()
 		{
-			this->debug("Stopping flow control threads.\n");
+			std::cerr << "Stopping flow control threads.\n";
+			this->setDuchsParameters(0, 0, 0, false);
 			if ( _fcClient != NULL ) {
-				_fcClient->interrupt();
+				//~ _fcClient->interrupt();
 				_fcClient->setDucTenGbePort(0, false);
 				_fcClient->setDucRateIndex(0, false);
 				_fcClient->setDucFrequency(0, false);
 				_fcClient->setDucStreamId(0, false);
 				_fcClient->setDucEnable(false, true);
 				delete _fcClient;
+				_fcClient = NULL;
 			}
 			if ( _statusRx != NULL ){
+				std::cerr << "_statusRx->interrupt()\n";
 				_statusRx->interrupt();
+				std::cerr << "delete _statusRx\n";
 				delete _statusRx;
+				_statusRx = NULL;
 			}
+			std::cerr << "Stopped flow control threads.\n";
 		}
 
 		unsigned int TransmitPacketizer::sendFrame(short * samples)
@@ -416,29 +505,30 @@ namespace LibCyberRadio
 			// failed to make our control objects!
 			if ( (_txSock != NULL) && (_fcClient != NULL) && (_statusRx != NULL) )
 			{
-				if (!_statusRx->okToSend(128*SAMPLES_PER_FRAME,false))
+				while (!_statusRx->okToSend(SAMPLES_PER_FRAME,false))
 				{
-					//_waiting = true;
+					usleep(1000);
 				}
-				else if (_statusRx->okToSend(SAMPLES_PER_FRAME,true))
+				memcpy(&_frame.payload.samples, samples, 4*SAMPLES_PER_FRAME);
+				if (_txSock->sendFrame(_frameStart, _frameLength))
 				{
-					//if (_waiting)
-					//	_waiting = false;
-					for(int i=0; i<2*SAMPLES_PER_FRAME; i++)
-					{
-						_frame.payload.samples[i] = samples[i];
+					_samplesSent = SAMPLES_PER_FRAME;
+					_incrementVitaHeader();
+					if (_firstFrame) {
+						this->debug("1st frame sent!\n");
+						_firstFrame = false;
 					}
-					if (_txSock->sendFrame(_frameStart, _frameLength))
-					{
-						_samplesSent = SAMPLES_PER_FRAME;
-						_incrementVitaHeader();
-						if (_firstFrame) {
-							this->debug("1st frame sent!\n");
-							_firstFrame = false;
-						}
-					}
-					_statusRx->sentNSamples(_samplesSent);
+
 				}
+				_currentSockIndex = (_currentSockIndex+1)%_txSockVec.size();
+				_txSock = _txSockVec[_currentSockIndex];
+				_statusRx->sentNSamples(_samplesSent);
+				//~ _frameCount += 1;
+				//~ if (_frameCount==_pauseCount) {
+					//~ std::cout << "UNPAUSING\n";
+					//~ _fcClient->unpause();
+				//~ }
+				//~ usleep(1);
 			}
 			return _samplesSent;
 		}
@@ -523,7 +613,8 @@ namespace LibCyberRadio
 		{
 			//Vita49
 			_frame.v49.frameStart = VRLP;
-			_frame.v49.frameSize = SAMPLES_PER_FRAME+10;
+			//~ _frame.v49.frameSize = SAMPLES_PER_FRAME+10;
+			_frame.v49.frameSize = _samplesPerFrame+10;
 			_frame.v49.streamId = streamId;
 			_frame.v49.packetType = 0x1;
 			_frame.v49.TSF = 0x1;
@@ -532,10 +623,17 @@ namespace LibCyberRadio
 			_frame.v49.C = 1;
 			_frame.v49.classId1 = 0x00fffffa;
 			_frame.v49.classId2 = 0x00130000;
-			_frame.v49.packetSize = SAMPLES_PER_FRAME+7;
+			//~ _frame.v49.packetSize = SAMPLES_PER_FRAME+7;
+			_frame.v49.packetSize = _samplesPerFrame+7;
 			_frame.vend.frameEnd = VEND;
 			return true;
 		}
+		
+		//~ unsigned int TransmitPacketizer::setSamplesPerFrame(unsigned int samplesPerFrame) {
+			//~ _samplesPerFrame = samplesPerFrame;
+			//~ _frame.v49.packetSize = _samplesPerFrame+7;
+			//~ _frame.v49.frameSize = _samplesPerFrame+10;
+		//~ }
 
 		void TransmitPacketizer::_incrementVitaHeader()
 		{

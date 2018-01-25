@@ -1,0 +1,37 @@
+<block>
+  <name>[CyberRadio] Vita/IQ Snapshot Vector Source</name>
+  <key>CyberRadio_snapshot_vector_source</key>
+  <category>[CyberRadio]/Vita and UDP Sources</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.snapshot_vector_source($ip, $port, $block_size, $block_rate)</make>
+  <param>
+    <name>IP</name>
+    <key>ip</key>
+    <value>0.0.0.0</value>
+    <type>string</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Port</name>
+    <key>port</key>
+    <value>11000</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Block Size</name>
+    <key>block_size</key>
+    <value>131072</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Block Rate</name>
+    <key>block_rate</key>
+    <value>10</value>
+    <type>int</type>
+  </param>
+  <source>
+    <name>out</name>
+    <type>complex</type>
+    <vlen>$block_size</vlen>
+  </source>
+</block>

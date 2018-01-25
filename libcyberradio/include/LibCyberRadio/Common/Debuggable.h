@@ -56,6 +56,13 @@ namespace LibCyberRadio
 			 * \return The number of characters outputted.
 			 */
 			int debug(const char *format, ...);
+			/*!
+			 * \brief Returns a string representation of a Boolean value.
+			 *
+			 * \param val The Boolean value.
+			 * \return The string representation.
+			 */
+			const char* debugBool(bool val);
 
 		public:
 			bool d_debug;

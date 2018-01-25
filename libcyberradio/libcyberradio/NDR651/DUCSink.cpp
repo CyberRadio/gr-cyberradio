@@ -28,7 +28,7 @@ namespace LibCyberRadio
 				  const std::string& name,
 				  const std::string& radio_host_name,
 				  unsigned int radio_tcp_port,
-				  const std::vector<std::string>& tengig_iface_list,
+				  unsigned int tengig_iface_index,
 				  float iq_scale_factor,
 				  unsigned int duc_channel,
 				  const std::string& duc_iface_string,
@@ -36,23 +36,27 @@ namespace LibCyberRadio
 				  long duc_frequency,
 				  float duc_attenuation,
 				  unsigned int duc_tx_channels,
-				  unsigned int duc_tx_frequency,
+				  double duc_tx_frequency,
 				  unsigned int duc_tx_attenuation,
 				  unsigned int duc_stream_id,
 				  bool config_tx,
 				  bool debug,
 				  unsigned int fc_update_rate,
 				  bool use_udp,
-				  bool use_ring_buffer) :
+				  bool use_ring_buffer,
+				  unsigned int duchsPfThresh, 
+				  unsigned int duchsPeThresh, 
+				  unsigned int duchsPeriod, 
+				  bool updatePE, 
+				  int txinv_mode) :
 			Debuggable(debug, name),
 			d_name(name),
 			d_radio_host_name(radio_host_name),
 			d_radio_tcp_port(radio_tcp_port),
-			d_tengig_iface_list(tengig_iface_list),
+			d_duc_iface_index(tengig_iface_index),
 			d_iq_scale_factor(iq_scale_factor),
 			d_duc_channel(duc_channel),
 			d_duc_iface_string(duc_iface_string),
-			d_duc_iface_index(0),
 			d_duc_rate_index(duc_rate_index),
 			d_duc_frequency(duc_frequency),
 			d_duc_attenuation(duc_attenuation),
@@ -64,20 +68,27 @@ namespace LibCyberRadio
 			d_fc_update_rate(fc_update_rate),
 			d_use_udp(use_udp),
 			d_use_ring_buffer(use_ring_buffer),
-			d_tx(NULL)
+			d_tx(NULL),
+			d_duchsPfThresh(duchsPfThresh), 
+			d_duchsPeThresh(duchsPeThresh), 
+			d_duchsPeriod(duchsPeriod), 
+			d_updatePE(updatePE), 
+			d_duc_txinv_mode(txinv_mode)
 		{
 			this->debug("construction\n");
 			memset(d_sample_buffer, 0, SAMPLES_PER_FRAME * 2 * sizeof(short));
-			set_duc_iface_index_from_string();
+			//~ set_duc_iface_index_from_string();
 			// d_tx initial configuration
 			d_tx = new NDR651::TransmitPacketizer(
 					d_radio_host_name, d_radio_tcp_port,
 					d_duc_channel, d_duc_iface_string,
-					d_duc_iface_index, d_duc_rate_index,
+					d_duc_iface_index, -1, d_duc_rate_index,
 					d_duc_tx_channels, d_duc_frequency,
 					d_duc_attenuation, d_duc_tx_frequency,
 					d_duc_tx_attenuation, d_duc_stream_id,
 					d_config_tx, d_debug);
+			d_tx->setDuchsParameters(d_duchsPfThresh, d_duchsPeThresh, d_duchsPeriod, d_updatePE);
+			d_tx->setDucTxinvMode(d_duc_txinv_mode);
 		}
 
 		/*
@@ -140,7 +151,7 @@ namespace LibCyberRadio
 		void DUCSink::set_duc_iface_string(const std::string& duc_iface_string)
 		{
 			d_duc_iface_string = duc_iface_string;
-			set_duc_iface_index_from_string();
+			//~ set_duc_iface_index_from_string();
 			if ( d_tx != NULL )
 				d_tx->setDucInterface(d_duc_iface_string, d_duc_iface_index);
 		}
@@ -169,6 +180,13 @@ namespace LibCyberRadio
 				d_tx->setDucFreq(d_duc_frequency);
 		}
 
+		void DUCSink::set_duc_txinv_mode(int duc_txinv_mode)
+		{
+			d_duc_txinv_mode = duc_txinv_mode;
+			if ( d_tx != NULL )
+				d_tx->setDucTxinvMode((unsigned int)duc_txinv_mode);
+		}
+
 		float DUCSink::get_duc_attenuation() const
 		{
 			return d_duc_attenuation;
@@ -193,12 +211,12 @@ namespace LibCyberRadio
 				d_tx->setDucTxChannels(d_duc_tx_channels);
 		}
 
-		unsigned int DUCSink::get_duc_tx_frequency() const
+		double DUCSink::get_duc_tx_frequency() const
 		{
 			return d_duc_tx_frequency;
 		}
 
-		void DUCSink::set_duc_tx_frequency(unsigned int duc_tx_frequency)
+		void DUCSink::set_duc_tx_frequency(double duc_tx_frequency)
 		{
 			d_duc_tx_frequency = duc_tx_frequency;
 			if ( (d_tx != NULL)&&d_config_tx )
@@ -238,6 +256,31 @@ namespace LibCyberRadio
 				ret = (long)(102.4e6 / pow(2, d_duc_rate_index));
 			return ret;
 		}
+
+		void DUCSink::set_duchs_pf_threshold(unsigned int duchsPfThresh) {
+			d_duchsPfThresh = duchsPfThresh;
+			//~ d_tx->setDuchsParameters(duchsPfThresh, d_tx->getDuchsPeThresh(), d_tx->getDuchsPeriod(), d_tx->getUpdatePE());
+			d_tx->setDuchsParameters(d_duchsPfThresh, d_duchsPeThresh, d_duchsPeriod, d_updatePE);
+		}
+
+		void DUCSink::set_duchs_pe_threshold(unsigned int duchsPeThresh) {
+			d_duchsPeThresh = duchsPeThresh;
+			//~ d_tx->setDuchsParameters(d_tx->getDuchsPfThresh(), duchsPeThresh, d_tx->getDuchsPeriod(), d_tx->getUpdatePE());
+			d_tx->setDuchsParameters(d_duchsPfThresh, d_duchsPeThresh, d_duchsPeriod, d_updatePE);
+		}
+
+		void DUCSink::set_duchs_period(unsigned int duchsPeriod) {
+			d_duchsPeriod = duchsPeriod;
+			//~ d_tx->setDuchsParameters(d_tx->getDuchsPfThresh(), d_tx->getDuchsPeThresh(), duchsPeriod, d_tx->getUpdatePE());
+			d_tx->setDuchsParameters(d_duchsPfThresh, d_duchsPeThresh, d_duchsPeriod, d_updatePE);
+		}
+
+		void DUCSink::set_duchs_update_pe(bool updatePE) {
+			d_updatePE = updatePE;
+			//~ d_tx->setDuchsParameters(d_tx->getDuchsPfThresh(), d_tx->getDuchsPeThresh(), d_tx->getDuchsPeriod(), updatePE);
+			d_tx->setDuchsParameters(d_duchsPfThresh, d_duchsPeThresh, d_duchsPeriod, d_updatePE);
+		}
+
 
 		bool DUCSink::start()
 		{

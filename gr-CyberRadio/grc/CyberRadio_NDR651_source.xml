@@ -1,0 +1,324 @@
+<?xml version='1.0' encoding='ASCII'?>
+<!--
+###################################################
+# [CyberRadio] NDR651 Source
+#
+# Author: DA
+#
+# Copyright: (c) 2015 CyberRadio Solutions, Inc.
+#    All rights reserved.
+###################################################
+ -->
+<block>
+  <name>[CyberRadio] NDR651 Source</name>
+  <key>CyberRadio_NDR651_source</key>
+  <category>[CyberRadio]/Radio Sources</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.NDR651_source(
+    verbose_mode=$verbose_mode,
+    radio_host_name=$radio_host_name,
+    radio_host_port=$radio_host_port,
+    tengig_iface_list=$tengig_iface_list,
+    num_tuners=$num_tuners,
+    tuner1_param_list=$tuner1_param_list,
+#if $num_tuners() >= 2
+    tuner2_param_list=$tuner2_param_list,
+#end if
+    num_wbddcs=$num_wbddcs,
+#if $num_wbddcs() >= 1
+    wbddc1_param_list=$wbddc1_param_list,
+#end if
+#if $num_wbddcs() >= 2
+    wbddc2_param_list=$wbddc2_param_list,
+#end if
+    num_nbddcs=$num_nbddcs,
+#if $num_nbddcs() >= 1
+    nbddc1_param_list=$nbddc1_param_list,
+#end if
+#if $num_nbddcs() >= 2
+    nbddc2_param_list=$nbddc2_param_list,
+#end if
+#if $num_nbddcs() >= 3
+    nbddc3_param_list=$nbddc3_param_list,
+#end if
+#if $num_nbddcs() >= 4
+    nbddc4_param_list=$nbddc4_param_list,
+#end if
+#if $num_nbddcs() >= 5
+    nbddc5_param_list=$nbddc5_param_list,
+#end if
+#if $num_nbddcs() >= 6
+    nbddc6_param_list=$nbddc6_param_list,
+#end if
+#if $num_nbddcs() >= 7
+    nbddc7_param_list=$nbddc7_param_list,
+#end if
+#if $num_nbddcs() >= 8
+    nbddc8_param_list=$nbddc8_param_list,
+#end if
+    tagged=$tagged,
+    debug=$debug,
+)</make>
+  <callback>set_tuner1_param_list($tuner1_param_list)</callback>
+  <callback>set_tuner2_param_list($tuner2_param_list)</callback>
+  <callback>set_wbddc1_param_list($wbddc1_param_list)</callback>
+  <callback>set_wbddc2_param_list($wbddc2_param_list)</callback>
+  <callback>set_nbddc1_param_list($nbddc1_param_list)</callback>
+  <callback>set_nbddc2_param_list($nbddc2_param_list)</callback>
+  <callback>set_nbddc3_param_list($nbddc3_param_list)</callback>
+  <callback>set_nbddc4_param_list($nbddc4_param_list)</callback>
+  <callback>set_nbddc5_param_list($nbddc5_param_list)</callback>
+  <callback>set_nbddc6_param_list($nbddc6_param_list)</callback>
+  <callback>set_nbddc7_param_list($nbddc7_param_list)</callback>
+  <callback>set_nbddc8_param_list($nbddc8_param_list)</callback>
+  <param>
+    <name>Verbose Mode</name>
+    <key>verbose_mode</key>
+    <value>True</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Radio Host Name</name>
+    <key>radio_host_name</key>
+    <value>ndr651</value>
+    <type>string</type>
+    <hide>none</hide>
+  </param>
+  <param>
+    <name>Radio Host Port</name>
+    <key>radio_host_port</key>
+    <value>8617</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>10GigE Interface List</name>
+    <key>tengig_iface_list</key>
+    <value>['eth10', 'eth11']</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Number of Tuners</name>
+    <key>num_tuners</key>
+    <value>1</value>
+    <type>int</type>
+    <option>
+       <name>1</name>
+       <key>1</key>
+    </option>
+    <option>
+       <name>2</name>
+       <key>2</key>
+    </option>
+  </param>
+  <param>
+    <name>Tuner 1 Parameter List</name>
+    <key>tuner1_param_list</key>
+    <value>[False, 900e6, 0]</value>
+    <type>raw</type>
+  <hide>#if $num_tuners() >= 1 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Tuner 2 Parameter List</name>
+    <key>tuner2_param_list</key>
+    <value>[False, 900e6, 0]</value>
+    <type>raw</type>
+  <hide>#if $num_tuners() >= 2 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Number of WBDDCs</name>
+    <key>num_wbddcs</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>none</hide>
+    <option>
+       <name>1</name>
+       <key>1</key>
+    </option>
+    <option>
+       <name>2</name>
+       <key>2</key>
+    </option>
+  </param>
+  <param>
+    <name>WBDDC 1 Parameter List</name>
+    <key>wbddc1_param_list</key>
+    <value>["eth10", 40001, 0, 0, False]</value>
+    <type>raw</type>
+  <hide>#if $num_wbddcs() >= 1 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>WBDDC 2 Parameter List</name>
+    <key>wbddc2_param_list</key>
+    <value>["eth10", 40002, 0, 0, False]</value>
+    <type>raw</type>
+  <hide>#if $num_wbddcs() >= 2 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Number of NBDDCs</name>
+    <key>num_nbddcs</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>none</hide>
+    <option>
+       <name>1</name>
+       <key>1</key>
+    </option>
+    <option>
+       <name>2</name>
+       <key>2</key>
+    </option>
+    <option>
+       <name>3</name>
+       <key>3</key>
+    </option>
+    <option>
+       <name>4</name>
+       <key>4</key>
+    </option>
+    <option>
+       <name>5</name>
+       <key>5</key>
+    </option>
+    <option>
+       <name>6</name>
+       <key>6</key>
+    </option>
+    <option>
+       <name>7</name>
+       <key>7</key>
+    </option>
+    <option>
+       <name>8</name>
+       <key>8</key>
+    </option>
+  </param>
+  <param>
+    <name>NBDDC 1 Parameter List</name>
+    <key>nbddc1_param_list</key>
+    <value>["eth10", 41001, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 1 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 2 Parameter List</name>
+    <key>nbddc2_param_list</key>
+    <value>["eth10", 41002, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 2 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 3 Parameter List</name>
+    <key>nbddc3_param_list</key>
+    <value>["eth10", 41003, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 3 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 4 Parameter List</name>
+    <key>nbddc4_param_list</key>
+    <value>["eth10", 41004, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 4 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 5 Parameter List</name>
+    <key>nbddc5_param_list</key>
+    <value>["eth10", 41005, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 5 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 6 Parameter List</name>
+    <key>nbddc6_param_list</key>
+    <value>["eth10", 41006, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 6 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 7 Parameter List</name>
+    <key>nbddc7_param_list</key>
+    <value>["eth10", 41007, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 7 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 8 Parameter List</name>
+    <key>nbddc8_param_list</key>
+    <value>["eth10", 41008, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 8 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Tagged Output Streams</name>
+    <key>tagged</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+  <param>
+    <name>Debug Mode</name>
+    <key>debug</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <source>
+    <name>log</name>
+    <type>byte</type>
+    <vlen>1</vlen>
+    <optional>1</optional>
+  </source>
+  <source>
+    <name>wbddc</name>
+    <type>complex</type>
+    <vlen>1</vlen>
+    <nports>$num_wbddcs()</nports>
+    <optional>1</optional>
+  </source>
+  <source>
+    <name>nbddc</name>
+    <type>complex</type>
+    <vlen>1</vlen>
+    <nports>$num_nbddcs()</nports>
+    <optional>1</optional>
+  </source>
+  <doc>
+I/Q data source using the NDR651 radio.
+
+The NDR651_source block supplies wideband DDC outputs, as indicated \
+by the Number of WBDDCs setting, and narrowband DDC outputs, as indicated \
+by the Number of NBDDCs setting. Any outputs supplied by this block are \
+optional, so the user does not need to connect them if they are not \
+being used.  The NDR651_source block also supplies a character-stream \
+output for collecting logging data from the underlying driver interface.
+
+WBDDCs and NBDDCs are configured via parameter lists.  Parameter \
+lists are standard Python lists, formatted as follows:
+* A tuner parameter list contains the following elements: [tuner \
+enabled flag, tuner frequency (Hz), tuner attenuation (dB)].
+* A WBDDC parameter list contains the following elements: [10GigE \
+interface to use, UDP port number, VITA type, sample rate index, \
+enabled flag]. 
+* An NBDDC parameter list contains the following elements: [10GigE \
+interface to use, UDP port number, VITA type, sample rate index, \
+enabled flag, frequency offset (Hz)]. 
+
+The NDR651_source block can also produce stream tags for any DDCs \
+configured to use VITA 49 frames.  See the documentation for the base \
+VITA I/Q Source block for details on the stream tags produced.
+
+NOTE: GNU Radio Companion handles DDC indexes differently than the \
+block configuration parameters do.  If only one WBDDC is used, the output \
+port ("wbddc") is not indexed at all.  If more than one WBDDC is used, then \
+the WBDDC outputs have zero-based indexes (so WBDDC 1 comes out on port \
+"wbddc0", WBDDC 2 comes out on port "wbddc1", etc.).  NBDDC output ports \
+follow a similar naming scheme.
+
+NOTE: The parameter list scheme is a workaround to get around the \
+(undocumented) parameter limit that GNU Radio Companion \
+silently imposes.
+
+  </doc>
+</block>

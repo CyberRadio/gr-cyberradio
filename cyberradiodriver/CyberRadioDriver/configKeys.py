@@ -2,16 +2,20 @@
 ###############################################################
 # \package CyberRadioDriver.configKeys
 # 
-# Provides classes and constants that define basic support for
-# configurable objects.  
+# \brief Provides classes and constants that define basic 
+#     support for configurable objects.  
 #
 # \author NH
 # \author DA
-# \copyright Copyright (c) 2014 CyberRadio Solutions, Inc.  All rights 
-# reserved.
+# \author MN
+# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
+#     All rights reserved.
 #
 ###############################################################
 
+# Imports from other modules in this package
+# Imports from external modules
+# Python standard library imports
 import copy
 
 #------ Configuration Key Constants ----------------------------------------#
@@ -67,6 +71,8 @@ CONFIG_IP = "ipConfiguration"
 CONFIG_WBDDC = "wideband"
 ## Narrowband DDC configuration sub-dictionary.
 CONFIG_NBDDC = "narrowband"
+## FFT Stream DDC configuration sub-dictionary.
+CONFIG_FFT = "fftStream"
 ## DUC configuration sub-dictionary.
 CONFIG_DUC = "ducConfiguration"
 ## Wideband DUC configuration sub-dictionary.
@@ -79,6 +85,16 @@ CONFIG_DDC_GROUP = "ddcGroupConfiguration"
 CONFIG_WBDDC_GROUP = "wideband"
 ## Narrowband DDC group configuration sub-dictionary.
 CONFIG_NBDDC_GROUP = "narrowband"
+## Combined wideband/narrowband DDC group configuration sub-dictionary.
+CONFIG_COMBINED_DDC_GROUP = "combined"
+## DUC group configuration sub-dictionary.
+CONFIG_DUC_GROUP = "ducGroupConfiguration"
+## Wideband DUC group configuration sub-dictionary.
+CONFIG_WBDUC_GROUP = "wideband"
+## Tuner group configuration sub-dictionary.
+CONFIG_TUNER_GROUP = "tunerGroupConfiguration"
+## ADC sample rate mode.
+ADC_RATE_MODE = "adcRateMode"
 
 #------ Tuner Configuration Keys ----------------------------------------#
 ## Tuner index number.
@@ -87,6 +103,8 @@ TUNER_INDEX = "tunerIndex"
 TUNER_FREQUENCY = "frequency"
 ## Tuner attenuation.
 TUNER_ATTENUATION = "attenuation"
+## Tuner agp.
+TUNER_AGP = "agp"
 ## Tuner RF attentuation.
 TUNER_RF_ATTENUATION = "rfAttenuation"
 ## Tuner IF attentuation.
@@ -121,6 +139,18 @@ TUNER_AGC_DECAY_LIMIT = "adl"
 TUNER_FILTER = "filter"
 ## Timing adjustment, in clocks.
 TUNER_TIMING_ADJ = "timingAdjustment"
+## Tuner Coherent Group
+TUNER_COHERENT_GROUP = "cohGroup"
+## RF input power
+TUNER_RF_INPUT_POWER = "rfInputPower"
+## ADC Overload
+TUNER_ADC_OVERLOAD = "adcOverload"
+## Preselector bypass
+TUNER_PRESELECT_BYPASS = "preselectorBypass"
+## IF
+TUNER_IF = "if"
+## LO sync indicator
+TUNER_LO_SYNC = "loSync"
 
 #------ Transmitter Configuration Keys --------------------------------#
 TX_INDEX = "txIndex"
@@ -158,6 +188,8 @@ DDC_RF_INDEX = "rfIndex"
 DDC_OUTPUT_TYPE = "outputType"
 ## DDC decimation factor.
 DDC_DECIMATION = "decimation"
+## DDC audio decimation factor.
+DDC_AUDIO_DECIMATION = "audioDecimation"
 ## DDC filter index.
 DDC_FILTER_INDEX = "filterIndex"
 ## DDC oversampling parameter.
@@ -176,6 +208,16 @@ DDC_CIC0 = "cic0"
 DDC_CIC1 = "cic1"
 ## DDC demodulation type.
 DDC_DEMOD_TYPE = "demod"
+## DDC demodulation gain.
+DDC_DEMOD_GAIN = "demodGain"
+## DDC demod Audio DC block.
+DDC_DEMOD_DC_BLOCK = "dcBlock"
+## DDC demod Audio Level Control type.
+DDC_DEMOD_ALC_TYPE = "alcType"
+## DDC demod Audio Level Control setpoint.
+DDC_DEMOD_ALC_LEVEL = "alcLevel"
+## DDC demod Squelch Level.
+DDC_DEMOD_SQUELCH_LEVEL = "squelchLevel"
 ## DDC Beat Frequency Oscillator (BFO) value.
 DDC_BEAT_FREQ_OSC = "bfo"
 ## DDC Digital Gain Control (DGC) gain mode.
@@ -206,6 +248,40 @@ DDC_DGC_ATTACK_TRIGGER = "dat"
 DDC_DGC_DECAY_TRIGGER = "ddt"
 ## DDC data port (that is, 10GigE interface number).
 DDC_DATA_PORT = "dataPort"
+## DDC Output Format (complex I&Q, demod output, etc.)
+DDC_OUTPUT_FORMAT = "streamFormat"
+DDC_SPECTRAL_AVERAGE_ALPHA = "avgAlpha"
+DDC_SPECTRAL_FRAME_RATE = "frameRate"
+## DDC class ID
+DDC_CLASS_ID = "classId"
+## DDC phase offset
+DDC_PHASE_OFFSET = "phase"
+## DDC group enable
+DDC_GROUP_ENABLE = "groupEnable"
+## DDC mode
+DDC_MODE = "mode"
+## DDC samples
+DDC_SAMPLES = "samples"
+## DDC start block.
+DDC_START_BLOCK = "startBlock"
+## DDC type
+DDC_TYPE = "type"
+## DDC total repeat packets
+DDC_TOTAL_REPEAT_PACKETS = "totalRepeatPackets"
+## DDC active repeat packets
+DDC_ACTIVE_REPEAT_PACKETS = "activeRepeatPackets"
+
+#------ FFT Stream Configuration Keys ---------------------------------#
+## FFT Stream index
+FFT_INDEX = "fftIndex"
+## FFT Rate (number of FFTs per second)
+FFT_RATE = "rate"
+## FFT window type
+FFT_WINDOW = "window"
+## FFT size
+FFT_SIZE = "size"
+## FFT source DDC
+FFT_SOURCE = "source"
 
 #------ DUC Configuration Keys ----------------------------------------#
 ## DUC index.
@@ -246,6 +322,16 @@ NBDDC_RF_INDEX = "rfIndex"
 #------ DDC Group Configuration Keys ----------------------------------------#
 DDC_GROUP_MEMBER = "member"
 DDC_GROUP_MEMBERS = "members"
+WBDDC_GROUP_MEMBERS = "wbddcMembers"
+NBDDC_GROUP_MEMBERS = "nbddcMembers"
+
+#------ DUC Group Configuration Keys ----------------------------------------#
+DUC_GROUP_MEMBER = "member"
+DUC_GROUP_MEMBERS = "members"
+
+#------ Tuner Group Configuration Keys ----------------------------------------#
+TUNER_GROUP_MEMBER = "member"
+TUNER_GROUP_MEMBERS = "members"
 
 #------ Time Configuration Keys ----------------------------------------#
 ## UTC time, in seconds past the Epoch.
@@ -280,6 +366,8 @@ GIGE_DEST_PORT = "destPort"
 GIGE_ARP = "arp"
 ## Gigabit Ethernet flow control enabled.
 GIGE_FLOW_CONTROL = "flowControl"
+## Gigabit Ethernet netmask.
+GIGE_NETMASK = "netmask"
 
 #--  Calibration Frequency Keys  ---------------------------------------#
 ## Calibration frequency.
@@ -307,31 +395,165 @@ GPIO_GO = "go"
 
 #--  Status Keys  ------------------------------------------------------#
 ## MAC address of auxiliary 1GigE port.
-STATUS_AMAC = "amac"
+STATUS_AUX_MAC = "auxMacAddr"
+## MAC address of primary 1GigE port.
+STATUS_PRI_MAC = "primaryMacAddr"
+## MAC address of fast-scan 1GigE port.
+STATUS_FASTSCAN_MAC = "fastScanMacAddr"
+## Control port MAC address.
+STATUS_CTL_MAC = "controlMacAddr"
+## Data port 0 MAC address.
+STATUS_DATA0_MAC = "data0MacAddr"
+## Data port 1 MAC address.
+STATUS_DATA1_MAC = "data1MacAddr"
 ## 10MHz reference source.
-STATUS_CFG10M = "cfg10m"
+STATUS_10MHZ_REF = "10MHzRef"
 ## Error state.
-STATUS_ERROR = "error"
+STATUS_ERROR = "errorState"
 ## 10GigE Link 0 state.
-STATUS_LINK0 = "link0up"
+STATUS_LINK0 = "link0State"
 ## 10GigE Link 1 state.
-STATUS_LINK1 = "link1up"
+STATUS_LINK1 = "link1State"
 ## 10GigE Link 2 state.
-STATUS_LINK2 = "link2up"
+STATUS_LINK2 = "link2State"
 ## 10GigE Link 3 state.
-STATUS_LINK3 = "link3up"
+STATUS_LINK3 = "link3State"
 ## Available memory space for user-defined filters.
-STATUS_MEM = "mem"
+STATUS_MEM = "memory"
 ## Accumulated powered-on time.
 STATUS_ONTIME = "ontime"
-## MAC address of primary 1GigE port.
-STATUS_PMAC = "pmac"
 ## 10MHz reference status.
-STATUS_10M = "status10m"
+STATUS_10MHZ_REF_STATUS = "10MHzRefStatus"
 ## Pulse-per-second (PPS) status.
-STATUS_PPS = "statuspps"
+STATUS_PPS = "ppsStatus"
 ## Unit internal temperature (degrees Celsius).
 STATUS_TEMP = "temp"
+## Radio hostname.
+STATUS_HOSTNAME = "hostname"
+## Digital board serial number.
+STATUS_DIGBRD_SN = "digitalBoardSN"
+## Tuner board 1 serial number.
+STATUS_TUNERBRD1_SN = "tunerBoard1SN"
+## Tuner board 2 serial number.
+STATUS_TUNERBRD2_SN = "tunerBoard2SN"
+## Number of tuners available.
+STATUS_TUNERS = "tuners"
+## Number of WBDDCs available
+STATUS_WBDDCS = "wbddcs"
+## Number of NBDDCs available
+STATUS_NBDDCS = "nbddcs"
+## Number of demods available
+STATUS_DEMODS = "demods"
+## Voltages and currents
+STATUS_VOLTS = "volts"
+## Lock information
+STATUS_LOCKS = "locks"
+## Temperature information
+STATUS_TEMPS = "temps"
+## PPS reference source
+STATUS_PPS_SOURCE = "ppsSource"
+## NTP status
+STATUS_NTP = "ntpStatus"
+## Clock time of RTC
+STATUS_CLOCK_TIME = "clockTime"
+## Fan status
+STATUS_FAN = "fanStatus"
+## Average power level (watts)
+STATUS_AVG_POWER = "avgPower"
+## Battery level
+STATUS_BATTERY_LEVEL = "batteryLevel"
+## ADC clock 1
+STATUS_ADC_CLOCK1 = "adcClock1"
+## ADC clock 1
+STATUS_ADC_CLOCK2 = "adcClock2"
+## Digital board temperature
+STATUS_DIGBRD_TEMP = "digitalBoardTemp"
+## FPGA temperature
+STATUS_FPGA_TEMP = "fpgaTemp"
+## LO 11
+STATUS_LO11 = "lo11"
+## LO 12
+STATUS_LO12 = "lo12"
+## LO 13
+STATUS_LO13 = "lo13"
+## LO 14
+STATUS_LO12 = "lo14"
+## LO 21
+STATUS_LO21 = "lo21"
+## LO 22
+STATUS_LO22 = "lo22"
+## LO 23
+STATUS_LO23 = "lo23"
+## LO 24
+STATUS_LO22 = "lo24"
+## Tuner 0 LO 1
+STATUS_TUNER0_LO1 = "tuner0lo1"
+## Tuner 0 LO 2
+STATUS_TUNER0_LO2 = "tuner0lo2"
+## Tuner 1 LO 1
+STATUS_TUNER1_LO1 = "tuner1lo1"
+## Tuner 1 LO 2
+STATUS_TUNER1_LO2 = "tuner1lo2"
+## Tuner 2 LO 1
+STATUS_TUNER2_LO1 = "tuner2lo1"
+## Tuner 2 LO 2
+STATUS_TUNER2_LO2 = "tuner2lo2"
+## Tuner 3 LO 1
+STATUS_TUNER3_LO1 = "tuner3lo1"
+## Tuner 3 LO 2
+STATUS_TUNER3_LO2 = "tuner3lo2"
+## Tuner 4 LO 1
+STATUS_TUNER4_LO1 = "tuner4lo1"
+## Tuner 4 LO 2
+STATUS_TUNER4_LO2 = "tuner4lo2"
+## Tuner 5 LO 1
+STATUS_TUNER5_LO1 = "tuner5lo1"
+## Tuner 5 LO 2
+STATUS_TUNER5_LO2 = "tuner5lo2"
+## Tuner 6 LO 1
+STATUS_TUNER6_LO1 = "tuner63lo1"
+## Tuner 6 LO 2
+STATUS_TUNER6_LO2 = "tuner6lo2"
+## Tuner 7 LO 1
+STATUS_TUNER7_LO1 = "tuner7lo1"
+## Tuner 7 LO 2
+STATUS_TUNER7_LO2 = "tuner7lo2"
+## Tuner board 0 ADC clock
+STATUS_TUNERBRD0_ADC_CLOCK = "tunerBoard0AdcClk"
+## Tuner board 1 ADC clock
+STATUS_TUNERBRD1_ADC_CLOCK = "tunerBoard1AdcClk"
+## Mode
+STATUS_MODE = "mode"
+## Tuner board 1 JESD
+STATUS_TUNERBRD1_JESD = "tunerBoard1JESD"
+## Tuner board 2 JESD
+STATUS_TUNERBRD2_JESD = "tunerBoard2JESD"
+## Tuner board 1 temperature
+STATUS_TUNERBRD1_TEMP = "tunerBoard1Temp"
+## Tuner board 2 temperature
+STATUS_TUNERBRD2_TEMP = "tunerBoard2Temp"
+## Tuner power
+STATUS_TUNER_POWER = "tunerPower"
+## Volts 1
+STATUS_VOLTS1 = "volts1"
+## Volts 2
+STATUS_VOLTS2 = "volts2"
+## Volts 3
+STATUS_VOLTS3 = "volts3"
+## Volts 4
+STATUS_VOLTS4 = "volts4"
+## Volts 5
+STATUS_VOLTS5 = "volts5"
+## Number of FSCI packets
+STATUS_FSCI_PACKETS = "fsciPackets"
+## Number of tunes in Fast Scan mode
+STATUS_FASTSCAN_TUNES = "fastScanTunes"
+## Link status in Fast Scan mode
+STATUS_FASTSCAN_LINK = "fastScanLink"
+## Number of seconds last Fast Scan needed to complete
+STATUS_FASTSCAN_SEC = "fastScanSec"
+## Number of samples last Fast Scan needed to complete
+STATUS_FASTSCAN_SAMP = "fastScanSamples"
 
 #--  Reset Type Keys  --------------------------------------------------#
 ## Reset type.
@@ -423,10 +645,13 @@ class Configurable(object):
     # \protected
     # Queries hardware to determine the object's current configuration.  
     #
-    # The base-class implementation of this method does nothing.  Override
-    # this method in derived classes to set elements in the configuration
-    # dictionary as appropriate for the object.
+    # The base-class implementation of this method puts None into the 
+    # configuration dictionary for each element in the valid configuration 
+    # keyword list. Extend this behavior in derived classes to set elements 
+    # in the configuration dictionary as appropriate for the object.
     def _queryConfiguration(self):
+        for kw in self.validConfigurationKeywords:
+            self.configuration[kw] = None
         pass
 
     ##

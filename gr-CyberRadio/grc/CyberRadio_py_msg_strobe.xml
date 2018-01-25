@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] py_msg_strobe</name>
+  <key>CyberRadio_py_msg_strobe</key>
+  <category>[CyberRadio]/Misc</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.py_msg_strobe($value, $rate)</make>
+  <callback>setValue($value)</callback>
+  <callback>setRate($rate)</callback>
+  <param>
+    <name>MSG Value</name>
+    <key>value</key>
+    <type>raw</type>
+  </param>
+  <param>
+    <name>Rate (Hz)</name>
+    <key>rate</key>
+    <value>1.0</value>
+    <type>real</type>
+  </param>
+  <sink>
+    <name>msg</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  <source>
+    <name>msg</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+
+</block>

@@ -30,6 +30,14 @@
 # Source folder MUST contain a "debian" sub-folder with package building 
 # information.
 #
+# The makedeb script can automatically determine package name and version
+# number from a variety of sources.  Sources are checked in the following
+# order:
+# (1) Version information file (version.txt)
+# (2) Python distutils setup file (setup.py)
+# (3) GNU Autotools configuration file (configure.ac)
+# (4) CMake lists file (CMakeLists.txt)
+#
 #################################################################
 
 print_usage()
@@ -40,6 +48,8 @@ print_usage()
 	echo "                                     tagging with the default (either "
 	echo "                                     today's date or the version number "
 	echo "                                     from a setup.py/configure.ac file)"
+	echo "-x [INFO],--extra=[INFO]             Extra information to append to the "
+	echo "                                     version tag"
 	echo "-p [PACKAGE],--package=[PACKAGE]     Use PACKAGE as the package name "
 	echo "                                     instead of basing the package name "
 	echo "                                     off of the source folder name"
@@ -51,6 +61,14 @@ print_usage()
 	echo " "
 	echo "Source folder MUST contain a \"debian\" sub-folder with package building "
 	echo "information."
+	echo " "
+	echo "The makedeb script can automatically determine package name and version"
+	echo "number from a variety of sources.  Sources are checked in the following"
+	echo "order:"
+	echo "(1) Version information file (version.txt)"
+	echo "(2) Python distutils setup file (setup.py)"
+	echo "(3) GNU Autotools configuration file (configure.ac)"
+	echo "(4) CMake lists file (CMakeLists.txt)"
 	echo " "
 }
 
@@ -88,6 +106,7 @@ exit_if_error()
 # CLEANUP: Whether to do cleanup (1) or not (0)
 # DEB_PKG_SUBGROUP: Subgroup of code to be included in package
 DEB_PKG_VERSION=
+DEB_PKG_EXTRA=
 DEB_PKG_ARCH=$(dpkg-architecture -qDEB_BUILD_ARCH)
 DEB_PKG_ARCH_GNU=$(dpkg-architecture -qDEB_BUILD_GNU_CPU)
 DEB_PKG_OS=$(lsb_release -si)
@@ -95,12 +114,16 @@ DEB_PKG_OS_VER=$(lsb_release -sr)
 CLEANUP=1
 DEB_PKG_SUBGROUP=ALL
 # Parse command-line options
-set -- `getopt -n $0 -o hv:p:s:n -l "help version: package: subgroup: no-cleanup" -- "$@"`
+set -- `getopt -n $0 -o hv:x:p:s:n -l "help version: extra: package: subgroup: no-cleanup" -- "$@"`
 while [ $# -gt 0 ]
 do
     case "$1" in
        -v|--version)
  		DEB_PKG_VERSION=$(eval echo $2)
+		shift
+		;;
+       -x|--extra)
+ 		DEB_PKG_EXTRA=$(eval echo $2)
 		shift
 		;;
        -p|--package)
@@ -142,11 +165,27 @@ then
 		exit_if_error 1
 	fi
 fi
-# If the source folder contains a setup.py file, use the
+# If the source folder contains a version.txt file, extract the package
+# name and package version number from the file, if the user didn't 
+# override them on the command line
+if [ -e ${SRC_FOLDER_NAME}/version.txt ]
+then
+	QQQ=$(< ${SRC_FOLDER_NAME}/version.txt )
+	exit_if_error $?
+	eval ZZZ=(${QQQ})
+	if [ -z ${DEB_PKG_NAME} ]
+	then
+		DEB_PKG_NAME=${ZZZ[0]}
+	fi
+	if [ -z ${DEB_PKG_VERSION} ]
+	then
+		DEB_PKG_VERSION=${ZZZ[1]}
+	fi
+# Or, if the source folder contains a setup.py file, use the
 # package name (prepending "python-") and package version 
 # number provided by the setup.py file, if the user didn't 
 # override them on the command line
-if [ -e ${SRC_FOLDER_NAME}/setup.py ]
+elif [ -e ${SRC_FOLDER_NAME}/setup.py ]
 then
 	QQQ=$(python ${SRC_FOLDER_NAME}/setup.py --name --version)
 	exit_if_error $?
@@ -159,13 +198,29 @@ then
 	then
 		DEB_PKG_VERSION=${ZZZ[1]}
 	fi
-fi
+# Or, if the source folder contains a configure.ac file, use the
+# package name and package version number provided by the AC_INIT line
+# in the setup.py file, if the user didn't override them on the command 
+# line
+elif [ -e ${SRC_FOLDER_NAME}/configure.ac ]
+then
+	QQQ=$($(grep '^AC_INIT' ${SRC_FOLDER_NAME}/configure.ac | sed -e 's/AC_INIT(//g' -e 's/)//g' -e 's/,//g'))
+	exit_if_error $?
+	eval ZZZ=(${QQQ})
+	if [ -z ${DEB_PKG_NAME} ]
+	then
+		DEB_PKG_NAME=${ZZZ[0]}
+	fi
+	if [ -z ${DEB_PKG_VERSION} ]
+	then
+		DEB_PKG_VERSION=${ZZZ[1]}
+	fi
 # Or, if the source folder contains a CMakeLists.txt file, determine
 # the project name and project version from CMake cache variables, if 
 # the user didn't override them on the command line.
 # NOTE: The CMakeLists.txt file needs to be set up so that PROJECT_NAME
 # and PROJECT_VERSION are defined as cache variables.
-if [ -e ${SRC_FOLDER_NAME}/CMakeLists.txt ]
+elif [ -e ${SRC_FOLDER_NAME}/CMakeLists.txt ]
 then
 	CMAKE_SRC=$(readlink -f ${SRC_FOLDER_NAME})
 	rm -rf /tmp/makedeb
@@ -187,24 +242,6 @@ then
 	popd >/dev/null 2>&1
 	rm -rf /tmp/makedeb
 fi
-# Or, if the source folder contains a configure.ac file, use the
-# package name and package version number provided by the AC_INIT line
-# in the setup.py file, if the user didn't override them on the command 
-# line
-if [ -e ${SRC_FOLDER_NAME}/configure.ac ]
-then
-	QQQ=$($(grep '^AC_INIT' ${SRC_FOLDER_NAME}/configure.ac | sed -e 's/AC_INIT(//g' -e 's/)//g' -e 's/,//g'))
-        exit_if_error $?
-	eval ZZZ=(${QQQ})
-	if [ -z ${DEB_PKG_NAME} ]
-	then
-		DEB_PKG_NAME=${ZZZ[0]}
-	fi
-	if [ -z ${DEB_PKG_VERSION} ]
-	then
-		DEB_PKG_VERSION=${ZZZ[1]}
-	fi
-fi
 # If the user did not specify a package name on the command line, 
 # and if the package name cannot be obtained from some other source, 
 # form the package name from the source folder name.
@@ -224,6 +261,11 @@ fi
 # NOTE -- doing this may still result in a failure if the package
 # name cannot be made compliant!
 DEB_PKG_NAME=$(echo "${DEB_PKG_NAME}" | tr "[:upper:]" "[:lower:]" | tr "_" "-")
+# Append the extra info (if any) to the version number
+if [ ! -z ${DEB_PKG_EXTRA} ]
+then
+	DEB_PKG_VERSION=${DEB_PKG_VERSION}-${DEB_PKG_EXTRA}
+fi
 
 #########################################################
 # Build the Debian package
@@ -277,9 +319,12 @@ else
 	done
 	# Build the Debian package
 	# -- Note that this Debian package will be an *unsigned* package.
+	# -- Also note that PYTHONPATH will be honored.  This is primarily
+	#    intended to support automated builds in Jenkins, but can easily
+	#    break things, so be VERY careful with this one.
 	echo "Building Debian package: ${DEB_PKG_NAME}"
 	cd ${DEB_BUILD_FOLDER_NAME}
-	debuild --no-tgz-check --no-lintian -uc -us
+	debuild --preserve-envvar=PYTHONPATH --no-tgz-check --no-lintian -uc -us
 	exit_if_error $? "In building package"
 	cd ..
 	# Clean up

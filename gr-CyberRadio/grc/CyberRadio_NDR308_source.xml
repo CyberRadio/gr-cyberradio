@@ -1,0 +1,864 @@
+<?xml version='1.0' encoding='ASCII'?>
+<!--
+###################################################
+# [CyberRadio] NDR308 Source
+#
+# Author: DA
+#
+# Copyright: (c) 2015 CyberRadio Solutions, Inc.
+#    All rights reserved.
+###################################################
+ -->
+<block>
+  <name>[CyberRadio] NDR308 Source (Deprecated)</name>
+  <key>CyberRadio_NDR308_source</key>
+  <category>[CyberRadio]/Radio Sources</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.NDR308_source(
+    verbose_mode=$verbose_mode,
+    radio_host_name=$radio_host_name,
+    radio_host_port=$radio_host_port,
+    tengig_iface_list=$tengig_iface_list,
+    num_tuners=$num_tuners,
+    tuner1_param_list=$tuner1_param_list,
+#if $num_tuners() >= 2
+    tuner2_param_list=$tuner2_param_list,
+#end if
+#if $num_tuners() >= 3
+    tuner3_param_list=$tuner3_param_list,
+#end if
+#if $num_tuners() >= 4
+    tuner4_param_list=$tuner4_param_list,
+#end if
+#if $num_tuners() >= 5
+    tuner5_param_list=$tuner5_param_list,
+#end if
+#if $num_tuners() >= 6
+    tuner6_param_list=$tuner6_param_list,
+#end if
+#if $num_tuners() >= 7
+    tuner7_param_list=$tuner7_param_list,
+#end if
+#if $num_tuners() >= 8
+    tuner8_param_list=$tuner8_param_list,
+#end if
+    num_wbddcs=$num_wbddcs,
+#if $num_wbddcs() >= 1
+    wbddc1_param_list=$wbddc1_param_list,
+#end if
+#if $num_wbddcs() >= 2
+    wbddc2_param_list=$wbddc2_param_list,
+#end if
+#if $num_wbddcs() >= 3
+    wbddc3_param_list=$wbddc3_param_list,
+#end if
+#if $num_wbddcs() >= 4
+    wbddc4_param_list=$wbddc4_param_list,
+#end if
+#if $num_wbddcs() >= 5
+    wbddc5_param_list=$wbddc5_param_list,
+#end if
+#if $num_wbddcs() >= 6
+    wbddc6_param_list=$wbddc6_param_list,
+#end if
+#if $num_wbddcs() >= 7
+    wbddc7_param_list=$wbddc7_param_list,
+#end if
+#if $num_wbddcs() >= 8
+    wbddc8_param_list=$wbddc8_param_list,
+#end if
+    num_nbddcs=$num_nbddcs,
+#if $num_nbddcs() >= 1
+    nbddc1_param_list=$nbddc1_param_list,
+#end if
+#if $num_nbddcs() >= 2
+    nbddc2_param_list=$nbddc2_param_list,
+#end if
+#if $num_nbddcs() >= 3
+    nbddc3_param_list=$nbddc3_param_list,
+#end if
+#if $num_nbddcs() >= 4
+    nbddc4_param_list=$nbddc4_param_list,
+#end if
+#if $num_nbddcs() >= 5
+    nbddc5_param_list=$nbddc5_param_list,
+#end if
+#if $num_nbddcs() >= 6
+    nbddc6_param_list=$nbddc6_param_list,
+#end if
+#if $num_nbddcs() >= 7
+    nbddc7_param_list=$nbddc7_param_list,
+#end if
+#if $num_nbddcs() >= 8
+    nbddc8_param_list=$nbddc8_param_list,
+#end if
+#if $num_nbddcs() >= 9
+    nbddc9_param_list=$nbddc9_param_list,
+#end if
+#if $num_nbddcs() >= 10
+    nbddc10_param_list=$nbddc10_param_list,
+#end if
+#if $num_nbddcs() >= 11
+    nbddc11_param_list=$nbddc11_param_list,
+#end if
+#if $num_nbddcs() >= 12
+    nbddc12_param_list=$nbddc12_param_list,
+#end if
+#if $num_nbddcs() >= 13
+    nbddc13_param_list=$nbddc13_param_list,
+#end if
+#if $num_nbddcs() >= 14
+    nbddc14_param_list=$nbddc14_param_list,
+#end if
+#if $num_nbddcs() >= 15
+    nbddc15_param_list=$nbddc15_param_list,
+#end if
+#if $num_nbddcs() >= 16
+    nbddc16_param_list=$nbddc16_param_list,
+#end if
+#if $num_nbddcs() >= 17
+    nbddc17_param_list=$nbddc17_param_list,
+#end if
+#if $num_nbddcs() >= 18
+    nbddc18_param_list=$nbddc18_param_list,
+#end if
+#if $num_nbddcs() >= 19
+    nbddc19_param_list=$nbddc19_param_list,
+#end if
+#if $num_nbddcs() >= 20
+    nbddc20_param_list=$nbddc20_param_list,
+#end if
+#if $num_nbddcs() >= 21
+    nbddc21_param_list=$nbddc21_param_list,
+#end if
+#if $num_nbddcs() >= 22
+    nbddc22_param_list=$nbddc22_param_list,
+#end if
+#if $num_nbddcs() >= 23
+    nbddc23_param_list=$nbddc23_param_list,
+#end if
+#if $num_nbddcs() >= 24
+    nbddc24_param_list=$nbddc24_param_list,
+#end if
+#if $num_nbddcs() >= 25
+    nbddc25_param_list=$nbddc25_param_list,
+#end if
+#if $num_nbddcs() >= 26
+    nbddc26_param_list=$nbddc26_param_list,
+#end if
+#if $num_nbddcs() >= 27
+    nbddc27_param_list=$nbddc27_param_list,
+#end if
+#if $num_nbddcs() >= 28
+    nbddc28_param_list=$nbddc28_param_list,
+#end if
+#if $num_nbddcs() >= 29
+    nbddc29_param_list=$nbddc29_param_list,
+#end if
+#if $num_nbddcs() >= 30
+    nbddc30_param_list=$nbddc30_param_list,
+#end if
+#if $num_nbddcs() >= 31
+    nbddc31_param_list=$nbddc31_param_list,
+#end if
+#if $num_nbddcs() >= 32
+    nbddc32_param_list=$nbddc32_param_list,
+#end if
+    tagged=$tagged,
+    debug=$debug,
+)</make>
+  <callback>set_tuner1_param_list($tuner1_param_list)</callback>
+  <callback>set_tuner2_param_list($tuner2_param_list)</callback>
+  <callback>set_tuner3_param_list($tuner3_param_list)</callback>
+  <callback>set_tuner4_param_list($tuner4_param_list)</callback>
+  <callback>set_tuner5_param_list($tuner5_param_list)</callback>
+  <callback>set_tuner6_param_list($tuner6_param_list)</callback>
+  <callback>set_tuner7_param_list($tuner7_param_list)</callback>
+  <callback>set_tuner8_param_list($tuner8_param_list)</callback>
+  <callback>set_wbddc1_param_list($wbddc1_param_list)</callback>
+  <callback>set_wbddc2_param_list($wbddc2_param_list)</callback>
+  <callback>set_wbddc3_param_list($wbddc3_param_list)</callback>
+  <callback>set_wbddc4_param_list($wbddc4_param_list)</callback>
+  <callback>set_wbddc5_param_list($wbddc5_param_list)</callback>
+  <callback>set_wbddc6_param_list($wbddc6_param_list)</callback>
+  <callback>set_wbddc7_param_list($wbddc7_param_list)</callback>
+  <callback>set_wbddc8_param_list($wbddc8_param_list)</callback>
+  <callback>set_nbddc1_param_list($nbddc1_param_list)</callback>
+  <callback>set_nbddc2_param_list($nbddc2_param_list)</callback>
+  <callback>set_nbddc3_param_list($nbddc3_param_list)</callback>
+  <callback>set_nbddc4_param_list($nbddc4_param_list)</callback>
+  <callback>set_nbddc5_param_list($nbddc5_param_list)</callback>
+  <callback>set_nbddc6_param_list($nbddc6_param_list)</callback>
+  <callback>set_nbddc7_param_list($nbddc7_param_list)</callback>
+  <callback>set_nbddc8_param_list($nbddc8_param_list)</callback>
+  <callback>set_nbddc9_param_list($nbddc9_param_list)</callback>
+  <callback>set_nbddc10_param_list($nbddc10_param_list)</callback>
+  <callback>set_nbddc11_param_list($nbddc11_param_list)</callback>
+  <callback>set_nbddc12_param_list($nbddc12_param_list)</callback>
+  <callback>set_nbddc13_param_list($nbddc13_param_list)</callback>
+  <callback>set_nbddc14_param_list($nbddc14_param_list)</callback>
+  <callback>set_nbddc15_param_list($nbddc15_param_list)</callback>
+  <callback>set_nbddc16_param_list($nbddc16_param_list)</callback>
+  <callback>set_nbddc17_param_list($nbddc17_param_list)</callback>
+  <callback>set_nbddc18_param_list($nbddc18_param_list)</callback>
+  <callback>set_nbddc19_param_list($nbddc19_param_list)</callback>
+  <callback>set_nbddc20_param_list($nbddc20_param_list)</callback>
+  <callback>set_nbddc21_param_list($nbddc21_param_list)</callback>
+  <callback>set_nbddc22_param_list($nbddc22_param_list)</callback>
+  <callback>set_nbddc23_param_list($nbddc23_param_list)</callback>
+  <callback>set_nbddc24_param_list($nbddc24_param_list)</callback>
+  <callback>set_nbddc25_param_list($nbddc25_param_list)</callback>
+  <callback>set_nbddc26_param_list($nbddc26_param_list)</callback>
+  <callback>set_nbddc27_param_list($nbddc27_param_list)</callback>
+  <callback>set_nbddc28_param_list($nbddc28_param_list)</callback>
+  <callback>set_nbddc29_param_list($nbddc29_param_list)</callback>
+  <callback>set_nbddc30_param_list($nbddc30_param_list)</callback>
+  <callback>set_nbddc31_param_list($nbddc31_param_list)</callback>
+  <callback>set_nbddc32_param_list($nbddc32_param_list)</callback>
+  <param>
+    <name>Verbose Mode</name>
+    <key>verbose_mode</key>
+    <value>True</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Radio Host Name</name>
+    <key>radio_host_name</key>
+    <value>ndr651</value>
+    <type>string</type>
+    <hide>none</hide>
+  </param>
+  <param>
+    <name>Radio Host Port</name>
+    <key>radio_host_port</key>
+    <value>8617</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>10GigE Interface List</name>
+    <key>tengig_iface_list</key>
+    <value>['eth10', 'eth11']</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Number of Tuners</name>
+    <key>num_tuners</key>
+    <value>1</value>
+    <type>int</type>
+    <option>
+       <name>1</name>
+       <key>1</key>
+    </option>
+    <option>
+       <name>2</name>
+       <key>2</key>
+    </option>
+    <option>
+       <name>3</name>
+       <key>3</key>
+    </option>
+    <option>
+       <name>4</name>
+       <key>4</key>
+    </option>
+    <option>
+       <name>5</name>
+       <key>5</key>
+    </option>
+    <option>
+       <name>6</name>
+       <key>6</key>
+    </option>
+    <option>
+       <name>7</name>
+       <key>7</key>
+    </option>
+    <option>
+       <name>8</name>
+       <key>8</key>
+    </option>
+  </param>
+  <param>
+    <name>Tuner 1 Parameter List</name>
+    <key>tuner1_param_list</key>
+    <value>[False, 900e6, 0]</value>
+    <type>raw</type>
+  <hide>#if $num_tuners() >= 1 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Tuner 2 Parameter List</name>
+    <key>tuner2_param_list</key>
+    <value>[False, 900e6, 0]</value>
+    <type>raw</type>
+  <hide>#if $num_tuners() >= 2 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Tuner 3 Parameter List</name>
+    <key>tuner3_param_list</key>
+    <value>[False, 900e6, 0]</value>
+    <type>raw</type>
+  <hide>#if $num_tuners() >= 3 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Tuner 4 Parameter List</name>
+    <key>tuner4_param_list</key>
+    <value>[False, 900e6, 0]</value>
+    <type>raw</type>
+  <hide>#if $num_tuners() >= 4 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Tuner 5 Parameter List</name>
+    <key>tuner5_param_list</key>
+    <value>[False, 900e6, 0]</value>
+    <type>raw</type>
+  <hide>#if $num_tuners() >= 5 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Tuner 6 Parameter List</name>
+    <key>tuner6_param_list</key>
+    <value>[False, 900e6, 0]</value>
+    <type>raw</type>
+  <hide>#if $num_tuners() >= 6 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Tuner 7 Parameter List</name>
+    <key>tuner7_param_list</key>
+    <value>[False, 900e6, 0]</value>
+    <type>raw</type>
+  <hide>#if $num_tuners() >= 7 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Tuner 8 Parameter List</name>
+    <key>tuner8_param_list</key>
+    <value>[False, 900e6, 0]</value>
+    <type>raw</type>
+  <hide>#if $num_tuners() >= 8 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Number of WBDDCs</name>
+    <key>num_wbddcs</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>none</hide>
+    <option>
+       <name>1</name>
+       <key>1</key>
+    </option>
+    <option>
+       <name>2</name>
+       <key>2</key>
+    </option>
+    <option>
+       <name>3</name>
+       <key>3</key>
+    </option>
+    <option>
+       <name>4</name>
+       <key>4</key>
+    </option>
+    <option>
+       <name>5</name>
+       <key>5</key>
+    </option>
+    <option>
+       <name>6</name>
+       <key>6</key>
+    </option>
+    <option>
+       <name>7</name>
+       <key>7</key>
+    </option>
+    <option>
+       <name>8</name>
+       <key>8</key>
+    </option>
+  </param>
+  <param>
+    <name>WBDDC 1 Parameter List</name>
+    <key>wbddc1_param_list</key>
+    <value>["eth10", 40001, 0, 0, False]</value>
+    <type>raw</type>
+  <hide>#if $num_wbddcs() >= 1 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>WBDDC 2 Parameter List</name>
+    <key>wbddc2_param_list</key>
+    <value>["eth10", 40002, 0, 0, False]</value>
+    <type>raw</type>
+  <hide>#if $num_wbddcs() >= 2 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>WBDDC 3 Parameter List</name>
+    <key>wbddc3_param_list</key>
+    <value>["eth10", 40003, 0, 0, False]</value>
+    <type>raw</type>
+  <hide>#if $num_wbddcs() >= 3 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>WBDDC 4 Parameter List</name>
+    <key>wbddc4_param_list</key>
+    <value>["eth10", 40004, 0, 0, False]</value>
+    <type>raw</type>
+  <hide>#if $num_wbddcs() >= 4 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>WBDDC 5 Parameter List</name>
+    <key>wbddc5_param_list</key>
+    <value>["eth11", 40005, 0, 0, False]</value>
+    <type>raw</type>
+  <hide>#if $num_wbddcs() >= 5 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>WBDDC 6 Parameter List</name>
+    <key>wbddc6_param_list</key>
+    <value>["eth11", 40006, 0, 0, False]</value>
+    <type>raw</type>
+  <hide>#if $num_wbddcs() >= 6 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>WBDDC 7 Parameter List</name>
+    <key>wbddc7_param_list</key>
+    <value>["eth11", 40007, 0, 0, False]</value>
+    <type>raw</type>
+  <hide>#if $num_wbddcs() >= 7 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>WBDDC 8 Parameter List</name>
+    <key>wbddc8_param_list</key>
+    <value>["eth11", 40008, 0, 0, False]</value>
+    <type>raw</type>
+  <hide>#if $num_wbddcs() >= 8 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Number of NBDDCs</name>
+    <key>num_nbddcs</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>none</hide>
+    <option>
+       <name>1</name>
+       <key>1</key>
+    </option>
+    <option>
+       <name>2</name>
+       <key>2</key>
+    </option>
+    <option>
+       <name>3</name>
+       <key>3</key>
+    </option>
+    <option>
+       <name>4</name>
+       <key>4</key>
+    </option>
+    <option>
+       <name>5</name>
+       <key>5</key>
+    </option>
+    <option>
+       <name>6</name>
+       <key>6</key>
+    </option>
+    <option>
+       <name>7</name>
+       <key>7</key>
+    </option>
+    <option>
+       <name>8</name>
+       <key>8</key>
+    </option>
+    <option>
+       <name>9</name>
+       <key>9</key>
+    </option>
+    <option>
+       <name>10</name>
+       <key>10</key>
+    </option>
+    <option>
+       <name>11</name>
+       <key>11</key>
+    </option>
+    <option>
+       <name>12</name>
+       <key>12</key>
+    </option>
+    <option>
+       <name>13</name>
+       <key>13</key>
+    </option>
+    <option>
+       <name>14</name>
+       <key>14</key>
+    </option>
+    <option>
+       <name>15</name>
+       <key>15</key>
+    </option>
+    <option>
+       <name>16</name>
+       <key>16</key>
+    </option>
+    <option>
+       <name>17</name>
+       <key>17</key>
+    </option>
+    <option>
+       <name>18</name>
+       <key>18</key>
+    </option>
+    <option>
+       <name>19</name>
+       <key>19</key>
+    </option>
+    <option>
+       <name>20</name>
+       <key>20</key>
+    </option>
+    <option>
+       <name>21</name>
+       <key>21</key>
+    </option>
+    <option>
+       <name>22</name>
+       <key>22</key>
+    </option>
+    <option>
+       <name>23</name>
+       <key>23</key>
+    </option>
+    <option>
+       <name>24</name>
+       <key>24</key>
+    </option>
+    <option>
+       <name>25</name>
+       <key>25</key>
+    </option>
+    <option>
+       <name>26</name>
+       <key>26</key>
+    </option>
+    <option>
+       <name>27</name>
+       <key>27</key>
+    </option>
+    <option>
+       <name>218</name>
+       <key>28</key>
+    </option>
+    <option>
+       <name>29</name>
+       <key>29</key>
+    </option>
+    <option>
+       <name>30</name>
+       <key>30</key>
+    </option>
+    <option>
+       <name>31</name>
+       <key>31</key>
+    </option>
+    <option>
+       <name>32</name>
+       <key>32</key>
+    </option>
+  </param>
+  <param>
+    <name>NBDDC 1 Parameter List</name>
+    <key>nbddc1_param_list</key>
+    <value>["eth10", 41001, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 1 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 2 Parameter List</name>
+    <key>nbddc2_param_list</key>
+    <value>["eth10", 41002, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 2 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 3 Parameter List</name>
+    <key>nbddc3_param_list</key>
+    <value>["eth10", 41003, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 3 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 4 Parameter List</name>
+    <key>nbddc4_param_list</key>
+    <value>["eth10", 41004, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 4 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 5 Parameter List</name>
+    <key>nbddc5_param_list</key>
+    <value>["eth10", 41005, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 5 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 6 Parameter List</name>
+    <key>nbddc6_param_list</key>
+    <value>["eth10", 41006, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 6 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 7 Parameter List</name>
+    <key>nbddc7_param_list</key>
+    <value>["eth10", 41007, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 7 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 8 Parameter List</name>
+    <key>nbddc8_param_list</key>
+    <value>["eth10", 41008, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 8 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 9 Parameter List</name>
+    <key>nbddc9_param_list</key>
+    <value>["eth10", 41009, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 9 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 10 Parameter List</name>
+    <key>nbddc10_param_list</key>
+    <value>["eth10", 41010, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 10 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 11 Parameter List</name>
+    <key>nbddc11_param_list</key>
+    <value>["eth10", 41011, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 11 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 12 Parameter List</name>
+    <key>nbddc12_param_list</key>
+    <value>["eth10", 41012, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 12 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 13 Parameter List</name>
+    <key>nbddc13_param_list</key>
+    <value>["eth10", 41013, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 13 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 14 Parameter List</name>
+    <key>nbddc14_param_list</key>
+    <value>["eth10", 41014, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 14 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 15 Parameter List</name>
+    <key>nbddc15_param_list</key>
+    <value>["eth10", 41015, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 15 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 16 Parameter List</name>
+    <key>nbddc16_param_list</key>
+    <value>["eth10", 41016, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 16 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 17 Parameter List</name>
+    <key>nbddc17_param_list</key>
+    <value>["eth11", 41017, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 17 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 18 Parameter List</name>
+    <key>nbddc18_param_list</key>
+    <value>["eth11", 41018, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 18 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 19 Parameter List</name>
+    <key>nbddc19_param_list</key>
+    <value>["eth11", 41019, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 19 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 20 Parameter List</name>
+    <key>nbddc20_param_list</key>
+    <value>["eth11", 41020, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 20 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 21 Parameter List</name>
+    <key>nbddc21_param_list</key>
+    <value>["eth11", 41021, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 21 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 22 Parameter List</name>
+    <key>nbddc22_param_list</key>
+    <value>["eth11", 41022, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 22 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 23 Parameter List</name>
+    <key>nbddc23_param_list</key>
+    <value>["eth11", 41023, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 23 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 24 Parameter List</name>
+    <key>nbddc24_param_list</key>
+    <value>["eth11", 41024, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 24 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 25 Parameter List</name>
+    <key>nbddc25_param_list</key>
+    <value>["eth11", 41025, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 25 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 26 Parameter List</name>
+    <key>nbddc26_param_list</key>
+    <value>["eth11", 41026, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 26 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 27 Parameter List</name>
+    <key>nbddc27_param_list</key>
+    <value>["eth11", 41027, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 27 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 28 Parameter List</name>
+    <key>nbddc28_param_list</key>
+    <value>["eth11", 41028, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 28 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 29 Parameter List</name>
+    <key>nbddc29_param_list</key>
+    <value>["eth11", 41029, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 29 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 30 Parameter List</name>
+    <key>nbddc30_param_list</key>
+    <value>["eth11", 41030, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 30 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 31 Parameter List</name>
+    <key>nbddc31_param_list</key>
+    <value>["eth11", 41031, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 31 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>NBDDC 32 Parameter List</name>
+    <key>nbddc32_param_list</key>
+    <value>["eth11", 41032, 0, 0, False, 0.0]</value>
+    <type>raw</type>
+  <hide>#if $num_nbddcs() >= 32 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Tagged Output Streams</name>
+    <key>tagged</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+  <param>
+    <name>Debug Mode</name>
+    <key>debug</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <source>
+    <name>log</name>
+    <type>byte</type>
+    <vlen>1</vlen>
+    <optional>1</optional>
+  </source>
+  <source>
+    <name>wbddc</name>
+    <type>complex</type>
+    <vlen>1</vlen>
+    <nports>$num_wbddcs()</nports>
+    <optional>1</optional>
+  </source>
+  <source>
+    <name>nbddc</name>
+    <type>complex</type>
+    <vlen>1</vlen>
+    <nports>$num_nbddcs()</nports>
+    <optional>1</optional>
+  </source>
+  <doc>
+I/Q data source using the NDR308 radio.
+
+The NDR308_source block supplies wideband DDC outputs, as indicated \
+by the Number of WBDDCs setting, and narrowband DDC outputs, as indicated \
+by the Number of NBDDCs setting. Any outputs supplied by this block are \
+optional, so the user does not need to connect them if they are not \
+being used.  The NDR651_source block also supplies a character-stream \
+output for collecting logging data from the underlying driver interface.
+
+WBDDCs and NBDDCs are configured via parameter lists.  Parameter \
+lists are standard Python lists, formatted as follows:
+* A tuner parameter list contains the following elements: [tuner \
+enabled flag, tuner frequency (Hz), tuner attenuation (dB)].
+* A WBDDC parameter list contains the following elements: [10GigE \
+interface to use, UDP port number, VITA type, sample rate index, \
+enabled flag]. 
+* An NBDDC parameter list contains the following elements: [10GigE \
+interface to use, UDP port number, VITA type, sample rate index, \
+enabled flag, frequency offset (Hz)]. 
+
+The NDR308_source block can also produce stream tags for any DDCs \
+configured to use VITA 49 frames.  See the documentation for the base \
+VITA I/Q Source block for details on the stream tags produced.
+
+NOTE: GNU Radio Companion handles DDC indexes differently than the \
+block configuration parameters do.  If only one WBDDC is used, the output \
+port ("wbddc") is not indexed at all.  If more than one WBDDC is used, then \
+the WBDDC outputs have zero-based indexes (so WBDDC 1 comes out on port \
+"wbddc0", WBDDC 2 comes out on port "wbddc1", etc.).  NBDDC output ports \
+follow a similar naming scheme.
+
+NOTE: The parameter list scheme is a workaround to get around the \
+(undocumented) parameter limit that GNU Radio Companion \
+silently imposes.
+
+  </doc>
+</block>

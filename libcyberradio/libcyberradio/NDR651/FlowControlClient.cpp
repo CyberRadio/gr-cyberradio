@@ -40,6 +40,7 @@ namespace LibCyberRadio
 			_ducAttenuation(0),
 			_txAttenuation(0),
 			_txFreq(0.0),
+			_shfMode(-1),
 			_ducFreq(0),
 			_statusSockfd(-1)
 		{
@@ -47,13 +48,14 @@ namespace LibCyberRadio
 			_firstUpdate = true;
 			_tbsQuery = std::string("\n");
 			_651freeSpace = 0;
-			_multiChannel = (ducChannel==0);
+			_multiChannel = false;
 			_mySocket = NULL;
 			_initStatusFrame();
 			_statusSockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 			_initStatusAddress();
 			setDucChannel( ducChannel );
 			setUpdateRate( updatesPerSecond );
+			//~ _clearDucSettingsInRadio();
 		}
 
 		FlowControlClient::~FlowControlClient() {
@@ -70,6 +72,11 @@ namespace LibCyberRadio
 		void FlowControlClient::_initStatusFrame() {
 			memset(&_statusFrame, 0, sizeof(TxStatusFrame));
 			_statusFrame.v49.frameStart = VRLP;
+			_statusFrame.v49.frameSize = 14;
+			_statusFrame.v49.C = 1;
+			_statusFrame.v49.packetSize = 11;
+			_statusFrame.v49.TSI = 1;
+			_statusFrame.v49.TSF = 0;
 			_statusFrame.vend.frameEnd = VEND;
 		}
 
@@ -79,6 +86,11 @@ namespace LibCyberRadio
 			_statusDestAddr.sin_family = AF_INET;
 			_statusDestAddr.sin_addr.s_addr = htonl( INADDR_LOOPBACK );
 			_statusDestAddr.sin_port = htons(_ducStreamId);
+			
+			memset(&_statusCopyAddr, 0, _statusDestLen);
+			_statusCopyAddr.sin_family = AF_INET;
+			_statusCopyAddr.sin_addr.s_addr = htonl( INADDR_LOOPBACK );
+			_statusCopyAddr.sin_port = htons(0xfff0);
 		}
 
 		void FlowControlClient::_sendStatusFrame() {
@@ -94,6 +106,7 @@ namespace LibCyberRadio
 			_statusFrame.v49.packetCount = (_statusFrame.v49.packetCount+1)%4096;
 			if (_statusSockfd>=0) {
 				sendto(_statusSockfd, (char *) &_statusFrame, sizeof(TxStatusFrame), 0, (struct sockaddr *) &_statusDestAddr, _statusDestLen);
+				sendto(_statusSockfd, (char *) &_statusFrame, sizeof(TxStatusFrame), 0, (struct sockaddr *) &_statusCopyAddr, _statusDestLen);
 			} else {
 				std::cerr << "No socket to send status?" << std::endl;
 			}
@@ -223,6 +236,9 @@ namespace LibCyberRadio
 
 		bool FlowControlClient::disableDuc() {
 			_ducEnable = false;
+			std::string cmd = (boost::format("DUCHS %d, 0, 0, 0, 0, 0, 0, 0\n") % _ducChannel).str();
+			std::string qry = (boost::format("DUCHS? %d\n") % _ducChannel ).str();
+			_sendCmdAndQry(cmd, qry);
 			return _sendDuc();
 		}
 
@@ -231,7 +247,7 @@ namespace LibCyberRadio
 											unsigned int streamId,
 											unsigned int tenGbeIndex,
 											float attenuation,
-											float txFreq,
+											double txFreq,
 											long ducFreq,
 											unsigned int txAtten,
 											bool ducEnable ) {
@@ -247,7 +263,7 @@ namespace LibCyberRadio
 		}
 
 		//Optional method to set _txFreq and
-		bool FlowControlClient::setTxFrequency(int txFreq, bool applySetting) {
+		bool FlowControlClient::setTxFrequency(double txFreq, bool applySetting) {
 			_txFreq = txFreq;
 			return applySetting?_sendTxf():false;
 		}
@@ -306,12 +322,17 @@ namespace LibCyberRadio
 
 		bool FlowControlClient::setDucAttenuation(float attenuation, bool applySetting) {
 			_ducAttenuation = attenuation;
-			return applySetting?_sendDuc():false;
+			return applySetting?_sendWba():false;
 		}
 
 		bool FlowControlClient::setDucFrequency(long ducFreq, bool applySetting) {
 			_ducFreq = ducFreq;
 			return applySetting?_sendWbf():false;
+		}
+
+		bool FlowControlClient::setDucTxinvMode(unsigned int txinvMode, bool applySetting) {
+			_txinvMode = txinvMode;
+			return applySetting?_sendTxinv():false;
 		}
 
 		bool FlowControlClient::okToSend(long int numSamples, bool lockIfOk) {
@@ -353,13 +374,77 @@ namespace LibCyberRadio
 			return cmdError;
 		}
 
+		bool FlowControlClient::_sendShf() {
+			bool cmdError = false;
+			if (_config_tx&&(_shfMode>=0)) {
+				for (int chan=1; chan<=2; chan++) {
+					if ((_ducTxChannel&chan)>0)
+					{
+						this->debug("_sendShf: txf=%f and shfMode=%d\n", _txFreq, _shfMode);
+						int currentShfMode;
+						BasicStringList::iterator rspIter;
+						BasicStringList splitRes;
+						std::string cmd, qry;
+						cmd = (boost::format("SHF %d, 1, %d\n") % chan %_shfMode ).str();
+						qry = (boost::format("SHF? %d, 1\n") % chan ).str();
+						_rspVec.clear();
+						cmdError = _mySocket->sendCmdAndGetRsp(qry, _rspVec, 10000);
+						for (rspIter = _rspVec.begin();
+							 rspIter != _rspVec.end();
+							 rspIter++)
+						{
+							if (strstr((*rspIter).c_str(),"SHF ") != NULL)
+							{
+								//this->debug("buffer state response = %s\n",
+								//		    (*rspIter).c_str());
+								split(splitRes, *rspIter, is_any_of(", "));
+								// Sanity check -- make sure response is long enough
+								// to parse
+								if ( splitRes.size() >= 2 )
+								{
+									for (int ii=0; ii<splitRes.size(); ii++) {
+										std::cout << "splitRes.at(" << ii << ") = " << splitRes.at(ii).c_str() << std::endl;
+									}
+									currentShfMode = strtol( splitRes.at(5).c_str(), NULL, 10 );
+									this->debug("currentShfMode = %d\n", currentShfMode);
+									if (currentShfMode!=_shfMode)
+									{
+										cmdError = _sendCmdAndQry(cmd, qry);
+									} else {
+										std::cout << "NOT sending SHF" << std::endl;
+									}
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+			return cmdError;
+		}
+
 		bool FlowControlClient::_sendTxf() {
 			bool cmdError = false;
+			bool shfChange = false;
 			if (_config_tx) {
 				std::string cmd, qry;
+				if (_ducTxChannel!=0) {
+					_shfMode = (_txFreq<200.0)?1:0;
+					_sendShf();
+				}
+				//~ if ((_txFreq<200.0)&&(_shfMode!=1)) {
+					//~ _shfMode = 1;
+					//~ shfChange = true;
+				//~ } else if ((_txFreq>=200.0)&&(_shfMode!=0)) {
+					//~ _shfMode = 0;
+					//~ shfChange = true;
+				//~ }
+				//~ if (shfChange) {
+				//~ cmdError |= _sendShf();
+				//~ }
 				for (int chan=1; chan<=2; chan++) {
 					if ((_ducTxChannel&chan)>0) {
-						cmd = (boost::format("TXF %d, %f\n") % chan % _txFreq ).str();
+						cmd = (boost::format("TXF %d, %f\n") % chan %  _txFreq ).str();
 						qry = (boost::format("TXF? %d\n") % chan ).str();
 						cmdError |= _sendCmdAndQry(cmd, qry);
 					}
@@ -430,29 +515,101 @@ namespace LibCyberRadio
 			return cmdError;
 		}
 
+		bool FlowControlClient::_sendTxinv() {
+			bool cmdError = false;
+			if (_config_tx) {
+				std::string cmd, qry;
+				cmd = (boost::format("TXINV %d, %d\n") % _ducChannel % _txinvMode ).str();
+				qry = (boost::format("TXINV? %d\n") % _ducChannel ).str();
+				cmdError |= _sendCmdAndQry(cmd, qry);
+			}
+			return cmdError;
+		}
+
 		bool FlowControlClient::_sendWbduc() {
 			std::string cmd = (boost::format("WBDUC %d, %d, %d, %f, %d, %d, 0, %d\n") % _ducChannel % _ducTenGbePort % _ducFreq % _ducAttenuation % _ducRateIndex % (_ducEnable ? _ducTxChannel : 0) % _ducStreamId ).str();
 			std::string qry = (boost::format("WBDUC? %d\n") % _ducChannel ).str();
 			return _sendCmdAndQry(cmd, qry);
 		}
 
+		bool FlowControlClient::_sendDucp() {
+			std::string cmd = (boost::format("DUCP %d, %d\n") % _ducChannel % (_ducEnable ? 1 : 0) ).str();
+			std::string qry = (boost::format("DUCP? %d\n") % _ducChannel ).str();
+			return _sendCmdAndQry(cmd, qry);
+		}
+
 		bool FlowControlClient::_sendDuc() {
-			std::string cmd = (boost::format("DUC %d, %d, %d, %f, %d, %d, 0, %d\n") % _ducChannel % _ducTenGbePort % _ducFreq % _ducAttenuation % _ducRateIndex % (_ducEnable ? _ducTxChannel : 0) % _ducStreamId ).str();
+			std::string cmd = (boost::format("DUC %d, %d, %d, %f, %d, %d, %d, %d\n") 
+												% _ducChannel 
+												% _ducTenGbePort 
+												% _ducFreq 
+												% _ducAttenuation 
+												% _ducRateIndex 
+												% (_ducEnable ? _ducTxChannel : 0) 
+												% (_ducEnable ? 0 : 1) 
+												% _ducStreamId ).str();
 			std::string qry = (boost::format("DUC? %d\n") % _ducChannel ).str();
 			return _sendCmdAndQry(cmd, qry);
 		}
 
 		bool FlowControlClient::_sendWba() {
-			std::string cmd = (boost::format("WBA %d, %f\n") % _ducChannel % _ducAttenuation ).str();
-			std::string qry = (boost::format("WBA? %d\n") % _ducChannel ).str();
+			std::string cmd = (boost::format("DUCA %d, %f\n") % _ducChannel % _ducAttenuation ).str();
+			std::string qry = (boost::format("DUCA? %d\n") % _ducChannel ).str();
 			return _sendCmdAndQry(cmd, qry);
 		}
 
 		bool FlowControlClient::_sendWbf() {
-			std::string cmd = (boost::format("WBF %d, %d\n") % _ducChannel % _ducFreq ).str();
-			std::string qry = (boost::format("WBF? %d\n") % _ducChannel ).str();
+			std::string cmd = (boost::format("DUCF %d, %d\n") % _ducChannel % _ducFreq ).str();
+			std::string qry = (boost::format("DUCF? %d\n") % _ducChannel ).str();
 			return _sendCmdAndQry(cmd, qry);
 		}
+		
+		bool FlowControlClient::_sendDip() {
+			return true;
+		}
+		
+		bool FlowControlClient::_sendDuchs() {
+			return true;
+		}
+
+		bool FlowControlClient::unpause() {
+			return _sendDucp();
+		}
+
+		bool FlowControlClient::setDucDipStatusEntry(int dipIndex, std::string dip, std::string dmac, unsigned int ducStatusPort) {
+			if (dipIndex<0) {
+				_ducDipIndex = 32-_ducChannel;
+			} else {
+				_ducDipIndex = dipIndex;
+			}
+			std::cout << "dIP = " << dip << " & dMAC = " << dmac << std::endl;
+			std::string cmd = (boost::format("DIP %d, %d, %s, %s, %d, %d\n") % _ducTenGbePort % _ducDipIndex % dip % dmac % ducStatusPort % ducStatusPort ).str();
+			std::string qry = (boost::format("DIP? %d, %d\n") % _ducTenGbePort % _ducDipIndex ).str();
+			_sendCmdAndQry(cmd, qry);
+			return false;
+		}
+
+		bool FlowControlClient::setDuchsParameters(unsigned int duchsFullThresh, unsigned int duchsEmptyThresh, unsigned int duchsPeriod) {
+			_duchsFullThresh = duchsFullThresh;
+			_duchsEmptyThresh = duchsEmptyThresh;
+			_duchsPeriod = duchsPeriod;
+			std::string cmd = (boost::format("DUCHS %d, %d, %d, %d, %d, %d, 0, %d\n") % _ducChannel % _ducTenGbePort % _duchsFullThresh % _duchsEmptyThresh % _duchsPeriod % _ducDipIndex % _ducStreamId ).str();
+			std::string qry = (boost::format("DUCHS? %d\n") % _ducChannel ).str();
+			return _sendCmdAndQry(cmd, qry);
+		}
+
+		bool FlowControlClient::_clearDucSettingsInRadio() {
+			bool rv = false;
+			std::string cmd = (boost::format("DUC %d, 0, 0, 0, 0, 0, 0, 0\n") % _ducChannel).str();
+			std::string qry = (boost::format("DUC? %d\n") % _ducChannel ).str();
+			rv = rv||_sendCmdAndQry(cmd, qry);
+			
+			cmd = (boost::format("DUCHS %d, 0, 0, 0, 0, 0, 0, 0\n") % _ducChannel).str();
+			qry = (boost::format("DUCHS? %d\n") % _ducChannel ).str();
+			rv = rv||_sendCmdAndQry(cmd, qry);
+			return rv;
+		}
+
 
 
 		void FlowControlClient::_queryBufferState()
@@ -520,7 +677,7 @@ namespace LibCyberRadio
 			BasicStringList rspVec, splitRes;
 			BasicStringList::iterator rspIter;
 			if ( (_mySocket != NULL) &&
-				 !_mySocket->sendCmdAndGetRsp("UTC?\n", rspVec, 100, false)) {
+				 !_mySocket->sendCmdAndGetRsp("UTC?\n", rspVec, 100, d_debug)) {
 				for (rspIter=rspVec.begin(); rspIter!=rspVec.end(); rspIter++) {
 					if (strstr((*rspIter).c_str(),"UTC ")!=NULL) {
 						split(splitRes, *rspIter, is_any_of(", "));
@@ -529,6 +686,27 @@ namespace LibCyberRadio
 					}
 				}
 			} else {
+			}
+		}
+		
+		void FlowControlClient::_queryStatus() {
+			BasicStringList rspVec, splitRes;
+			BasicStringList::iterator rspIter;
+			if ( (_mySocket != NULL) ) {
+				_mySocket->sendCmdAndGetRsp("STAT?\n", rspVec, 100, d_debug);
+				//~ for (rspIter=rspVec.begin(); rspIter!=rspVec.end(); rspIter++) {
+					//~ if (strstr((*rspIter).c_str(),"STAT ")!=NULL) {
+						//~ split(splitRes, *rspIter, is_any_of(", "));
+						//~ _stat = strtol( splitRes.back().c_str(), NULL, 10 );
+					//~ }
+				//~ }
+				_mySocket->sendCmdAndGetRsp("TSTAT?\n", rspVec, 100, d_debug);
+				//~ for (rspIter=rspVec.begin(); rspIter!=rspVec.end(); rspIter++) {
+					//~ if (strstr((*rspIter).c_str(),"TSTAT ")!=NULL) {
+						//~ split(splitRes, *rspIter, is_any_of(", "));
+						//~ _tstat = strtol( splitRes.back().c_str(), NULL, 10 );
+					//~ }
+				//~ }
 			}
 		}
 

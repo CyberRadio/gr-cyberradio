@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] NDR DDC Group Control</name>
+  <key>CyberRadio_generic_group_control_block</key>
+  <category>[CyberRadio]/Radio Element Control</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.generic_group_control_block(
+          $radioObj, 
+          $index, 
+          $enable, 
+          $wideband, 
+          $ddcList, 
+          $otherArgs, 
+          $debug, 
+           )</make>
+  <callback>set_enable($enable)</callback>
+  <callback>set_ddcList($ddcList)</callback>
+  <callback>set_otherArgs($otherArgs)</callback>
+  <param>
+    <name>Radio Object</name>
+    <key>radioObj</key>
+    <value></value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Group Index</name>
+    <key>index</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Group Enable</name>
+    <key>enable</key>
+    <value>True</value>
+    <type>bool</type>
+  </param>
+  <param>
+    <name>Wideband Flag</name>
+    <key>wideband</key>
+    <value>True</value>
+    <type>bool</type>
+  </param>
+    <param>
+    <name>DDC List</name>
+    <key>ddcList</key>
+    <value>[]</value>
+    <type>int_vector</type>
+    <hide>part</hide>
+  </param>
+<!--
+  <param>
+    <name>DDC Rate Index</name>
+    <key>rate</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>DDC Mode/Format</name>
+    <key>mode</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>DDC Frequency [DDC Center (Hz), RF Freq (MHz)]</name>
+    <key>freq</key>
+    <value>0</value>
+    <type>real</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>RF Source (i.e. Tuner Index)</name>
+    <key>rfSource</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>RF Freq (MHz)</name>
+    <key>rfFreq</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Radio Ethernet Interface (1-based)</name>
+    <key>radioInterface</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>DIP Table Index</name>
+    <key>dipIndex</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Local Ethernet Interface (None=broadcast)</name>
+    <key>localInterface</key>
+    <value>None</value>
+    <type>string</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Destination UDP Port</name>
+    <key>udpPort</key>
+    <value>12345</value>
+    <type>int</type>
+  </param>
+-->
+  <param>
+    <name>Other Args (dict)</name>
+    <key>otherArgs</key>
+    <value>{}</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Debug Flag</name>
+    <key>debug</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <sink>
+    <name>control</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+<!--
+  <sink>
+    <name>freq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+-->
+  <source>
+    <name>status</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+<!--
+  <source>
+    <name>freq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+-->
+</block>

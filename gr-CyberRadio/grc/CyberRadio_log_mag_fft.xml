@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] Log Mag FFT</name>
+  <key>CyberRadio_log_mag_fft</key>
+  <category>[CyberRadio]/DSP</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.log_mag_fft( 
+    fftSize=$fftSize, 
+    windowType=$windowType, 
+    iirAlpha=$iirAlpha, 
+     )</make>
+  <callback>set_iirAlpha($iirAlpha)</callback>
+  <param>
+    <name>FFT Size</name>
+    <key>fftSize</key>
+    <value>1024</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Window Type</name>
+    <key>windowType</key>
+    <value>"blackmanharris"</value>
+    <type>raw</type>
+  </param>
+  <param>
+    <name>Averaging Alpha</name>
+    <key>iirAlpha</key>
+    <value>2.0**-3</value>
+    <type>float</type>
+  </param>
+  <sink>
+    <name>IQ</name>
+    <type>complex</type>
+    <vlen>$fftSize</vlen>
+  </sink>
+  <source>
+    <name>Log Mag</name>
+    <type>float</type>
+    <vlen>$fftSize</vlen>
+  </source>
+  <source>
+    <name>FFT</name>
+    <type>complex</type>
+    <vlen>$fftSize</vlen>
+    <optional>1</optional>
+  </source>
+
+</block>

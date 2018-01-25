@@ -16,3 +16,13 @@
 #override_dh_auto_configure:
 #	autoreconf -i
 #	dh_auto_configure
+
+# Override configure step to pass package version to CMake
+override_dh_auto_configure:
+	dh_auto_configure -- -DPACKAGE_VERSION=DEB_PKG_VERSION
+
+# Override dh_auto_test so that it does nothing
+# (This is because automatic testing will probably fail on Jenkins)
+override_dh_auto_test:
+	:
+

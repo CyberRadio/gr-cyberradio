@@ -7,9 +7,12 @@ cmake_minimum_required(VERSION 2.6)
 # NOTE: Update this default package version string when there is a 
 #    new library release!
 if("${PACKAGE_VERSION}" STREQUAL "")
-   set(PACKAGE_VERSION "16.06.20"
+   set(PACKAGE_VERSION "16.09.16"
        CACHE STRING "Package version number" FORCE)
 endif("${PACKAGE_VERSION}" STREQUAL "")
+
+## Setup C++11
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # Set the project name and version
 project(libcyberradio CXX C)
@@ -24,6 +27,9 @@ if(NOT CMAKE_BUILD_TYPE)
    message(STATUS "Build type not specified: defaulting to release.")
 endif(NOT CMAKE_BUILD_TYPE)
 set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Build type")
+
+#make sure our local CMake Modules path comes first
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
 ########################################################################
 # Find Required Packages
@@ -45,6 +51,16 @@ find_package(Boost "1.47" COMPONENTS filesystem system thread chrono)
 if(NOT Boost_FOUND)
     message(FATAL_ERROR "Boost 1.47 or newer required to build ${PROJECT_NAME}")
 endif()
+# -- libpcap: This package is required
+find_package(PCAP)
+if(PCAP_FOUND)
+    get_filename_component(PCAP_LIBRARY_DIR ${PCAP_LIBRARIES} PATH)
+    message(STATUS "Found libpcap")
+    message(STATUS "-- Includes: ${PCAP_INCLUDE_DIRS}")
+    message(STATUS "-- Libraries: ${PCAP_LIBRARY_DIR}")
+else()
+    message(FATAL_ERROR "libpcap required to build ${PROJECT_NAME}")
+endif()
 # -- Doxygen: This package is optional
 find_package(Doxygen)
 
@@ -53,13 +69,18 @@ find_package(Doxygen)
 ########################################################################
 set(LIBCYBERRADIO_INC_SUBDIR       LibCyberRadio)
 set(LIBCYBERRADIO_INCLUDE_DIR      include/${LIBCYBERRADIO_INC_SUBDIR})
-set(LIBCYBERRADIO_LIBRARY_DIR      lib)
+if(UNIX AND EXISTS "/usr/lib64")
+    set(LIBCYBERRADIO_LIBRARY_DIR      lib64) # CentOS 64-bit fix
+else()
+    set(LIBCYBERRADIO_LIBRARY_DIR      lib)
+endif(UNIX AND EXISTS "/usr/lib64")
 set(LIBCYBERRADIO_BINARY_DIR       bin)
 set(LIBCYBERRADIO_DATA_DIR         share)
 set(LIBCYBERRADIO_PKG_DATA_DIR     ${LIBCYBERRADIO_DATA_DIR}/${PROJECT_NAME})
 set(LIBCYBERRADIO_DOC_DIR          ${LIBCYBERRADIO_DATA_DIR}/doc)
 set(LIBCYBERRADIO_PKG_DOC_DIR      ${LIBCYBERRADIO_DOC_DIR}/${PROJECT_NAME})
 set(LIBCYBERRADIO_EXAMPLES_DIR     ${LIBCYBERRADIO_PKG_DATA_DIR}/examples)
+set(LIBCYBERRADIO_CMAKE_MODS_DIR   ${LIBCYBERRADIO_LIBRARY_DIR}/cmake/${PROJECT_NAME})
 
 ########################################################################
 # Set Up Include and Linker Paths
@@ -70,10 +91,38 @@ include_directories(
     ${CMAKE_BINARY_DIR}/lib
     ${CMAKE_BINARY_DIR}/include
     ${Boost_INCLUDE_DIRS}
+    ${PCAP_INCLUDE_DIRS}
 )
 link_directories(
     ${Boost_LIBRARY_DIRS}
+    ${PCAP_LIBRARY_DIR}
 )
+
+########################################################################
+# Create CMake "Config" files
+# NOTE: These are used to tell CMake where to find this library 
+#    using the find_package() directive.
+# NOTE: Depends on the files LibCyberRadioConfig.cmake.in and 
+#    LibCyberRadioConfigVersion.cmake.in.
+########################################################################
+# -- Generate config files
+configure_file(
+    ${CMAKE_SOURCE_DIR}/LibCyberRadioConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/LibCyberRadioConfig.cmake
+@ONLY)
+configure_file(
+    ${CMAKE_SOURCE_DIR}/LibCyberRadioConfigVersion.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/LibCyberRadioConfigVersion.cmake
+@ONLY)
+# -- Add make target for config files
+add_custom_target(package_config_target ALL 
+                  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/LibCyberRadioConfig.cmake
+                          ${CMAKE_CURRENT_BINARY_DIR}/LibCyberRadioConfigVersion.cmake)
+# -- Add config files to install
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/LibCyberRadioConfig.cmake 
+        ${CMAKE_CURRENT_BINARY_DIR}/LibCyberRadioConfigVersion.cmake 
+        DESTINATION ${LIBCYBERRADIO_CMAKE_MODS_DIR})
 
 ########################################################################
 # Create Uninstall Target

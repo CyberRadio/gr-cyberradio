@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<block>
+  <name>Generic Control Base Block</name>
+  <key>CyberRadio_generic_radio_control_block</key>
+  <category>[CyberRadio]/Radio Element Control</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.generic_radio_control_block($radioParam, $otherArgs, $debug)</make>
+  <callback>send_command($cmd)</callback>
+  <callback>set_otherArgs($otherArgs)</callback>
+    <param>
+    <name>Command</name>
+    <key>cmd</key>
+    <value>""</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Radio Parameters (dict)</name>
+    <key>radioParam</key>
+    <value>{"type":"ndr308","host":"ndr308","port":8617,"obj":None}</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Other Arguments</name>
+    <key>otherArgs</key>
+    <value>{}</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Debug Flag</name>
+    <key>debug</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <sink>
+    <name>control</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  <source>
+    <name>status</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+</block>

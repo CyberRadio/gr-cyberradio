@@ -3,25 +3,27 @@
 # \package CyberRadioDriver
 # 
 # \brief The CyberRadio Solutions NDR Radio Driver module 
-# (CyberRadioDriver) provides users with a common application programming 
-# interface (API) for all CyberRadio Solutions NDR-class radios.
+# (CyberRadioDriver) provides users with a common application 
+# programming interface (API) for all CyberRadio Solutions 
+# NDR-class radios.
 #
-# End-users of the driver should obtain a radio handler object for
-# their radio(s) by calling CyberRadioDriver.getRadioObject() with the name
-# string for the desired radio.  They can then use the methods provided 
-# by the CyberRadioDriver.IRadio interface to manipulate their radio handler
-# object.
+# End-users of the driver should obtain a radio handler object 
+# for their radio(s) by calling CyberRadioDriver.getRadioObject() 
+# with the name string for the desired radio.  They can then use 
+# the methods provided by the CyberRadioDriver.IRadio interface 
+# to manipulate their radio handler object.
 #
-# The driver package documentation also includes other modules and objects.  
-# These implement the high-level functionality exposed by 
-# CyberRadioDriver.getRadioObject() and the CyberRadioDriver.IRadio interface.
-# However, these items will be of little interest to end-users.  They are 
-# included mainly for the benefit of those who maintain the driver.
+# The driver package documentation also includes other modules 
+# and objects. These implement the high-level functionality 
+# exposed by CyberRadioDriver.getRadioObject() and the 
+# CyberRadioDriver.IRadio interface. However, these items will 
+# be of little interest to end-users.  They are included mainly 
+# for the benefit of those who maintain the driver.
 #
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2015 CyberRadio Solutions, Inc.  All rights 
+# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  All rights 
 # reserved.
 #
 ###############################################################
@@ -31,33 +33,44 @@
 #
 # \section Description
 #
-# The CyberRadio Solutions NDR Radio Driver module (CyberRadioDriver) 
-# provides users with a common application programming interface 
-# (API) for all CyberRadio Solutions NDR-class radios.
+# The CyberRadio Solutions NDR Radio Driver module 
+# (CyberRadioDriver) provides users with a common application 
+# programming interface (API) for all CyberRadio Solutions 
+# NDR-class radios.
 #
-# End-users of the driver should obtain a radio handler object for
-# their radio(s) by calling CyberRadioDriver.getRadioObject() with either
-# the name string for the desired radio or "auto" to automatically detect
-# the connected radio type.  They can then use the methods provided 
-# by the CyberRadioDriver.IRadio interface to manipulate their radio handler
-# object.
+# End-users of the driver should obtain a radio handler object 
+# for their radio(s) by calling CyberRadioDriver.getRadioObject() 
+# with the name string for the desired radio.  They can then use 
+# the methods provided by the CyberRadioDriver.IRadio interface 
+# to manipulate their radio handler object.
 #
-# The driver package documentation also includes other modules and objects.  
-# These implement the high-level functionality exposed by 
-# CyberRadioDriver.getRadioObject() and the CyberRadioDriver.IRadio interface.
-# However, these items will be of little interest to end-users.  They are 
-# included mainly for the benefit of those who maintain the driver.
+# The driver package documentation also includes other modules 
+# and objects. These implement the high-level functionality 
+# exposed by CyberRadioDriver.getRadioObject() and the 
+# CyberRadioDriver.IRadio interface. However, these items will 
+# be of little interest to end-users.  They are included mainly 
+# for the benefit of those who maintain the driver.
 #
 # \section SupportedRadios Supported Radios
 #
 # <table>
 #    <tr><th>Radio</th><th>Name String</th></tr>
-#    <tr><td>\link CyberRadioDriver::radio::ndr304 NDR304 \endlink</td><td>"ndr304"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radio::ndr308_1 NDR308-1 \endlink</td><td>"ndr308_1"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radio::ndr308ts NDR308-TS \endlink</td><td>"ndr308ts"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radio::ndr308 NDR308 \endlink</td><td>"ndr308"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radio::ndr308_4 NDR308 4-tuner \endlink</td><td>"ndr308_4"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radio::ndr651 NDR651 \endlink</td><td>"ndr651"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::internal::ndr301::ndr301 NDR301 \endlink</td><td>"ndr301"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::internal::ndr303::ndr303 NDR303 \endlink</td><td>"ndr303"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr304::ndr304 NDR304 \endlink</td><td>"ndr304"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr308::ndr308_1 NDR308-1 \endlink</td><td>"ndr308_1"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr308::ndr308ts NDR308-TS \endlink</td><td>"ndr308ts"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr308::ndr308 NDR308 \endlink</td><td>"ndr308"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr308::ndr308_4 NDR308 4-tuner \endlink</td><td>"ndr308_4"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::internal::ndr328::ndr328 NDR328 \endlink</td><td>"ndr328"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::internal::ndr354::ndr354 NDR354 \endlink</td><td>"ndr354"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::internal::ndr364::ndr364 NDR364 \endlink</td><td>"ndr364"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::internal::ndr470::ndr470 NDR470 \endlink</td><td>"ndr470"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::internal::ndr472::ndr472_1 NDR472-1 \endlink</td><td>"ndr472_1"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::internal::ndr472::ndr472 NDR472 \endlink</td><td>"ndr472"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::internal::ndr551::ndr551 NDR551 \endlink</td><td>"ndr551"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr651::ndr651 NDR651 \endlink</td><td>"ndr651"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::internal::ndr804::ndr804 NDR804 \endlink</td><td>"ndr804"</td></tr>
 # </table>
 #
 # The name string from this table is used in 
@@ -66,10 +79,18 @@
 #
 ###############################################################
 
-import inspect, sys
-import socket, struct
-from command import radio_command
-import radio, configKeys
+# Imports from other modules in this package
+import configKeys
+import radio
+# Imports from external modules
+# Python standard library imports
+import importlib
+import inspect
+import pkgutil
+import socket
+import struct
+import sys
+
 
 ##
 # \brief Driver module name (string).
@@ -79,18 +100,20 @@ name = "CyberRadioDriver"
 description = "CyberRadio Solutions NDR Driver"
 ##
 # \brief Driver version number (string).
-version = "16.12.15"
+version = "17.12.08-unstable"
 
-# This section of code inspects the "radio" module for radio handler
-# objects (objects derived from _radio, thus implementing the IRadio interface)
-# and imports those objects into this module's namespace (that is, it mirrors
-# a "from radio import <radio handler class>" statement).
-for objname, obj in inspect.getmembers(radio):
-    if inspect.isclass(obj) and issubclass(obj, radio._radio) \
-      and "_radio" not in objname:
-        # Import that object into this module's namespace.
-        setattr(sys.modules[__name__], objname, obj)
-        
+
+# # This section of code inspects the "radio" module for radio handler
+# # objects (objects derived from _radio, thus implementing the IRadio interface)
+# # and imports those objects into this module's namespace (that is, it mirrors
+# # a "from radio import <radio handler class>" statement).
+# for objname, obj in inspect.getmembers(radio):
+#     if inspect.isclass(obj) and issubclass(obj, radio._radio) \
+#       and "_radio" not in objname:
+#         # Import that object into this module's namespace.
+#         setattr(sys.modules[__name__], objname, obj)
+
+
 # BEGIN NON-WINDOWS METHODS
 if sys.platform != "win32":
     
@@ -140,10 +163,64 @@ if sys.platform != "win32":
 # END NON-WINDOWS METHODS
 
 ##
+# \internal
+# \brief Recursively import submodules that are part of some arbitrary package.
+#
+# This code was found here: 
+# https://stackoverflow.com/questions/3365740/how-to-import-all-submodules
+#
+# \param package Either the package name (string) or the actual imported module.
+# \param recursive Whether or not to import recursively (boolean).
+# \returns A dictionary where the keys are module name strings and the values 
+#     are module type objects.
+def import_submodules(package, recursive=True):
+    if isinstance(package, str):
+        package = importlib.import_module(package)
+    results = {}
+    for loader, name, is_pkg in pkgutil.walk_packages(package.__path__):
+        full_name = package.__name__ + '.' + name
+        results[full_name] = importlib.import_module(full_name)
+        if recursive and is_pkg:
+            results.update(import_submodules(full_name))
+    return results
+
+##
+# \internal
+# \brief Creates the radio class map from radio handler modules.
+#
+# To support a radio, create a radio handler object (an object derived 
+# from radio._radio, thus implementing the IRadio interface) in a 
+# separate module under the CyberRadioDriver.radios package tree.  
+# This method imports these radio handler modules recursively, and then 
+# forms the radio class map from the results.
+#
+# \note Doxygen is not as intelligent as Python when it comes to 
+# generating documentation dynamically. When creating a new radio handler 
+# module, you will need to add the new radio to the list of supported radios 
+# in the "mainpage" documentation section at the top of this file.
+#
+# \returns The radio class map.  This is a dictionary whose keys are radio
+#     name strings and whose values are radio handler class names.
+def create_radio_class_map(): 
+    ret = {}
+    radio_module_info = import_submodules("CyberRadioDriver.radios")
+    for modname, modinfo in radio_module_info.iteritems():
+        for name, obj in inspect.getmembers(modinfo):
+            if inspect.isclass(obj) and issubclass(obj, radio._radio) and "_radio" not in name:
+                # Add the object to the radio class map.
+                ret[name.replace("_","-")] = obj
+    return ret
+
+##
+# \internal
+# \brief Radio class map.  This maps radio name strings to radio handler class names.
+_radio_class_map = create_radio_class_map()
+
+##
 # \brief Gets the list of supported radios.
 # \return The list of supported radios.
 def getSupportedRadios():
-    return sorted(radio._radio_class_map.keys())
+    return sorted(_radio_class_map.keys())
 
 ##
 # \brief Factory method for obtaining a radio handler class name from the name
@@ -151,12 +228,18 @@ def getSupportedRadios():
 #
 # The name string used to identify the radio can be any string returned 
 # by getSupportedRadios(), but the check is not case-sensitive.
+# The returned radio handler class will support the CyberRadioDriver.IRadio 
+# interface.
 #
 # \param nameString The name string for the radio of interest.
 # \returns The radio handler class name for the desired radio.
 # \throws RuntimeError if the desired radio is not supported.
 def getRadioClass(nameString):
-    return radio.getRadioObject(nameString)
+    nameString = nameString.strip().lower().replace("_","-")
+    try:
+        return _radio_class_map[nameString]
+    except:
+        raise RuntimeError("Unsupported radio: %s" % nameString)
 
 ##
 # \brief Factory method for obtaining a radio handler object from the name
@@ -213,13 +296,15 @@ def getRadioObject(nameString, *args, **kwargs):
         radioType = ""
         connModes = []
         if kwargs.get("host", None) is not None:
-            connModes.append("tcp")
+            connModes.extend(["https", "tcp"])
         if kwargs.get("dev", None) is not None:
             connModes.append("tty")
         for connMode in connModes:
             # Grab a temporary handler object of the identifier class
             tmpHandler = radio._radio_identifier(verbose=False, logFile=None)
-            if connMode == "tcp":
+            if connMode == "https":
+                tmpHandler.connect("https", kwargs.get("host"), kwargs.get("port", 443))
+            elif connMode == "tcp":
                 tmpHandler.connect("tcp", kwargs.get("host"), kwargs.get("port", None))
             elif connMode == "tty":
                 tmpHandler.connect("tty", kwargs.get("dev"), kwargs.get("baudrate", None))
@@ -242,10 +327,12 @@ def getRadioObject(nameString, *args, **kwargs):
         return obj
     else:
         obj = getRadioClass(nameString)(*args, **kwargs)
-        if kwargs.get("host", None) is not None and obj.isConnectionModeSupported("udp"):
-            obj.connect("udp", kwargs.get("host"), kwargs.get("port", None))
-        elif kwargs.get("host", None) is not None and obj.isConnectionModeSupported("tcp"):
-            obj.connect("tcp", kwargs.get("host"), kwargs.get("port", None))
+        if kwargs.get("host", None) and any(obj.isConnectionModeSupported(i) for i in ("https","tcp","udp")):
+            hostname = kwargs["host"]
+            for connectionMethod in ("https","tcp","udp"):
+                if not None and obj.isConnectionModeSupported(connectionMethod):
+                    obj.connect(connectionMethod, hostname, kwargs.get("port",None))
+                    break
         elif kwargs.get("dev", None) is not None and obj.isConnectionModeSupported("tty"):
             obj.connect("tty", kwargs.get("dev"), kwargs.get("baudrate", None))
         return obj
@@ -1398,6 +1485,24 @@ class IRadio(object):
         raise NotImplementedError
     
     ##
+    # \brief Gets the radio's default baud rate.
+    #
+    # \return The default baud rate.  This has no meaning if the radio does
+    #    not use serial control connections.
+    @classmethod
+    def getDefaultBaudrate(cls):
+        raise NotImplementedError
+    
+    ##
+    # \brief Gets the radio's default control port.
+    #
+    # \return The default port number.  This has no meaning if the radio does
+    #    not use network control connections.
+    @classmethod
+    def getDefaultControlPort(cls):
+        raise NotImplementedError
+    
+    ##
     # \brief Gets the allowed VITA enable options set for the radio.
     #
     # \return The option set.  This is a dictionary whose keys are 
@@ -1641,6 +1746,53 @@ class IRadio(object):
         raise NotImplementedError
     
     ##
+    # \brief Gets the frequency offset range for the wideband DUCs on the radio.
+    #
+    # \return The frequency range.  This is a 2-tuple: (minimum, maximum). 
+    @classmethod
+    def getWbducFrequencyRange(cls):
+        raise NotImplementedError
+    
+    ##
+    # \brief Gets the frequency resolution for wideband DUCs on the radio.
+    #
+    # \return The frequency resolution. 
+    @classmethod
+    def getWbducFrequencyRes(cls):
+        raise NotImplementedError
+    
+    ##
+    # \brief Gets the frequency unit for wideband DUCs on the radio.
+    #
+    # The frequency unit is a floating-point value that indicates
+    # how the frequency is specified in commands given to the radio.
+    # <ul>
+    # <li> 1.0: Frequency given in Hz
+    # <li> 1.0e6: Frequency given in MHz
+    # </ul> 
+    #
+    # \return The frequency unit.
+    @classmethod
+    def getWbducFrequencyUnit(cls):
+        raise NotImplementedError
+    
+    ##
+    # \brief Gets the attenuation range for the wideband DUCs on the radio.
+    #
+    # \return The attenuation range.  This is a 2-tuple: (minimum, maximum). 
+    @classmethod
+    def getWbducAttenuationRange(cls):
+        raise NotImplementedError
+    
+    ##
+    # \brief Gets the attenuation resolution for wideband DUCs on the radio.
+    #
+    # \return The attenuation resolution. 
+    @classmethod
+    def getWbducAttenuationRes(cls):
+        raise NotImplementedError
+    
+    ##
     # \brief Gets the allowed rate set for the wideband DUCs on the radio.
     #
     # \return The rate set.  This is a dictionary whose keys are rate indices
@@ -1693,6 +1845,22 @@ class IRadio(object):
         raise NotImplementedError
     
     ##
+    # \brief Gets the index range for the combined DDC groups on the radio.
+    #
+    # \return The list of combined DDC group indexes. 
+    @classmethod
+    def getCombinedDdcGroupIndexRange(cls):
+        raise NotImplementedError
+    
+    ##
+    # \brief Gets the index range for the wideband DUC groups on the radio.
+    #
+    # \return The list of wideband DUC group indexes. 
+    @classmethod
+    def getWbducGroupIndexRange(cls):
+        raise NotImplementedError
+    
+    ##
     # \brief Disables ethernet flow control on the radio.
     #
     # \return Boolean value to indicate success
@@ -1719,4 +1887,15 @@ class IRadio(object):
     # \return A dictionary of flow control statuses, keyed by 10GigE 
     #    port number.
     def getTenGigFlowControlStatus(self,):
+        raise NotImplementedError
+
+    ##
+    # \brief Performs coherent tuning.
+    #
+    # \param cohGroup Coherent tuning group number.
+    # \param freq Frequency, in Hz.
+    #
+    # \return True if successful, False otherwise. Returns False if the radio
+    #    does not support coherent tuning.
+    def coherentTune(self, cohGroup, freq):
         raise NotImplementedError

@@ -1,0 +1,124 @@
+<block>
+  <name>[CyberRadio] VITA UDP RX Source</name>
+  <key>CyberRadio_vita_udp_rx</key>
+  <category>[CyberRadio]/Vita and UDP Sources</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.vita_udp_rx($src_ip, $port, $header_byte_offset, $samples_per_packet, $bytes_per_packet, $swap_bytes, $swap_iq, $tag_packets, $vector_output)</make>
+<!--
+  <param>
+    <name>Radio Object</name>
+    <key>radioObj</key>
+    <type>raw</type>
+  </param>
+-->
+  <param>
+    <name>Src_ip</name>
+    <key>src_ip</key>
+    <value>0.0.0.0</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Port</name>
+    <key>port</key>
+    <value>19091</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Header_byte_offset</name>
+    <key>header_byte_offset</key>
+    <value>36</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Samples_per_packet</name>
+    <key>samples_per_packet</key>
+    <value>1024</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Bytes_per_packet</name>
+    <key>bytes_per_packet</key>
+    <value>4136</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Swap_bytes</name>
+    <key>swap_bytes</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+    <option>
+      <name>True</name>
+      <key>True</key>
+    </option>
+    <option>
+      <name>False</name>
+      <key>False</key>
+    </option>
+  </param>
+  <param>
+    <name>Swap_iq</name>
+    <key>swap_iq</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+    <option>
+      <name>True</name>
+      <key>True</key>
+    </option>
+    <option>
+      <name>False</name>
+      <key>False</key>
+    </option>
+  </param>
+  <param>
+    <name>Tag_packets</name>
+    <key>tag_packets</key>
+    <value>False</value>
+    <type>enum</type>
+    <hide>part</hide>
+    <option>
+      <name>True</name>
+      <key>True</key>
+    </option>
+    <option>
+      <name>False</name>
+      <key>False</key>
+    </option>
+  </param>
+  <param>
+    <name>Vector Output?</name>
+    <key>vector_output</key>
+    <value>False</value>
+    <type>enum</type>
+    <option>
+      <name>True</name>
+      <key>True</key>
+      <opt>size:$samples_per_packet</opt>
+    </option>
+    <option>
+      <name>False</name>
+      <key>False</key>
+      <opt>size:1</opt>
+    </option>
+  </param>
+  <sink>
+    <name>control</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  <source>
+    <name>out</name>
+    <type>complex</type>
+    <vlen>{False:1, True:$samples_per_packet}[$vector_output]</vlen>
+  </source>
+  <source>
+    <name>status</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+
+</block>

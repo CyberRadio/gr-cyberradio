@@ -16,7 +16,8 @@
 #include "LibCyberRadio/Common/Thread.h"
 
 #define MAX_RX_SIZE 8192
-
+#define MAX_RADIO_BUFFSIZE 67108862 // (2^26)-2 samples
+#define RADIO_BUFFER_RESERVE 1048576
 
 /*!
  * \brief Provides programming elements for controlling CyberRadio Solutions products.
@@ -42,7 +43,7 @@ namespace LibCyberRadio
 				 * \param port UDP port
 				 * \param debug Whether or not to produce debug output
 				 */
-				UdpStatusReceiver(std::string ifname, unsigned int port, bool debug);
+				UdpStatusReceiver(std::string ifname, unsigned int port, bool debug, bool updatePE);
 				/*!
 				 * \brief Destroys a UdpStatusReceiver object.
 				 */
@@ -95,6 +96,13 @@ namespace LibCyberRadio
 				 * \returns True if there is free space available, false otherwise.
 				 */
 				bool sentNSamples(long int samplesSent);
+				
+				bool setUpdatePE(bool updatePE);
+				bool getUpdatePE(void) { return _updatePE; };
+				int setMaxFreeSpace(float fs, float maxLatency);
+				int getMaxFreeSpace(void) { return _freeSpaceMax; };
+				//~ bool setUdpPort(unsigned int port);
+				int getUdpPort(void) { return _port; };
 
 			private:
 				int _sockfd;
@@ -103,13 +111,17 @@ namespace LibCyberRadio
 				boost::mutex _fcMutex, _selMutex;
 				bool _sendLock;
 				bool _shutdown;
+				bool _updatePE;
 
 				std::string _ifname;
 				unsigned int _port;
+				uint64_t timeoutCount;
 
-				long int _651freeSpace;
+				int _651freeSpace;
+				int _freeSpaceMax;
 
 				bool _makeSocket(void);
+				bool _setFreeSpace(int, bool, bool, bool);
 		};
 
 	} /* namespace NDR651 */

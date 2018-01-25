@@ -1,0 +1,168 @@
+<?xml version='1.0' encoding='ASCII'?>
+<!--
+###################################################
+# [CyberRadio] NDR472 Source
+#
+# Author: DA
+#
+# Copyright: (c) 2015 CyberRadio Solutions, Inc.
+#    All rights reserved.
+###################################################
+ -->
+<block>
+  <name>[CyberRadio] NDR472 Source (Deprecated)</name>
+  <key>CyberRadio_NDR472_source</key>
+  <category>[CyberRadio]/Radio Sources</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.NDR472_source(
+    verbose_mode=$verbose_mode,
+    radio_device_name=$radio_device_name,
+    radio_baud_rate=$radio_baud_rate,
+    gig_iface_to_use=$gig_iface_to_use,
+    num_tuners=$num_tuners,
+    tuner1_param_list=$tuner1_param_list,
+#if $num_tuners() >= 2
+    tuner2_param_list=$tuner2_param_list,
+#end if
+    num_wbddcs=$num_wbddcs,
+    wbddc1_param_list=$wbddc1_param_list,
+#if $num_wbddcs() >= 2
+    wbddc2_param_list=$wbddc2_param_list,
+#end if
+    tagged=$tagged,
+)</make>
+  <callback>set_tuner1_param_list($tuner1_param_list)</callback>
+  <callback>set_tuner2_param_list($tuner2_param_list)</callback>
+  <callback>set_wbddc1_param_list($wbddc1_param_list)</callback>
+  <callback>set_wbddc2_param_list($wbddc2_param_list)</callback>
+  <param>
+    <name>Verbose Mode</name>
+    <key>verbose_mode</key>
+    <value>True</value>
+    <type>bool</type>
+  </param>
+  <param>
+    <name>Radio Device Name</name>
+    <key>radio_device_name</key>
+    <value>/dev/ndr47x</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Radio Baud Rate</name>
+    <key>radio_baud_rate</key>
+    <value>921600</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>GigE Interface To Use</name>
+    <key>gig_iface_to_use</key>
+    <value>eth0</value>
+    <type>string</type>
+    <hide>none</hide>
+  </param>
+  <param>
+    <name>Number of Tuners</name>
+    <key>num_tuners</key>
+    <value>1</value>
+    <type>int</type>
+    <option>
+       <name>1</name>
+       <key>1</key>
+    </option>
+    <option>
+       <name>2</name>
+       <key>2</key>
+    </option>
+  </param>
+  <param>
+    <name>Tuner 1 Parameter List</name>
+    <key>tuner1_param_list</key>
+    <value>[False, 900e6, 0]</value>
+    <type>raw</type>
+  <hide>#if $num_tuners() >= 1 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Tuner 2 Parameter List</name>
+    <key>tuner2_param_list</key>
+    <value>[False, 900e6, 0]</value>
+    <type>raw</type>
+  <hide>#if $num_tuners() >= 2 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Number of WBDDCs</name>
+    <key>num_wbddcs</key>
+    <value>1</value>
+    <type>int</type>
+    <option>
+       <name>1</name>
+       <key>1</key>
+    </option>
+    <option>
+       <name>2</name>
+       <key>2</key>
+    </option>
+  </param>
+  <param>
+    <name>WBDDC 1 Parameter List</name>
+    <key>wbddc1_param_list</key>
+    <value>[40001, 0, 0, False, 0e6]</value>
+    <type>raw</type>
+  <hide>#if $num_wbddcs() >= 1 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>WBDDC 2 Parameter List</name>
+    <key>wbddc2_param_list</key>
+    <value>[40002, 0, 0, False, 0e6]</value>
+    <type>raw</type>
+  <hide>#if $num_wbddcs() >= 2 then 'part' else 'all'#</hide>
+  </param>
+  <param>
+    <name>Tagged Output Streams</name>
+    <key>tagged</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+  <source>
+    <name>log</name>
+    <type>byte</type>
+    <vlen>1</vlen>
+    <optional>1</optional>
+  </source>
+  <source>
+    <name>wbddc</name>
+    <type>complex</type>
+    <vlen>1</vlen>
+  <nports>$num_wbddcs()</nports>
+    <optional>1</optional>
+  </source>
+  <doc>
+I/Q data source block using the NDR472 radio.
+
+The NDR472_source block supplies wideband DDC outputs, as indicated \
+by the Number of WBDDCs setting. Any outputs supplied by this block are \
+optional, so the user does not need to connect them if they are not \
+being used.  The NDR472_source block also supplies a character-stream \
+output for collecting logging data from the underlying driver interface.
+
+Tuners and WBDDCs are configured via parameter lists.  Parameter \
+lists are standard Python lists, formatted as follows:
+* A tuner parameter list contains the following elements: [tuner \
+enabled flag, tuner frequency (Hz), tuner attenuation (dB)].
+* A WBDDC parameter list contains the following elements: [UDP port number, \
+VITA type, sample rate index, enabled flag, DDC frequency offset (Hz)]. 
+
+The NDR472_source block can also produce stream tags for any WBDDCs \
+configured to use VITA 49 frames.  See the documentation for the base \
+VITA I/Q Source block for details on the stream tags produced.
+
+NOTE: GNU Radio Companion handles WBDDC indexes differently than the \
+block configuration parameters do.  If only one WBDDC is used, the output \
+port ("wbddc") is not indexed at all.  If more than one WBDDC is used, then \
+the WBDDC outputs have zero-based indexes (so WBDDC 1 comes out on port \
+"wbddc0", WBDDC 2 comes out on port "wbddc1", etc.).  
+
+NOTE: The parameter list scheme is a workaround to get around the \
+(undocumented) parameter limit that GNU Radio Companion \
+silently imposes.
+  </doc>
+</block>

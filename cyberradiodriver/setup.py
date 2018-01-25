@@ -27,14 +27,14 @@
 #
 ###############################################################
 
+import CyberRadioDriver
 from distutils.core import setup
 from distutils.sysconfig import get_python_lib
 import sys, os, glob
-import CyberRadioDriver
+
 
 # Configuration information for this application.  This should be consistent 
 # across platforms, though there may be exceptions.
-
 VERSION=CyberRadioDriver.version
 NAME=CyberRadioDriver.name
 DESCRIPTION=CyberRadioDriver.description
@@ -42,6 +42,8 @@ AUTHOR='CyberRadio Solutions, Inc.'
 EMAIL='sales@cyberradiosolutions.com'
 PACKAGE_LIST=[ \
                'CyberRadioDriver', \
+               'CyberRadioDriver.radios', \
+               'CyberRadioDriver.radios.internal', \
               ]
 if sys.platform == 'win32':
     SCRIPT_LIST=[]
@@ -49,7 +51,7 @@ if sys.platform == 'win32':
     # Installing init script files not supported under Windows right now
     # Automatic document generation not supported under Windows right now
 else:
-    SCRIPT_LIST=[]
+    SCRIPT_LIST=['apps/ndr_dataport_config']
     CONF_FILE_LIST=[]
     INIT_SCRIPT_LIST=[]
     DOXY_FILE_LIST=['CyberRadioDriver.doxyfile']
@@ -204,9 +206,16 @@ else:
             # Install configuration files
             for conf_file in self.distribution.conf_files:
                 if os.access(conf_file, os.F_OK):
-                    # Work around issue with os.path.join() that manages to
-                    # change the root path somehow :(
-                    dst = "/".join([self.root, self.conf_prefix, conf_file])
+                    # os.path.join() drops the root path if the conf_prefix contains
+                    # a leading slash
+                    dstComponents = []
+                    dstComponents.append("/" if self.root is None \
+                                         else self.root)
+                    dstComponents.append(self.conf_prefix[1:] if \
+                                         self.conf_prefix.startswith("/") \
+                                         else self.conf_prefix)
+                    dstComponents.append(os.path.basename(conf_file))
+                    dst = os.path.join(*dstComponents)
                     self.ensurePathToFileExists(dst)
                     self.distribution.announce("copying %s -> %s" % (conf_file, dst))
                     self.copy_file(conf_file, dst)
@@ -216,9 +225,16 @@ else:
                     # If init file name ends with ".init", then strip this 
                     # ending off of the filename
                     tmp = init_file.replace(".init", "")
-                    # Work around issue with os.path.join() that manages to
-                    # change the root path somehow :(
-                    dst = "/".join([self.root, self.init_prefix, tmp])
+                    # os.path.join() drops the root path if the init_prefix contains
+                    # a leading slash
+                    dstComponents = []
+                    dstComponents.append("/" if self.root is None \
+                                         else self.root)
+                    dstComponents.append(self.init_prefix[1:] if \
+                                         self.init_prefix.startswith("/") \
+                                         else self.init_prefix)
+                    dstComponents.append(os.path.basename(tmp))
+                    dst = os.path.join(*dstComponents)
                     self.ensurePathToFileExists(dst)
                     self.distribution.announce("copying %s -> %s" % (init_file, dst))
                     self.copy_file(init_file, dst)
@@ -233,9 +249,16 @@ else:
             # Install desktop files
             for desktop_file in self.distribution.desktop_files:
                 if os.access(desktop_file, os.F_OK):
-                    # Work around issue with os.path.join() that manages to
-                    # change the root path somehow :(
-                    dst = "/".join([self.root, self.desktop_prefix, desktop_file])
+                    # os.path.join() drops the root path if the desktop_prefix contains
+                    # a leading slash
+                    dstComponents = []
+                    dstComponents.append("/" if self.root is None \
+                                         else self.root)
+                    dstComponents.append(self.desktop_prefix[1:] if \
+                                         self.desktop_prefix.startswith("/") \
+                                         else self.desktop_prefix)
+                    dstComponents.append(os.path.basename(desktop_file))
+                    dst = os.path.join(*dstComponents)
                     self.ensurePathToFileExists(dst)
                     self.distribution.announce("copying %s -> %s" % (desktop_file, dst))
                     self.copy_file(desktop_file, dst)

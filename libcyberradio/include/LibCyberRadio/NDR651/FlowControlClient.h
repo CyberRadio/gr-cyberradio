@@ -140,7 +140,7 @@ namespace LibCyberRadio
 				 */
 				bool enableDuc(unsigned int rateIndex, unsigned int txChannel,
 						unsigned int streamId, unsigned int tenGbeIndex, float attenuation,
-						float txFreq, long ducFreq, unsigned int txAtten, bool ducEnable = true);
+						double txFreq, long ducFreq, unsigned int txAtten, bool ducEnable = true);
 				//bool enableDucChannel(unsigned int ducChannel, bool enable, unsigned int ducRate, unsigned int streamId, unsigned int tenGbeIndex, unsigned int ducTxChannel, float ducFreq, float ducAtten);
 				//bool enableDucChannel(unsigned int ducChannel, bool enable, unsigned int ducRate, unsigned int streamId, unsigned int tenGbeIndex, unsigned int ducTxChannel, float ducFreq, float ducAtten, bool enableTxChannels, float txFreq, unsigned int txAtten);
 				/*!
@@ -149,7 +149,7 @@ namespace LibCyberRadio
 				 * \param applySetting Whether or not to apply the new setting immediately
 				 * \returns True if the action succeeds, false otherwise.
 				 */
-				bool setTxFrequency(int txFreq, bool applySetting = true);
+				bool setTxFrequency(double txFreq, bool applySetting = true);
 				/*!
 				 * \brief Sets the transmitter attenuation.
 				 * \param txAttenuation Transmitter attenuation (dB)
@@ -193,6 +193,13 @@ namespace LibCyberRadio
 				 */
 				bool setDucFrequency(long ducFreq, bool applySetting = true);
 				/*!
+				 * \brief Sets the DUC TX Inversion Mode.
+				 * \param txinvMode TX Inversion Mode (0=normal, 1=inverted)
+				 * \param applySetting Whether or not to apply the new setting immediately
+				 * \returns True if the action succeeds, false otherwise.
+				 */
+				bool setDucTxinvMode(unsigned int txinvMode, bool applySetting = true);
+				/*!
 				 * \brief Sets whether or not the DUC is enabled.
 				 * \param ducEnable Whether or not to enable the DUC
 				 * \param applySetting Whether or not to apply the new setting immediately
@@ -227,6 +234,11 @@ namespace LibCyberRadio
 				 */
 				bool sentNSamples(long int samplesSent);
 			//	bool sentNSamples(long int samplesSent, unsigned int ducChannel);
+				
+				bool setDucDipStatusEntry(int dipIndex, std::string dip, std::string dmac, unsigned int ducStatusPort);
+				bool setDuchsParameters(unsigned int duchsFullThresh, unsigned int duchsEmptyThresh, unsigned int duchsPeriod);
+				
+				bool unpause(void);
 
 			private:
 
@@ -236,7 +248,7 @@ namespace LibCyberRadio
 				struct TxStatusFrame _statusFrame;
 				int _statusSockfd;
 				socklen_t _statusDestLen; /* byte size of client's address */
-				struct sockaddr_in _statusDestAddr; /* client addr */
+				struct sockaddr_in _statusDestAddr, _statusCopyAddr; /* client addr */
 
 				unsigned int _tbsChannel;
 				unsigned int _tbsSpace;
@@ -254,11 +266,19 @@ namespace LibCyberRadio
 				unsigned int _ducStreamId;
 				unsigned int _ducTxChannel;
 				unsigned int _ducTenGbePort;
+				unsigned int _ducDipIndex;
 				unsigned int _ducAttenuation;
+				unsigned int _txinvMode;
 				unsigned int _txAttenuation;
-				float _txFreq;
+				double _txFreq;
+				int _shfMode;
 				long _ducFreq;
 				bool _config_tx;
+				
+				unsigned int _duchsFullThresh;
+				unsigned int _duchsEmptyThresh;
+				unsigned int _duchsPeriod;
+				unsigned int _duchsUdpPort;
 
 				BasicStringList _rspVec;
 
@@ -282,13 +302,21 @@ namespace LibCyberRadio
 
 
 				bool _sendCmdAndQry(const std::string& cmd, const std::string& qry);
+				bool _setShfMode();
+				bool _sendShf();
 				bool _sendTxf();
 				bool _sendTxa();
 				bool _sendTxp();
+				bool _sendTxinv();
 				bool _sendWbduc();
 				bool _sendDuc();
+				bool _sendDucp();
 				bool _sendWba();
 				bool _sendWbf();
+				bool _sendDuchs();
+				bool _sendDip();
+				
+				bool _clearDucSettingsInRadio(void);
 
 				void _initStatusFrame(void);
 				void _initStatusSocket(void);
@@ -298,6 +326,7 @@ namespace LibCyberRadio
 				//bool _setDucConfig(bool enable);
 				void _queryBufferState(void);
 				void _queryUtc(void);
+				void _queryStatus(void);
 				long _getDucSampleRate(void) const;
 
 		};

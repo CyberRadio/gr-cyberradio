@@ -2,36 +2,45 @@
 ###############################################################
 # \package CyberRadioDriver.radio
 # 
-# \brief Provides classes that define supported radios.
+# \brief Defines basic functionality for radio handler objects.
+#
+# \note This module defines basic behavior only.  To customize
+#     a radio handler class for a particular radio, derive a new
+#     class from the appropriate base class.  It is recommended
+#     that behavior specific to a given radio be placed in the
+#     module that supports that radio.
 #
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2014 CyberRadio Solutions, Inc.  All rights 
-# reserved.
+# \copyright Copyright (c) 2017 G3 Technologies, Inc.  All rights
+#    reserved.
 #
 ###############################################################
 
-# python library imports
-import traceback
-import time
-import math
-import inspect
-import sys
-import copy
-#    internal imports
-import components
-import transport
+# Imports from other modules in this package
 import command
-import log
+import components
 import configKeys
+import log
+import transport
+# Imports from external modules
+# Python standard library imports
+import copy
+import math
+import sys
+import time
+import traceback
 
 
 ##
 # \internal
 # \brief Returns the MAC address and IP address for a given Ethernet interface.
 #
-# \param ifname The name of the Ethernet system interface ("eth0", for example).
+# \param ifname The name of t# \author DA
+# \copyright Copyright (c) 2017 G3 Technologies, Inc.  All rights
+#    reserved.
+# \param ifname The Ethernet system interface ("eth0", for example).
 # \returns A 2-tuple: (MAC Address, IP Address).
 def getInterfaceAddresses(ifname):
     import socket,fcntl,struct
@@ -69,26 +78,6 @@ class _ifSpec():
     iqSwapped = False
     
 
-##
-# \internal
-# \brief VITA 49 interface specification class for the NDR304.
-class ndr304_ifSpec(_ifSpec):
-    headerSizeWords = 7
-    tailSizeWords = 1
-    payloadSizeWords = 384
-    byteOrder = "little"
-    iqSwapped = True
-
-##
-# \internal
-# \brief VITA 49 interface specification class for the NDR308.
-class ndr308_ifSpec(_ifSpec):
-    headerSizeWords = 9
-    payloadSizeWords = 1024
-    tailSizeWords = 1
-    byteOrder = "little"
-
-
 #-- Radio Handler Objects ---------------------------------------------#
 
 ##
@@ -98,7 +87,8 @@ class ndr308_ifSpec(_ifSpec):
 #
 # To add a supported radio to this driver, derive a class from 
 # _radio and change the static members of the new class to describe the
-# capabilities of that particular radio.
+# capabilities of that particular radio.  Each supported radio should
+# have its own module under the CyberRadioDriver.radios package tree.
 #
 # A radio handler object maintains a series of component objects, one
 # per component of each type (tuner, WBDDC, NBDDC, etc.).  Each component 
@@ -146,6 +136,13 @@ class _radio(log._logger, configKeys.Configurable):
     nbddcIndexBase = 1
     ## \brief NBDDC component type 
     nbddcType = components._nbddc
+    # FFT Processor Settings
+    ## \brief Number of FFT Channels
+    numFftStream = 0
+    ## \brief FFT stream index base (what number indices start at) 
+    fftStreamIndexBase = 0
+    ## \brief FFT stream component type 
+    fftStreamType = None
     # Transmitter settings
     ## \brief Number of transmitters
     numTxs = 0
@@ -181,6 +178,27 @@ class _radio(log._logger, configKeys.Configurable):
     nbddcGroupIndexBase = 1
     ## \brief NBDDC Group component type 
     nbddcGroupType = None
+    # Combined DDC Group settings
+    ## \brief Number of combined DDC groups available
+    numCddcGroups = 0
+    ## \brief Combined DDC group index base (what number indices start at) 
+    cddcGroupIndexBase = 1
+    ## \brief Combined DDC Group component type 
+    cddcGroupType = None
+    # WBDUC Group settings
+    ## \brief Number of WBDUC groups available
+    numWbducGroups = 0
+    ## \brief WBDUC group index base (what number indices start at) 
+    wbducGroupIndexBase = 1
+    ## \brief WBDUC Group component type 
+    wbducGroupType = None
+    # Tuner Group settings
+    ## \brief Number of tuner groups available
+    numTunerGroups = 0
+    ## \brief Tuner group index base (what number indices start at) 
+    tunerGroupIndexBase = 1
+    ## \brief Tuner Group component type 
+    tunerGroupType = None
     # UDP destination information
     ## \brief What the UDP destination setting represents for this radio
     udpDestInfo = ""
@@ -250,6 +268,8 @@ class _radio(log._logger, configKeys.Configurable):
     gpioSeqCmd = None
     ## \brief Command: Gigabit Ethernet interface flow control set/query
     tgfcCmd = None
+    ## \brief Coherent tuning command
+    cohTuneCmd = None
     # Mode settings
     ## \brief Supported reference modes 
     refModes = {}
@@ -259,6 +279,10 @@ class _radio(log._logger, configKeys.Configurable):
     vitaEnableOptions = {}
     ## \brief Supported connection modes
     connectionModes = ["tty"]
+    ## \brief Default baud rate (has no effect if radio does not use TTY)
+    defaultBaudrate = 921600
+    ## \brief Default port number (has no effect if radio does not use network connections)
+    defaultPort = 8617
     ##
     # \brief The list of valid configuration keywords supported by this
     # object.  Override in derived classes as needed.
@@ -291,11 +315,15 @@ class _radio(log._logger, configKeys.Configurable):
         self.tunerDict = {}
         self.wbddcDict = {}
         self.nbddcDict = {}
+        self.fftStreamDict = {}
         self.txDict = {}
         self.wbducDict = {}
         self.nbducDict = {}
         self.wbddcGroupDict = {}
         self.nbddcGroupDict = {}
+        self.cddcGroupDict = {}
+        self.wbducGroupDict = {}
+        self.tunerGroupDict = {}
         self.componentList = []
         # Little hack to ensure numWbddc is always set (we didn't always have this attribute).
         if self.numWbddc is None:
@@ -304,11 +332,15 @@ class _radio(log._logger, configKeys.Configurable):
                                         (xrange(self.tunerIndexBase, self.tunerIndexBase + self.numTuner),self.tunerType,self.tunerDict), \
                                         (xrange(self.wbddcIndexBase, self.wbddcIndexBase + self.numWbddc),self.wbddcType,self.wbddcDict), \
                                         (xrange(self.nbddcIndexBase, self.nbddcIndexBase + self.numNbddc),self.nbddcType,self.nbddcDict), \
+                                        (xrange(self.fftStreamIndexBase, self.fftStreamIndexBase + self.numFftStream),self.fftStreamType,self.fftStreamDict), \
                                         (xrange(self.txIndexBase, self.txIndexBase + self.numTxs),self.txType,self.txDict), \
                                         (xrange(self.wbducIndexBase, self.wbddcIndexBase + self.numWbduc),self.wbducType,self.wbducDict), \
                                         (xrange(self.nbducIndexBase, self.nbddcIndexBase + self.numNbduc),self.nbducType,self.nbducDict), \
                                         (xrange(self.wbddcGroupIndexBase, self.wbddcGroupIndexBase + self.numWbddcGroups),self.wbddcGroupType,self.wbddcGroupDict), \
                                         (xrange(self.nbddcGroupIndexBase, self.nbddcGroupIndexBase + self.numNbddcGroups),self.nbddcGroupType,self.nbddcGroupDict), \
+                                        (xrange(self.cddcGroupIndexBase, self.cddcGroupIndexBase + self.numCddcGroups),self.cddcGroupType,self.cddcGroupDict), \
+                                        (xrange(self.wbducGroupIndexBase, self.wbducGroupIndexBase + self.numWbducGroups),self.wbducGroupType,self.wbducGroupDict), \
+                                        (xrange(self.tunerGroupIndexBase, self.tunerGroupIndexBase + self.numTunerGroups),self.tunerGroupType,self.tunerGroupDict), \
                                          ):
             if objType is not None:
                 for objInd in objRange:
@@ -419,9 +451,9 @@ class _radio(log._logger, configKeys.Configurable):
             self.host_or_dev = host_or_dev
             self.port_or_baudrate = port_or_baudrate
             if self.port_or_baudrate is None:
-                self.port_or_baudrate = transport.radio_transport.defaultBaudrate \
-                                           if mode == "tty" else \
-                                           transport.radio_transport.defaultPort
+                self.port_or_baudrate = self.defaultBaudrate if mode == "tty" else \
+                                        self.defaultPort
+                self.logIfVerbose("USING PORT %r"%(self.port_or_baudrate))
             if self.transport is not None:
                 self.transport.disconnect()
                 self.transport = None
@@ -429,7 +461,7 @@ class _radio(log._logger, configKeys.Configurable):
                                                        logFile=self.logFile, 
                                                        logCtrl=self.logCtrl,
                                                        json=self.json)
-            if self.transport.connect(mode, host_or_dev, port_or_baudrate):
+            if self.transport.connect(mode, self.host_or_dev, self.port_or_baudrate):
                 self._queryConfiguration()
                 for obj in self.componentList:
                     obj.addTransport(self.transport,self.sendCommand,)
@@ -463,7 +495,7 @@ class _radio(log._logger, configKeys.Configurable):
         try:
             self.transport.disconnect()
         except:
-            self.log(traceback.format_exc())
+            self.logIfVerbose(traceback.format_exc())
             #traceback.print_exc()
         for obj in self.componentList:
             obj.delTransport()
@@ -473,6 +505,10 @@ class _radio(log._logger, configKeys.Configurable):
     #
     # \copydetails CyberRadioDriver::IRadio::sendCommand()
     def sendCommand(self,cmdString,timeout=None):
+        # Sanity-check: Don't bother trying if we don't have a 
+        # transport object, or if it's disconnected
+        if self.transport is None or not self.transport.isConnected():
+            return None
         try:
             x = self.transport.sendCommandAndReceive(cmdString,timeout)
             if not self.transport.connected:
@@ -481,7 +517,7 @@ class _radio(log._logger, configKeys.Configurable):
             else:
                 return x
         except:
-            self.log(traceback.format_exc())
+            self.logIfVerbose(traceback.format_exc())
             #traceback.print_exc()
             self.transport.disconnect()
             return None
@@ -495,12 +531,14 @@ class _radio(log._logger, configKeys.Configurable):
         # Normalize the incoming configuration dictionary before trying to process it.
         configDict2 = self._normalizeConfigDict(configDict)
         success = configKeys.Configurable.setConfiguration(self, **configDict2)
+        # Tuner configuration
         tunerConfDict = configDict2.get(configKeys.CONFIG_TUNER,{})
         for index in xrange(self.tunerIndexBase, self.tunerIndexBase + self.numTuner):
             if tunerConfDict.has_key(index):
                 confDict = tunerConfDict[index]
                 confDict[configKeys.TUNER_INDEX] = index
                 success &= self.setTunerConfigurationNew(**confDict)
+        # DDC configuration
         for ddcType in [configKeys.CONFIG_WBDDC, configKeys.CONFIG_NBDDC]:
             isWideband = (ddcType == configKeys.CONFIG_WBDDC)
             ddcConfDict = configDict2.get(configKeys.CONFIG_DDC,{}).get(ddcType,{})
@@ -511,7 +549,9 @@ class _radio(log._logger, configKeys.Configurable):
                     confDict = ddcConfDict[index]
                     confDict[configKeys.DDC_INDEX] = index
                     success &= self.setDdcConfigurationNew(wideband=isWideband, **confDict)
+        # IP configuration
         success &= self.setIpConfigurationNew(configDict2.get(configKeys.CONFIG_IP, {}))
+        # Transmitter configuration
         txConfDict = configDict2.get(configKeys.CONFIG_TX,{})
         for index in self.getTransmitterIndexRange():
             if txConfDict.has_key(index):
@@ -528,6 +568,7 @@ class _radio(log._logger, configKeys.Configurable):
                     confDict = ducConfDict[index]
                     confDict[configKeys.DUC_INDEX] = index
                     success &= self.setDucConfigurationNew(wideband=isWideband, **confDict)
+        # DDC group configuration
         for ddcType in [configKeys.CONFIG_WBDDC_GROUP, configKeys.CONFIG_NBDDC_GROUP]:
             # Flag for forcing the driver to query DDCs for status information
             forceDdcQuery = False
@@ -551,6 +592,79 @@ class _radio(log._logger, configKeys.Configurable):
                 ddcGroupDict = self.wbddcGroupDict if isWideband else self.nbddcGroupDict
                 for i in self._getIndexList(None, ddcGroupDict):
                     ddcGroupDict[i]._queryConfiguration()
+        # Combined DDC group configuration
+        for ddcType in [configKeys.CONFIG_COMBINED_DDC_GROUP]:
+            #self.logIfVerbose("[ndr551][setConfiguration()] Configure combined DDCs")
+            # Flag for forcing the driver to query DDCs for status information
+            forceDdcQuery = False
+            ddcGroupConfDict = configDict2.get(configKeys.CONFIG_DDC_GROUP,{}).get(ddcType,{})
+            ddcGroupIndexRange = xrange(self.cddcGroupIndexBase, self.cddcGroupIndexBase + self.numCddcGroups)
+            for index in ddcGroupIndexRange:
+                if ddcGroupConfDict.has_key(index):
+                    confDict = ddcGroupConfDict[index]
+                    confDict[configKeys.INDEX] = index
+                    #self.logIfVerbose("[ndr551][setConfiguration()] Combined DDC", index)
+                    #self.logIfVerbose("[ndr551][setConfiguration()] %s" % confDict)
+                    success &= self.setCombinedDdcGroupConfigurationNew(**confDict)
+                    # Force DDC query if DDC grouping configuration gets changed
+                    forceDdcQuery = True
+            # This section forces hardware queries to update the corresponding DDC
+            # and DDC group configurations.
+            if forceDdcQuery:
+                for isWideband in [True, False]:
+                    ddcDict = self.wbddcDict if isWideband else self.nbddcDict
+                    for i in self._getIndexList(None, ddcDict):
+                        ddcDict[i]._queryConfiguration()
+                ddcGroupDict = self.cddcGroupDict
+                for i in self._getIndexList(None, ddcGroupDict):
+                    ddcGroupDict[i]._queryConfiguration()
+        # DUC configuration
+        for ducType in [configKeys.CONFIG_WBDUC_GROUP]:
+            # Flag for forcing the driver to query DUCs for status information
+            forceDucQuery = False
+            isWideband = (ducType == configKeys.CONFIG_WBDUC_GROUP)
+            ducGroupConfDict = configDict2.get(configKeys.CONFIG_DUC_GROUP,{}).get(ducType,{})
+            ducGroupIndexRange = xrange(self.wbducGroupIndexBase, self.wbducGroupIndexBase + self.numWbducGroups) if isWideband \
+                            else xrange(self.nbducGroupIndexBase, self.nbducGroupIndexBase + self.numNbducGroups)
+            for index in ducGroupIndexRange:
+                if ducGroupConfDict.has_key(index):
+                    confDict = ducGroupConfDict[index]
+                    confDict[configKeys.INDEX] = index
+                    success &= self.setDucGroupConfigurationNew(wideband=isWideband, **confDict)
+                    # Force DUC query if DUC grouping configuration gets changed
+                    forceDucQuery = True
+            # This section forces hardware queries to update the corresponding DUC
+            # and DUC group configurations.
+            if forceDucQuery:
+                ducDict = self.wbducDict if isWideband else self.nbducDict
+                for i in self._getIndexList(None, ducDict):
+                    ducDict[i]._queryConfiguration()
+                ducGroupDict = self.wbducGroupDict if isWideband else self.nbducGroupDict
+                for i in self._getIndexList(None, ducGroupDict):
+                    ducGroupDict[i]._queryConfiguration()
+        # FFT streaming configuration
+        fftStreamConfDict = configDict2.get(configKeys.CONFIG_FFT,{})
+        for index in xrange(self.fftStreamIndexBase, self.fftStreamIndexBase + self.numFftStream):
+            if fftStreamConfDict.has_key(index):
+                confDict = fftStreamConfDict[index]
+                confDict[configKeys.FFT_INDEX] = index
+                success &= self.setFftStreamConfiguration(**confDict)
+        # Tuner group configuration
+        forceTunerQuery = False
+        tunerGroupConfDict = configDict2.get(configKeys.CONFIG_TUNER_GROUP,{})
+        tunerGroupIndexRange = xrange(self.tunerGroupIndexBase, self.tunerGroupIndexBase + self.numTunerGroups)
+        for index in tunerGroupIndexRange:
+            if tunerGroupConfDict.has_key(index):
+                confDict = tunerGroupConfDict[index]
+                confDict[configKeys.INDEX] = index
+                success &= self.setTunerGroupConfigurationNew(**confDict)
+                # Force tuner query if tuner grouping configuration gets changed
+                forceTunerQuery = True
+        if forceTunerQuery:
+            for i in self._getIndexList(None, self.tunerDict):
+                self.tunerDict[i]._queryConfiguration()
+            for i in self._getIndexList(None, self.tunerGroupDict):
+                self.tunerGroupDict[i]._queryConfiguration()
         return success
     
     ##
@@ -581,6 +695,8 @@ class _radio(log._logger, configKeys.Configurable):
             if self.numNbddc > 0:
                 # -- Narrowband
                 ret[configKeys.CONFIG_DDC][configKeys.CONFIG_NBDDC] = self.getDdcConfigurationNew(wideband=False)
+        if self.numFftStream > 0:
+            ret[configKeys.CONFIG_FFT] = self.getFftStreamConfiguration()
         # Get transmitter configuration
         if self.numTxs > 0:
             ret[configKeys.CONFIG_TX] = self.getTxConfigurationNew()
@@ -602,6 +718,24 @@ class _radio(log._logger, configKeys.Configurable):
                 # -- Narrowband
                 ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_NBDDC_GROUP] = \
                       self.getDdcGroupConfigurationNew(wideband=False)
+        elif self.numCddcGroups > 0:
+            ret[configKeys.CONFIG_DDC_GROUP] = {}
+            ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_COMBINED_DDC_GROUP] = \
+                      self.getCombinedDdcGroupConfigurationNew()
+        # Get DUC group configuration
+        if self.numWbducGroups > 0:
+            ret[configKeys.CONFIG_DUC_GROUP] = {}
+            # -- Wideband
+            ret[configKeys.CONFIG_DUC_GROUP][configKeys.CONFIG_WBDUC_GROUP] = \
+                      self.getDucGroupConfigurationNew(wideband=True)
+#             if self.numNbducGroups > 0:
+#                 # -- Narrowband
+#                 ret[configKeys.CONFIG_DUC_GROUP][configKeys.CONFIG_NBDUC_GROUP] = \
+#                       self.getDucGroupConfigurationNew(wideband=False)
+        # Get tuner group configuration
+        if self.numTunerGroups > 0:
+            ret[configKeys.CONFIG_TUNER_GROUP] = \
+                      self.getTunerGroupConfigurationNew()
         return ret 
     
     ##
@@ -630,6 +764,8 @@ class _radio(log._logger, configKeys.Configurable):
             if self.numNbddc > 0:
                 # -- Narrowband
                 ret[configKeys.CONFIG_DDC][configKeys.CONFIG_NBDDC] = self.queryDdcConfigurationNew(wideband=False)
+        if self.numFftStream > 0:
+            ret[configKeys.CONFIG_FFT] = self.getFftStreamConfiguration()
         # Get transmitter configuration
         if self.numTxs > 0:
             ret[configKeys.CONFIG_TX] = self.queryTxConfigurationNew()
@@ -651,6 +787,25 @@ class _radio(log._logger, configKeys.Configurable):
                 # -- Narrowband
                 ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_NBDDC_GROUP] = \
                       self.queryDdcGroupConfigurationNew(wideband=False)
+        elif self.numCddcGroups > 0:
+            ret[configKeys.CONFIG_DDC_GROUP] = {}
+            # -- Wideband
+            ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_COMBINED_DDC_GROUP] = \
+                      self.queryCombinedDdcGroupConfigurationNew()
+        # Get DUC group configuration
+        if self.numWbducGroups > 0:
+            ret[configKeys.CONFIG_DUC_GROUP] = {}
+            # -- Wideband
+            ret[configKeys.CONFIG_DUC_GROUP][configKeys.CONFIG_WBDUC_GROUP] = \
+                      self.queryDucGroupConfigurationNew(wideband=True)
+#             if self.numNbducGroups > 0:
+#                 # -- Narrowband
+#                 ret[configKeys.CONFIG_DUC_GROUP][configKeys.CONFIG_NBDUC_GROUP] = \
+#                       self.queryDucGroupConfigurationNew(wideband=False)
+        # Get tuner group configuration
+        if self.numTunerGroups > 0:
+            ret[configKeys.CONFIG_TUNER_GROUP] = \
+                      self.queryTunerGroupConfigurationNew()
         return ret 
     
     ##
@@ -665,6 +820,9 @@ class _radio(log._logger, configKeys.Configurable):
     # \protected
     # \brief Queries hardware to determine the object's current configuration.  
     def _queryConfiguration(self):
+        # Call the base-class implementation
+        configKeys.Configurable._queryConfiguration(self)
+        # Override
         for cmdClass, configKey in [ \
                                 (self.cfgCmd, configKeys.CONFIG_MODE), \
                                 (self.refCmd, configKeys.REFERENCE_MODE), \
@@ -681,6 +839,7 @@ class _radio(log._logger, configKeys.Configurable):
                 cmd.send( self.sendCommand, )
                 self._addLastCommandErrorInfo(cmd)
                 rspInfo = cmd.getResponseInfo()
+                #self.logIfVerbose("DEBUG:", cmd.mnemonic, "rspInfo=", rspInfo)
                 if rspInfo is not None:
                     self.configuration[configKey] = rspInfo.get(configKey, 0)
         # IP configuration query -- The format of this section depends on whether
@@ -694,6 +853,7 @@ class _radio(log._logger, configKeys.Configurable):
                                     (self.smacCmd, configKeys.MAC_SOURCE), \
                                     (self.dmacCmd, configKeys.MAC_DEST), \
                                   ]:
+                self.configuration[configKey] = None
                 if cmdClass is not None and cmdClass.queryable:
                     cmd = cmdClass(parent=self, 
                                    query=True,
@@ -709,8 +869,18 @@ class _radio(log._logger, configKeys.Configurable):
             for gigEPortNum in xrange(self.gigEIndexBase, 
                                       self.gigEIndexBase + self.numGigE, 1):
                 self.configuration[configKeys.CONFIG_IP][gigEPortNum] = {}
-                # Query source IP address for this GigE port
+                # Query source IP address for this GigE port   
                 if self.sipCmd is not None and self.sipCmd.queryable:
+                    # Default source IP info
+                    if self.json:
+                        self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE] = {
+                                configKeys.GIGE_MAC_ADDR: None,
+                                configKeys.GIGE_IP_ADDR: None,
+                                configKeys.GIGE_NETMASK: None,
+                                configKeys.GIGE_SOURCE_PORT: None,
+                             }
+                    else:
+                        self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE] = None
                     cDict = { "parent": self, \
                               "query": True, \
                               "verbose": self.verbose, \
@@ -722,8 +892,23 @@ class _radio(log._logger, configKeys.Configurable):
                     self._addLastCommandErrorInfo(cmd)
                     rspInfo = cmd.getResponseInfo()
                     if rspInfo is not None:
-                        self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE] = \
-                               rspInfo.get(configKeys.IP_SOURCE, "")
+                        # How to parse this depends on whether the response info contains a 
+                        # "sourceIP" key (NDR308-class) or not (NDR551-class)
+                        if rspInfo.has_key(configKeys.IP_SOURCE):
+                            # Do it NDR308-style
+                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE] = \
+                                   rspInfo.get(configKeys.IP_SOURCE, "")
+                        else:
+                            # Do it NDR551-style
+                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE] = {}
+                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_MAC_ADDR] = \
+                                 rspInfo.get(configKeys.GIGE_MAC_ADDR, "")
+                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_IP_ADDR] = \
+                                 rspInfo.get(configKeys.GIGE_IP_ADDR, "")
+                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_NETMASK] = \
+                                 rspInfo.get(configKeys.GIGE_NETMASK, "")
+                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_SOURCE_PORT] = \
+                                 rspInfo.get(configKeys.GIGE_SOURCE_PORT, 0)
                 # Query destination IP table for this GigE port
                 if self.dipCmd is not None and self.dipCmd.queryable:
                     self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST] = {}
@@ -731,6 +916,16 @@ class _radio(log._logger, configKeys.Configurable):
                                                   self.gigEDipEntryIndexBase + self.numGigEDipEntries, 
                                                   1):
                         self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum] = {}
+                        cmd = self.dipCmd(**{})
+                        for configKey in [configKeys.GIGE_IP_ADDR, \
+                                          configKeys.GIGE_MAC_ADDR, \
+                                          configKeys.GIGE_SOURCE_PORT, \
+                                          configKeys.GIGE_DEST_PORT, \
+                                          configKeys.GIGE_ARP]:
+                            if hasattr(cmd, "queryParamMap") and cmd.queryParamMap.has_key(configKey):
+                                self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum][configKey] = None
+                            elif hasattr(cmd, "queryResponseData") and configKey in [q[0] for q in cmd.queryResponseData]:
+                                self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum][configKey] = None
                         cDict = { "parent": self, \
                                   "query": True, \
                                   "verbose": self.verbose, \
@@ -1438,6 +1633,71 @@ class _radio(log._logger, configKeys.Configurable):
         
 
     ##
+    # \brief Gets the number of narrowband DDCs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getNumFftStream()
+    @classmethod
+    def getNumFftStream(cls):
+        return cls.numFftStream
+    
+    ##
+    # \brief Gets the index range for the narrowband DDCs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getFftStreamIndexRange()
+    @classmethod
+    def getFftStreamIndexRange(cls):
+        return [] if cls.numFftStream == 0 else \
+               range(cls.fftStreamIndexBase, cls.fftStreamIndexBase + cls.numFftStream, 1)
+    
+    ##
+    # \brief Gets the allowed rate set for the FFTs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getFftStreamRateSet()
+    @classmethod
+    def getFftStreamRateSet(cls,):
+        return cls.fftStreamType.getDdcRateSet() if cls.fftStreamType is not None else {}
+    
+    ##
+    # \brief Gets the allowed rate list for the FFTs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getFftStreamRateList()
+    @classmethod
+    def getFftStreamRateList(cls,):
+        return cls.fftStreamType.getDdcRateList() if cls.fftStreamType is not None else []
+    
+    ##
+    # \brief Gets the allowed window set for the FFTs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getFftStreamWindowSet()
+    @classmethod
+    def getFftStreamWindowSet(cls,):
+        return cls.fftStreamType.getWindowSet() if cls.fftStreamType is not None else {}
+    
+    ##
+    # \brief Gets the allowed window list for the FFTs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getFftStreamWindowList()
+    @classmethod
+    def getFftStreamWindowList(cls,):
+        return sorted(cls.fftStreamType.getWindowSet().keys()) if cls.fftStreamType is not None else []
+    
+    ##
+    # \brief Gets the allowed size set for the FFTs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getFftStreamSizeSet()
+    @classmethod
+    def getFftStreamSizeSet(cls,):
+        return cls.fftStreamType.getSizeSet() if cls.fftStreamType is not None else {}
+
+    ##
+    # \brief Gets the allowed size list for the FFTs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getFftStreamSizeList()
+    @classmethod
+    def getFftStreamSizeList(cls,):
+        return sorted(cls.fftStreamType.getSizeSet().keys()) if cls.fftStreamType is not None else []
+    
+    ##
     # \brief Gets the ADC sample rate for the radio.
     #
     # \copydetails CyberRadioDriver::IRadio::getAdcRate()
@@ -1546,6 +1806,22 @@ class _radio(log._logger, configKeys.Configurable):
     @classmethod
     def isConnectionModeSupported(cls, mode):
         return mode in cls.getConnectionModeList()
+    
+    ##
+    # \brief Gets the radio's default baud rate.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getDefaultBaudrate()
+    @classmethod
+    def getDefaultBaudrate(cls):
+        return cls.defaultBaudrate
+    
+    ##
+    # \brief Gets the radio's default control port.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getDefaultControlPort()
+    @classmethod
+    def getDefaultControlPort(cls):
+        return cls.defaultPort
     
     ##
     # \brief Gets the allowed VITA enable options set for the radio.
@@ -1795,6 +2071,46 @@ class _radio(log._logger, configKeys.Configurable):
         return range(cls.wbducIndexBase, cls.wbducIndexBase + cls.numWbduc, 1)
     
     ##
+    # \brief Gets the frequency offset range for the wideband DUCs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getWbducFrequencyRange()
+    @classmethod
+    def getWbducFrequencyRange(cls):
+        return (0.0,0.0) if cls.wbducType is None else cls.wbducType.frqRange
+    
+    ##
+    # \brief Gets the frequency resolution for wideband DUCs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getWbducFrequencyRes()
+    @classmethod
+    def getWbducFrequencyRes(cls):
+        return 0.0 if cls.wbducType is None else cls.wbducType.frqRes
+    
+    ##
+    # \brief Gets the frequency unit for wideband DUCs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getWbducFrequencyUnit()
+    @classmethod
+    def getWbducFrequencyUnit(cls):
+        return 0.0 if cls.wbducType is None else cls.wbducType.frqUnits
+    
+    ##
+    # \brief Gets the attenuation range for the wideband DUCs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getWbducAttenuationRange()
+    @classmethod
+    def getWbducAttenuationRange(cls):
+        return (0.0,0.0) if cls.wbducType is None else cls.wbducType.attRange
+    
+    ##
+    # \brief Gets the attenuation resolution for wideband DUCs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getWbducAttenuationRes()
+    @classmethod
+    def getWbducAttenuationRes(cls):
+        return 0.0 if cls.wbducType is None else cls.wbducType.attRes
+    
+    ##
     # \brief Gets the allowed rate set for the wideband DUCs on the radio.
     #
     # \copydetails CyberRadioDriver::IRadio::getWbducRateSet()
@@ -1848,6 +2164,22 @@ class _radio(log._logger, configKeys.Configurable):
     @classmethod
     def getNbddcGroupIndexRange(cls):
         return range(cls.nbddcGroupIndexBase, cls.nbddcGroupIndexBase + cls.numNbddcGroups, 1)
+    
+    ##
+    # \brief Gets the index range for the combined DDC groups on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getCombinedDdcGroupIndexRange()
+    @classmethod
+    def getCombinedDdcGroupIndexRange(cls):
+        return range(cls.cddcGroupIndexBase, cls.cddcGroupIndexBase + cls.numCddcGroups, 1)
+    
+    ##
+    # \brief Gets the index range for the wideband DUC groups on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getWbducGroupIndexRange()
+    @classmethod
+    def getWbducGroupIndexRange(cls):
+        return range(cls.wbducGroupIndexBase, cls.wbducGroupIndexBase + cls.numWbducGroups, 1)
     
 
     # ------------- Deprecated/Helper Methods ----------------- #
@@ -1979,13 +2311,21 @@ class _radio(log._logger, configKeys.Configurable):
                     pass
             elif configKey == configKeys.CONFIG_DDC_GROUP:
                 newConfigDict[configKeys.CONFIG_DDC_GROUP] = {}
-                for ddcType in [configKeys.CONFIG_WBDDC_GROUP, configKeys.CONFIG_NBDDC_GROUP]:
+                for ddcType in [configKeys.CONFIG_WBDDC_GROUP, configKeys.CONFIG_NBDDC_GROUP, 
+                                configKeys.CONFIG_COMBINED_DDC_GROUP]:
                     isWideband = (ddcType == configKeys.CONFIG_WBDDC_GROUP)
                     ddcGroupConfDict = configDict[configKeys.CONFIG_DDC_GROUP].get(ddcType,{})
                     ddcGroupIndexRange = (self.wbddcGroupIndexBase, self.wbddcGroupIndexBase + self.numWbddcGroups - 1) if isWideband \
                                     else (self.nbddcGroupIndexBase, self.nbddcGroupIndexBase + self.numNbddcGroups - 1)
+                    if ddcType == configKeys.CONFIG_COMBINED_DDC_GROUP:
+                        ddcGroupIndexRange = (self.cddcGroupIndexBase, self.cddcGroupIndexBase + self.numCddcGroups - 1)
                     newConfigDict[configKeys.CONFIG_DDC_GROUP][ddcType] = self._normalizeConfigDictSection(\
                             ddcGroupConfDict, ddcGroupIndexRange[0], ddcGroupIndexRange[1])                    
+            elif configKey == configKeys.CONFIG_FFT:
+                newConfigDict[configKeys.CONFIG_FFT] = self._normalizeConfigDictSection( \
+                                                            configDict[configKeys.CONFIG_FFT], \
+                                                            self.fftStreamIndexBase, \
+                                                            self.fftStreamIndexBase + self.numFftStream - 1)
             else:
                 newConfigDict[configKey] = copy.deepcopy(configDict[configKey])
         return newConfigDict
@@ -2117,19 +2457,57 @@ class _radio(log._logger, configKeys.Configurable):
                     # Set source IP address for this GigE port
                     if self.sipCmd is not None and self.sipCmd.settable and \
                        configKeys.IP_SOURCE in confDict[gigEPortNum]:
-                        cDict = { "parent": self, \
-                                  "verbose": self.verbose, \
-                                  "logFile": self.logFile, \
-                                  configKeys.GIGE_PORT_INDEX: gigEPortNum, \
-                                  configKeys.IP_SOURCE: confDict[gigEPortNum][configKeys.IP_SOURCE], \
-                                 }
-                        cmd = self.sipCmd(**cDict)
-                        success &= cmd.send( self.sendCommand, )
-                        if success and cmd.success:
-                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE] = \
-                                    getattr(cmd, configKeys.IP_SOURCE)
+                        # What we do here depends on what "sourceIP" points to --
+                        # either a string (NDR308-class) or a dictionary (NDR551-class)
+                        if isinstance(confDict[gigEPortNum][configKeys.IP_SOURCE], str):
+                            # Do it the NDR308 way
+                            cDict = { "parent": self,
+                                      "verbose": self.verbose,
+                                      "logFile": self.logFile,
+                                      configKeys.GIGE_PORT_INDEX: gigEPortNum,
+                                      configKeys.IP_SOURCE: confDict[gigEPortNum][configKeys.IP_SOURCE],
+                                     }
+                            cmd = self.sipCmd(**cDict)
+                            success &= cmd.send( self.sendCommand, )
+                            if success and cmd.success:
+                                self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE] = \
+                                        getattr(cmd, configKeys.IP_SOURCE)
+                            else:
+                                self.cmdErrorInfo.extend(cmd.errorInfo)
                         else:
-                            self.cmdErrorInfo.extend(cmd.errorInfo)
+                            # Do it the NDR551 way
+                            cDict = { "parent": self,
+                                      "verbose": self.verbose,
+                                      "logFile": self.logFile,
+                                      configKeys.GIGE_PORT_INDEX: gigEPortNum,
+                                     }
+                            if configKeys.GIGE_MAC_ADDR in confDict[gigEPortNum][configKeys.IP_SOURCE]:
+                                cDict[configKeys.GIGE_MAC_ADDR] = confDict[gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_MAC_ADDR]
+                            if configKeys.GIGE_IP_ADDR in confDict[gigEPortNum][configKeys.IP_SOURCE]:
+                                cDict[configKeys.GIGE_IP_ADDR] = confDict[gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_IP_ADDR]
+                            if configKeys.GIGE_NETMASK in confDict[gigEPortNum][configKeys.IP_SOURCE]:
+                                cDict[configKeys.GIGE_NETMASK] = confDict[gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_NETMASK]
+                            if configKeys.GIGE_SOURCE_PORT in confDict[gigEPortNum][configKeys.IP_SOURCE]:
+                                cDict[configKeys.GIGE_SOURCE_PORT] = confDict[gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_SOURCE_PORT]
+                            cmd = self.sipCmd(**cDict)
+                            success &= cmd.send( self.sendCommand, )
+                            if success and cmd.success:
+                                #self.logIfVerbose("[setIpConfigurationNew()] cmd attributes = %s" % \
+                                #        cmd.attributeDump())
+                                if configKeys.GIGE_MAC_ADDR in cmd.__dict__:
+                                    self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_MAC_ADDR] = \
+                                        getattr(cmd, configKeys.GIGE_MAC_ADDR)
+                                if configKeys.GIGE_IP_ADDR in cmd.__dict__:
+                                    self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_IP_ADDR] = \
+                                        getattr(cmd, configKeys.GIGE_IP_ADDR)
+                                if configKeys.GIGE_NETMASK in cmd.__dict__:
+                                    self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_NETMASK] = \
+                                        getattr(cmd, configKeys.GIGE_NETMASK)
+                                if configKeys.GIGE_SOURCE_PORT in cmd.__dict__:
+                                    self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_SOURCE_PORT] = \
+                                        getattr(cmd, configKeys.GIGE_SOURCE_PORT)
+                            else:
+                                self.cmdErrorInfo.extend(cmd.errorInfo)
                     # Set destination IP table info for this GigE port
                     if self.dipCmd is not None and self.dipCmd.settable and \
                        configKeys.IP_DEST in confDict[gigEPortNum]:
@@ -2304,6 +2682,163 @@ class _radio(log._logger, configKeys.Configurable):
 
     ##
     # \internal
+    # \brief Helper function for getting the combined DDC group configuration.
+    #
+    # Deprecated in favor of getConfiguration().
+    def getCombinedDdcGroupConfigurationNew(self, ddcGroupIndex=None):
+        config = {}
+        ddcGroupDict = self.cddcGroupDict
+        for i in self._getIndexList(ddcGroupIndex, ddcGroupDict):
+            config[i] = ddcGroupDict[i].getConfiguration()
+            self.cmdErrorInfo.extend(ddcGroupDict[i].getLastCommandErrorInfo())
+        return config
+
+    ##
+    # \internal
+    # \brief Helper function for querying the combined DDC group configuration.
+    #
+    # Deprecated in favor of queryConfiguration().
+    def queryCombinedDdcGroupConfigurationNew(self, ddcGroupIndex=None):
+        config = {}
+        ddcGroupDict = self.cddcGroupDict
+        for i in self._getIndexList(ddcGroupIndex, ddcGroupDict):
+            config[i] = ddcGroupDict[i].queryConfiguration()
+            self.cmdErrorInfo.extend(ddcGroupDict[i].getLastCommandErrorInfo())
+        return config
+
+    ##
+    # \internal
+    # \brief Helper function for setting the combined DDC group configuration.
+    #
+    # Deprecated in favor of setConfiguration().
+    def setCombinedDdcGroupConfigurationNew(self, *args, **kwargs):
+        success = True
+        #self.logIfVerbose("[ndr551][setCombinedDdcGroupConfigurationNew()] begin")
+        ddcGroupDict = self.cddcGroupDict
+        ddcGroupIndex = kwargs.get(configKeys.INDEX, None)
+        for i in self._getIndexList(ddcGroupIndex, ddcGroupDict):
+            success &= ddcGroupDict[i].setConfiguration(*args, **kwargs)
+            self.cmdErrorInfo.extend(ddcGroupDict[i].getLastCommandErrorInfo())
+        #self.logIfVerbose("[ndr551][setCombinedDdcGroupConfigurationNew()] end")
+        return success
+
+    ##
+    # \internal
+    # \brief Helper function for getting the DUC group configuration.
+    #
+    # Deprecated in favor of getConfiguration().
+    def getDucGroupConfigurationNew(self, wideband=True, ducGroupIndex=None):
+        config = {}
+        ducGroupDict = self.wbducGroupDict if wideband else self.nbducGroupDict
+        for i in self._getIndexList(ducGroupIndex, ducGroupDict):
+            config[i] = ducGroupDict[i].getConfiguration()
+            self.cmdErrorInfo.extend(ducGroupDict[i].getLastCommandErrorInfo())
+        return config
+
+    ##
+    # \internal
+    # \brief Helper function for querying the DUC group configuration.
+    #
+    # Deprecated in favor of queryConfiguration().
+    def queryDucGroupConfigurationNew(self, wideband=True, ducGroupIndex=None):
+        config = {}
+        ducGroupDict = self.wbducGroupDict if wideband else self.nbducGroupDict
+        for i in self._getIndexList(ducGroupIndex, ducGroupDict):
+            config[i] = ducGroupDict[i].queryConfiguration()
+            self.cmdErrorInfo.extend(ducGroupDict[i].getLastCommandErrorInfo())
+        return config
+
+    ##
+    # \internal
+    # \brief Helper function for setting the DUC group configuration.
+    #
+    # Deprecated in favor of setConfiguration().
+    def setDucGroupConfigurationNew(self, wideband=True, *args, **kwargs):
+        success = True
+        ducGroupDict = self.wbducGroupDict if wideband else self.nbducGroupDict
+        ducGroupIndex = kwargs.get(configKeys.INDEX, None)
+        for i in self._getIndexList(ducGroupIndex, ducGroupDict):
+            success &= ducGroupDict[i].setConfiguration(*args, **kwargs)
+            self.cmdErrorInfo.extend(ducGroupDict[i].getLastCommandErrorInfo())
+        return success
+
+    ##
+    # \internal
+    # \brief Helper function for getting the tuner group configuration.
+    #
+    # Deprecated in favor of getConfiguration().
+    def getTunerGroupConfigurationNew(self, tunerGroupIndex=None):
+        config = {}
+        for i in self._getIndexList(tunerGroupIndex, self.tunerGroupDict):
+            config[i] = self.tunerGroupDict[i].getConfiguration()
+            self.cmdErrorInfo.extend(self.tunerGroupDict[i].getLastCommandErrorInfo())
+        return config
+
+    ##
+    # \internal
+    # \brief Helper function for querying the tuner group configuration.
+    #
+    # Deprecated in favor of queryConfiguration().
+    def queryTunerGroupConfigurationNew(self, tunerGroupIndex=None):
+        config = {}
+        for i in self._getIndexList(tunerGroupIndex, self.tunerGroupDict):
+            config[i] = self.tunerGroupDict[i].queryConfiguration()
+            self.cmdErrorInfo.extend(self.tunerGroupDict[i].getLastCommandErrorInfo())
+        return config
+
+    ##
+    # \internal
+    # \brief Helper function for setting the tuner group configuration.
+    #
+    # Deprecated in favor of setConfiguration().
+    def setTunerGroupConfigurationNew(self, *args, **kwargs):
+        success = True
+        tunerGroupIndex = kwargs.get(configKeys.INDEX, None)
+        for i in self._getIndexList(tunerGroupIndex, self.tunerGroupDict):
+            success &= self.tunerGroupDict[i].setConfiguration(*args, **kwargs)
+            self.cmdErrorInfo.extend(self.tunerGroupDict[i].getLastCommandErrorInfo())
+        return success
+
+    ##
+    # \internal
+    # \brief Helper function for setting the FFT stream configuration.
+    #
+    # Deprecated in favor of setConfiguration().
+    #
+    def setFftStreamConfiguration(self, *args, **kwargs):
+        success = True
+        index = kwargs.get(configKeys.FFT_INDEX, None)
+        for i in self._getIndexList(index, self.fftStreamDict):
+            success &= self.fftStreamDict[i].setConfiguration(**kwargs)
+            self.cmdErrorInfo.extend(self.fftStreamDict[i].getLastCommandErrorInfo())
+        return success
+
+    ##
+    # \internal
+    # \brief Helper function for getting the FFT stream configuration.
+    #
+    # Deprecated in favor of getConfiguration().
+    def getFftStreamConfiguration(self, fftStreamIndex=None):
+        config = {}
+        for i in self._getIndexList(fftStreamIndex, self.fftStreamDict):
+            config[i] = self.fftStreamDict[i].getConfiguration()
+            self.cmdErrorInfo.extend(self.fftStreamDict[i].getLastCommandErrorInfo())
+        return config
+
+    ##
+    # \internal
+    # \brief Helper function for querying the FFT stream configuration.
+    #
+    # Deprecated in favor of queryConfiguration().
+    def queryFftStreamConfiguration(self, fftStreamIndex=None):
+        config = {}
+        for i in self._getIndexList(fftStreamIndex, self.fftStreamDict):
+            config[i] = self.fftStreamDict[i].queryConfiguration()
+            self.cmdErrorInfo.extend(self.fftStreamDict[i].getLastCommandErrorInfo())
+        return config
+
+    ##
+    # \internal
     # \brief Helper function for configuring the IP addresses.
     def configureIp(self,iface,udpBase=41000,maxUdp=None):
         success = True
@@ -2391,6 +2926,15 @@ class _radio(log._logger, configKeys.Configurable):
         return ddcObj.getDdcBwSet(index) if ddcObj is not None else {}
     
     ##
+    # \brief Gets the allowed rate set for the DDCs on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getDdcRateSet()
+    @classmethod
+    def getDdcDataFormat(cls, wideband):
+        ddcObj = cls.wbddcType if wideband else cls.nbddcType
+        return ddcObj.getDdcDataFormat() if ddcObj is not None else {}
+    
+    ##
     # \brief Gets the allowed rate list for the DDCs on the radio.
     #
     # \copydetails CyberRadioDriver::IRadio::getDdcRateList()
@@ -2407,6 +2951,14 @@ class _radio(log._logger, configKeys.Configurable):
     def getDdcFrequencyRange(cls, wideband, index=None):
         ddcType = cls.wbddcType if wideband else cls.nbddcType
         return (0.0,0.0) if ddcType is None else ddcType.frqRange
+    
+    ##
+    # \brief Gets the list of DDC indexes for a specified type.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getDdcIndexRange()
+    @classmethod
+    def getDdcIndexRange(cls, wideband):
+        return cls.getWbddcIndexRange() if wideband else cls.getNbddcIndexRange()
 
     ##
     # \internal
@@ -2605,10 +3157,38 @@ class _radio(log._logger, configKeys.Configurable):
     def getTenGigFlowControlStatus(self,):
         return {}
 
+    ##
+    # \brief Performs coherent tuning.
+    #
+    # \copydetails CyberRadioDriver::IRadio::coherentTune()
+    def coherentTune(self, cohGroup, freq):
+        ret = True
+        if self.cohTuneCmd is not None:
+            cDict = { "parent": self, \
+                      "verbose": self.verbose, \
+                      "logFile": self.logFile, \
+                      configKeys.TUNER_COHERENT_GROUP: cohGroup,
+                      configKeys.TUNER_FREQUENCY: freq,
+                     }
+            cmd = self.cohTuneCmd(**cDict)
+            ret &= cmd.send( self.sendCommand, )
+            self.logIfVerbose("coherentTune send result =", ret)
+            ret &= cmd.success
+            self.logIfVerbose("coherentTune success result =", ret)
+            self._addLastCommandErrorInfo(cmd)
+            if ret:
+                self.logIfVerbose("force tuner requery")
+                self.queryTunerConfigurationNew(tunerIndex=None)
+            pass
+        else:
+            ret = False
+        return ret
+
 
 ##
 # \internal
-# \brief Radio handler class that identifies the radio.
+# \brief Radio handler class that supports nothing more complicated than 
+#     identifying a connected radio.
 #
 # Used internally to support radio auto-detection.
 #
@@ -2636,6 +3216,8 @@ class _radio_identifier(_radio):
     wbddcGroupType = None
     numNbddcGroups = 0
     nbddcGroupType = None
+    numTunerGroups = 0
+    tunerGroupType = None
     numGigE = 0
     numGigEDipEntries = 0
     idnQry = command.idn
@@ -2667,985 +3249,13 @@ class _radio_identifier(_radio):
     refModes = {}
     rbypModes = {}
     vitaEnableOptions = {}
-    connectionModes = ["tcp", "tty"]
+    connectionModes = ["https", "tcp", "tty"]
     validConfigurationKeywords = []
     setTimeDefault = False
 
 
-##
-# \brief Radio handler class for the NDR304.
-#
-# This class implements the CyberRadioDriver.IRadio interface.
-#
-# \section ConnectionModes_NDR304 Connection Modes
-#
-# "tty"
-#
-# \section RadioConfig_NDR304 Radio Configuration Options
-#
-# \code
-# configDict = {
-#      "configMode": [0, 1],
-#      "referenceMode": [0, 1, 2],
-#      "bypassMode": [0, 1],
-#      "tunerConfiguration": {
-#            1: {
-#               "frequency": [20000000.0-3000000000.0, step 1000000.0],
-#               "attenuation": [0.0-30.0, step 1.0],
-#               "enable": [0, 1],
-#               "filter": [0, 1],
-#               "timingAdjustment": [-200000 - 200000, step 1],
-#            },
-#         ...6 (repeat for each tuner)
-#      },
-#      "ddcConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "rateIndex": [0],
-#                 "udpDest": [port],
-#                 "vitaEnable": [0, 1, 2],
-#                 "streamId": [stream ID],
-#                 "frequency": [-25600000.0-25600000.0, step 1],
-#              },
-#           ...6 (repeat for each WBDDC)
-#         },
-#      },
-#      "ddcGroupConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "members": [None, single DDC, or iterable with multiple DDCs],
-#              },
-#           ...3 (repeat for each WBDDC group)
-#         },
-#      },
-#      "ipConfiguration": {
-#         "sourceIP": [IP address],
-#         "destIP": [IP address],
-#         "sourceMAC": [MAC address (read-only)],
-#         "destMAC": [MAC address],
-#      },
-# }
-# \endcode
-#
-# \section WbddcRates_NDR304 WBDDC Rate Settings
-#
-# <table>
-# <tr><th>Rate Index</th><th>WBDDC Rate (samples per second)</th></tr>
-# <tr><td>0</td><td>4266666.66667</td></tr>
-# </table>
-#
-# \section VitaEnable_NDR304 VITA 49 Enabling Options
-#
-# <table>
-# <tr><th>VITA Enable Option</th><th>Meaning</th></tr>
-# <tr><td>0</td><td>Vita49 and Vita49.1 disabled</td></tr>
-# <tr><td>1</td><td>Vita49 enabled and Vita 49.1 disabled</td></tr>
-# <tr><td>2</td><td>Vita 49 and Vita 49.1 enabled</td></tr>
-# </table>
-#
-# \implements CyberRadioDriver.IRadio
-class ndr304(_radio):
-    _name = "NDR304"
-    ifSpec = ndr304_ifSpec
-    adcRate = 102.4e6
-    numTuner = 6
-    numWbddc = 6
-    numNbddc = 0
-    tunerType = components.ndr304_tuner
-    wbddcType = components.ndr304_wbddc
-    nbddcType = None
-    numWbddcGroups = 3
-    wbddcGroupIndexBase = 1
-    wbddcGroupType = components.ndr304_wbddc_group
-    numNbddcGroups = 0
-    nbddcGroupIndexBase = 1
-    nbddcGroupType = None
-    statQry = command.stat304
-    tstatQry = command.tstat304
-    tadjCmd = command.tadj
-    rbypCmd = command.rbyp
-    fnrCmd = command.fnr
-    #refModes = {0:"Internal 10MHz",1:"External 10MHz",2:"Internal GPSDO 10MHz",3:"External 1PPS",4:"External 1PPS with jitter-optimized control loop"}
-    refModes = {0:"Internal 10MHz",1:"External 10MHz",2:"Internal GPSDO 10MHz"}
-    rbypModes = {0:"Internal 102.4MHz",1:"External 102.4MHz"}
-    udpDestInfo = "port"
-    vitaEnableOptions = {0: "VITA-49 header disabled",
-                         1: "VITA-49 header enabled, fractional timestamp in picoseconds",
-                         2: "VITA-49 header disabled",
-                         3: "VITA-49 header enabled, fractional timestamp in sample counts",
-                         }
-
-
-##
-# \brief Radio handler class for the NDR308-1.
-#
-# This class implements the CyberRadioDriver.IRadio interface.
-#
-# \section ConnectionModes_NDR308-1 Connection Modes
-#
-# "tcp"
-#
-# \section RadioConfig_NDR308-1 Radio Configuration Options
-#
-# \code
-# configDict = {
-#      "configMode": [0, 1],
-#      "referenceMode": [0, 1, 2, 3, 4],
-#      "bypassMode": [0, 1],
-#      "calibFrequency": [0, 25.0-3000.0],
-#      "freqNormalization": [0, 1],
-#      "gpsEnable": [0, 1],
-#      "referenceTuningVoltage": [0-65535],
-#      "tunerConfiguration": {
-#            1: {
-#               "frequency": [20000000.0-3000000000.0, step 1000000.0],
-#               "attenuation": [0.0-30.0, step 1.0],
-#               "enable": [0, 1],
-#               "filter": [0, 1],
-#               "timingAdjustment": [-200000 - 200000, step 1],
-#            },
-#         ...8 (repeat for each tuner)
-#      },
-#      "ddcConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "rateIndex": [0, 1, 2],
-#                 "udpDest": [DIP table index],
-#                 "vitaEnable": [0, 1, 2, 3],
-#                 "streamId": [stream ID],
-#              },
-#           ...8 (repeat for each WBDDC)
-#         },
-#         "narrowband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "frequency": [-25600000.0-25600000.0, step 1],
-#                 "rateIndex": [0, 1, 2, 3, 4, 5, 6, 7],
-#                 "udpDest": [DIP table index],
-#                 "vitaEnable": [0, 1, 2, 3],
-#                 "streamId": [stream ID],
-#              },
-#           ...16 (repeat for each NBDDC)
-#         },
-#      },
-#      "ddcGroupConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "members": [None, single DDC, or iterable with multiple DDCs],
-#              },
-#           ...4 (repeat for each WBDDC group)
-#         },
-#         "narrowband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "members": [None, single DDC, or iterable with multiple DDCs],
-#              },
-#           ...8 (repeat for each NBDDC group)
-#         },
-#      },
-#      "ipConfiguration": {
-#            1: {
-#               "sourceIP": [IP address],
-#               "destIP": {
-#                   0: {
-#                      "ipAddr": [IP address],
-#                      "macAddr": [MAC address],
-#                      "sourcePort": [port],
-#                      "destPort": [port],
-#                   },
-#                ...31 (repeat for each DIP table entry)
-#               },
-#            },
-#         ...2 (repeat for each Gigabit Ethernet port)
-#      },
-# }
-# \endcode
-#
-# \section WbddcRates_NDR308-1 WBDDC Rate Settings
-#
-# <table>
-# <tr><th>Rate Index</th><th>WBDDC Rate (samples per second)</th></tr>
-# <tr><td>0</td><td>51200000.0</td></tr>
-# <tr><td>1</td><td>25600000.0</td></tr>
-# <tr><td>2</td><td>12800000.0</td></tr>
-# </table>
-#
-# \section NbddcRates_NDR308-1 NBDDC Rate Settings
-#
-# <table>
-# <tr><th>Rate Index</th><th>NBDDC Rate (samples per second)</th></tr>
-# <tr><td>0</td><td>1600000.0</td></tr>
-# <tr><td>1</td><td>800000.0</td></tr>
-# <tr><td>2</td><td>400000.0</td></tr>
-# <tr><td>3</td><td>200000.0</td></tr>
-# <tr><td>4</td><td>100000.0</td></tr>
-# <tr><td>5</td><td>50000.0</td></tr>
-# <tr><td>6</td><td>25000.0</td></tr>
-# <tr><td>7</td><td>12500.0</td></tr>
-# </table>
-#
-# \section VitaEnable_NDR308-1 VITA 49 Enabling Options
-#
-# <table>
-# <tr><th>VITA Enable Option</th><th>Meaning</th></tr>
-# <tr><td>0</td><td>VITA-49 header disabled</td></tr>
-# <tr><td>1</td><td>VITA-49 header enabled, fractional timestamp in picoseconds</td></tr>
-# <tr><td>2</td><td>VITA-49 header disabled</td></tr>
-# <tr><td>3</td><td>VITA-49 header enabled, fractional timestamp in sample counts</td></tr>
-# </table>
-#
-# \implements CyberRadioDriver.IRadio
-class ndr308_1(_radio):
-    _name = "NDR308-1"
-    ifSpec = ndr308_ifSpec
-    adcRate = 102.4e6
-    numTuner = 8
-    numTunerBoards = 2
-    numWbddc = 8
-    numNbddc = 16
-    numGigE = 2
-    numGigEDipEntries = 64
-    tunerType = components.ndr308_tuner
-    wbddcType = components.ndr308_wbddc
-    nbddcType = components.ndr308_1_nbddc
-    numWbddcGroups = 4
-    wbddcGroupIndexBase = 1
-    wbddcGroupType = components.ndr308_wbddc_group
-    numNbddcGroups = 8
-    nbddcGroupIndexBase = 1
-    nbddcGroupType = components.ndr308_nbddc_group
-    statQry = command.stat308
-    tstatQry = command.tstat308
-    tadjCmd = command.tadj
-    ppsCmd = command.pps
-    utcCmd = command.utc
-    rbypCmd = command.rbyp
-    sipCmd = command.sip308
-    dipCmd = command.dip308
-    smacCmd = None
-    dmacCmd = None
-    calfCmd = command.calf
-    fnrCmd = command.fnr
-    gpsCmd = command.gps
-    gposCmd = command.gpos
-    rtvCmd = command.rtv
-    tempCmd = command.temp
-    gpioStaticCmd = command.gpio_static
-    gpioSeqCmd = command.gpio_sequence
-    refModes = {0:"Internal 10MHz",1:"External 10MHz",2:"Internal GPSDO 10MHz",3:"External 1PPS",4:"External 1PPS"}
-    rbypModes = {0:"Internal 102.4MHz",1:"External 102.4MHz"}
-    connectionModes = ["tcp"]
-    udpDestInfo = "DIP table index"
-    vitaEnableOptions = {0: "VITA-49 header disabled",
-                         1: "VITA-49 header enabled, fractional timestamp in picoseconds",
-                         2: "VITA-49 header disabled",
-                         3: "VITA-49 header enabled, fractional timestamp in sample counts",
-                         }
-    
-    def configureDipTable(self,index,sip,dip,dmac,udpBase):
-        success = True
-        x = [ int(i) for i in dip.split(".") ]
-        x[-1]+=10
-        sipCmd = command.radio_command( parent=self, cmdString="SIP %d,%s"%(index,sip) )
-        success &= sipCmd.send( self.sendCommand )
-        if success:
-            self.sipTable[index] = sip
-        self.dipTable[index] = {}
-        for i in range(32):
-            args = ", ".join( [str(i) for i in (index,i,dip,dmac,udpBase+i,udpBase+i)] )
-            dipCmd = command.radio_command( parent=self, cmdString="DIP %s"%args )
-            success &= dipCmd.send( self.sendCommand )
-            if success:
-                self.dipTable[index][i] = {"dip":dip,"dport":udpBase+i,"sport":udpBase+i,"sip":self.sipTable.get(index,None),}
-        return success
-    
-    def getDipTableEntry(self,ifIndex=None,dipIndex=None):
-        if ifIndex is None:
-            return self.dipTable
-        elif dipIndex is None:
-            return self.dipTable.get(ifIndex,{})
-        else:
-            return self.dipTable.get(ifIndex,{}).get(dipIndex,{})
-
-    def disableTenGigFlowControl(self,):
-        return self.setTenGigFlowControlStatus(False)
-    
-    def enableTenGigFlowControl(self,):
-        return self.setTenGigFlowControlStatus(True)
-    
-    def setTenGigFlowControlStatus(self,enable=False):
-        success = False
-        if self.tgfcCmd is not None and self.tgfcCmd.settable:
-            confDict = {
-                    configKeys.CONFIG_IP: {
-                        }
-                }
-            for gigEPortNum in xrange(self.gigEIndexBase, 
-                                      self.gigEIndexBase + self.numGigE, 1):
-                confDict[configKeys.CONFIG_IP][gigEPortNum] = {
-                        configKeys.GIGE_FLOW_CONTROL: 1 if enable else 0,
-                    }
-            success = self.setConfiguration(confDict)
-        return success
-    
-    def getTenGigFlowControlStatus(self,):
-        status = {}
-        if self.tgfcCmd is not None:
-            confDict = self.getConfiguration()[configKeys.CONFIG_IP]
-            for gigEPortNum in xrange(self.gigEIndexBase, 
-                                      self.gigEIndexBase + self.numGigE, 1):
-                if configKeys.GIGE_FLOW_CONTROL in confDict[gigEPortNum]:
-                    status |= (confDict[gigEPortNum][configKeys.GIGE_FLOW_CONTROL]    == 1)
-        return status
-
-##
-# \brief Radio handler class for the NDR308.
-#
-# This class implements the CyberRadioDriver.IRadio interface.
-#
-# \section ConnectionModes_NDR308 Connection Modes
-#
-# "tcp"
-#
-# \section RadioConfig_NDR308 Radio Configuration Options
-#
-# \code
-# configDict = {
-#      "configMode": [0, 1],
-#      "referenceMode": [0, 1, 2, 3, 4],
-#      "bypassMode": [0, 1],
-#      "freqNormalization": [0, 1],
-#      "gpsEnable": [0, 1],
-#      "referenceTuningVoltage": [0-65535],
-#      "tunerConfiguration": {
-#            1: {
-#               "frequency": [20000000.0-3000000000.0, step 1000000.0],
-#               "attenuation": [0.0-30.0, step 1.0],
-#               "enable": [0, 1],
-#               "filter": [0, 1],
-#               "timingAdjustment": [-200000 - 200000, step 1],
-#            },
-#         ...8 (repeat for each tuner)
-#      },
-#      "ddcConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "rateIndex": [0, 1, 2],
-#                 "udpDest": [DIP table index],
-#                 "vitaEnable": [0, 1, 2, 3],
-#                 "streamId": [stream ID],
-#                 "dataPort": [1, 2],
-#              },
-#           ...8 (repeat for each WBDDC)
-#         },
-#         "narrowband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "frequency": [-25600000.0-25600000.0, step 1],
-#                 "rateIndex": [0, 1, 2, 3, 4, 5, 6],
-#                 "udpDest": [DIP table index],
-#                 "vitaEnable": [0, 1, 2, 3],
-#                 "streamId": [stream ID],
-#                 "rfIndex": [1, 2, 3, 4, 5, 6, 7, 8],
-#                 "dataPort": [1, 2],
-#              },
-#           ...32 (repeat for each NBDDC)
-#         },
-#      },
-#      "ddcGroupConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "members": [None, single DDC, or iterable with multiple DDCs],
-#              },
-#           ...4 (repeat for each WBDDC group)
-#         },
-#         "narrowband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "members": [None, single DDC, or iterable with multiple DDCs],
-#              },
-#           ...8 (repeat for each NBDDC group)
-#         },
-#      },
-#      "ipConfiguration": {
-#            1: {
-#               "sourceIP": [IP address],
-#               "destIP": {
-#                   0: {
-#                      "ipAddr": [IP address],
-#                      "macAddr": [MAC address],
-#                      "sourcePort": [port],
-#                      "destPort": [port],
-#                   },
-#                ...31 (repeat for each DIP table entry)
-#               },
-#               "flowControl": [0, 1],
-#            },
-#         ...2 (repeat for each Gigabit Ethernet port)
-#      },
-# }
-# \endcode
-#
-# \section WbddcRates_NDR308 WBDDC Rate Settings
-#
-# <table>
-# <tr><th>Rate Index</th><th>WBDDC Rate (samples per second)</th></tr>
-# <tr><td>0</td><td>61440000.0</td></tr>
-# <tr><td>1</td><td>30720000.0</td></tr>
-# <tr><td>2</td><td>15360000.0</td></tr>
-# </table>
-#
-# \section NbddcRates_NDR308 NBDDC Rate Settings
-#
-# <table>
-# <tr><th>Rate Index</th><th>NBDDC Rate (samples per second)</th></tr>
-# <tr><td>0</td><td>1920000.0</td></tr>
-# <tr><td>1</td><td>960000.0</td></tr>
-# <tr><td>2</td><td>480000.0</td></tr>
-# <tr><td>3</td><td>180000.0</td></tr>
-# <tr><td>4</td><td>60000.0</td></tr>
-# <tr><td>5</td><td>30000.0</td></tr>
-# <tr><td>6</td><td>15000.0</td></tr>
-# </table>
-#
-# \section VitaEnable_NDR308 VITA 49 Enabling Options
-#
-# <table>
-# <tr><th>VITA Enable Option</th><th>Meaning</th></tr>
-# <tr><td>0</td><td>VITA-49 header disabled</td></tr>
-# <tr><td>1</td><td>VITA-49 header enabled, fractional timestamp in picoseconds</td></tr>
-# <tr><td>2</td><td>VITA-49 header disabled</td></tr>
-# <tr><td>3</td><td>VITA-49 header enabled, fractional timestamp in sample counts</td></tr>
-# </table>
-#
-# \implements CyberRadioDriver.IRadio
-class ndr308(ndr308_1):
-    _name = "NDR308"
-    numNbddc = 32
-    wbddcType = components.ndr308_wbddc
-    nbddcType = components.ndr308_nbddc
-    tgfcCmd = command.tgfc
-
-
-##
-# \brief Radio handler class for the NDR308 4-tuner variety.
-#
-# This class implements the CyberRadioDriver.IRadio interface.
-#
-# \section ConnectionModes_NDR308 Connection Modes
-#
-# "tcp"
-#
-# \section RadioConfig_NDR308_4 Radio Configuration Options
-#
-# \code
-# configDict = {
-#      "configMode": [0, 1],
-#      "referenceMode": [0, 1, 2, 3, 4],
-#      "bypassMode": [0, 1],
-#      "freqNormalization": [0, 1],
-#      "gpsEnable": [0, 1],
-#      "referenceTuningVoltage": [0-65535],
-#      "tunerConfiguration": {
-#            1: {
-#               "frequency": [20000000.0-3000000000.0, step 1000000.0],
-#               "attenuation": [0.0-30.0, step 1.0],
-#               "enable": [0, 1],
-#               "filter": [0, 1],
-#               "timingAdjustment": [-200000 - 200000, step 1],
-#            },
-#         ...4 (repeat for each tuner)
-#      },
-#      "ddcConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "rateIndex": [0, 1, 2],
-#                 "udpDest": [DIP table index],
-#                 "vitaEnable": [0, 1, 2, 3],
-#                 "streamId": [stream ID],
-#                 "dataPort": [1, 2],
-#              },
-#           ...4 (repeat for each WBDDC)
-#         },
-#         "narrowband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "frequency": [-25600000.0-25600000.0, step 1],
-#                 "rateIndex": [0, 1, 2, 3, 4, 5, 6],
-#                 "udpDest": [DIP table index],
-#                 "vitaEnable": [0, 1, 2, 3],
-#                 "streamId": [stream ID],
-#                 "rfIndex": [1, 2, 3, 4],
-#                 "dataPort": [1, 2],
-#              },
-#           ...4 (repeat for each NBDDC)
-#         },
-#      },
-#      "ddcGroupConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "members": [None, single DDC, or iterable with multiple DDCs],
-#              },
-#           ...4 (repeat for each WBDDC group)
-#         },
-#         "narrowband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "members": [None, single DDC, or iterable with multiple DDCs],
-#              },
-#           ...8 (repeat for each NBDDC group)
-#         },
-#      },
-#      "ipConfiguration": {
-#            1: {
-#               "sourceIP": [IP address],
-#               "destIP": {
-#                   0: {
-#                      "ipAddr": [IP address],
-#                      "macAddr": [MAC address],
-#                      "sourcePort": [port],
-#                      "destPort": [port],
-#                   },
-#                ...31 (repeat for each DIP table entry)
-#               },
-#               "flowControl": [0, 1],
-#            },
-#         ...2 (repeat for each Gigabit Ethernet port)
-#      },
-# }
-# \endcode
-#
-# \section WbddcRates_NDR308_4 WBDDC Rate Settings
-#
-# <table>
-# <tr><th>Rate Index</th><th>WBDDC Rate (samples per second)</th></tr>
-# <tr><td>0</td><td>61440000.0</td></tr>
-# <tr><td>1</td><td>30720000.0</td></tr>
-# <tr><td>2</td><td>15360000.0</td></tr>
-# </table>
-#
-# \section NbddcRates_NDR308_4 NBDDC Rate Settings
-#
-# <table>
-# <tr><th>Rate Index</th><th>NBDDC Rate (samples per second)</th></tr>
-# <tr><td>0</td><td>1920000.0</td></tr>
-# <tr><td>1</td><td>960000.0</td></tr>
-# <tr><td>2</td><td>480000.0</td></tr>
-# <tr><td>3</td><td>180000.0</td></tr>
-# <tr><td>4</td><td>60000.0</td></tr>
-# <tr><td>5</td><td>30000.0</td></tr>
-# <tr><td>6</td><td>15000.0</td></tr>
-# </table>
-#
-# \section VitaEnable_NDR308_4 VITA 49 Enabling Options
-#
-# <table>
-# <tr><th>VITA Enable Option</th><th>Meaning</th></tr>
-# <tr><td>0</td><td>VITA-49 header disabled</td></tr>
-# <tr><td>1</td><td>VITA-49 header enabled, fractional timestamp in picoseconds</td></tr>
-# <tr><td>2</td><td>VITA-49 header disabled</td></tr>
-# <tr><td>3</td><td>VITA-49 header enabled, fractional timestamp in sample counts</td></tr>
-# </table>
-#
-# \implements CyberRadioDriver.IRadio
-class ndr308_4(ndr308):
-    _name = "NDR308-4"
-    numTuner = 4
-    numWbddc = 4
-    numNbddc = 4
-
-
-##
-# \brief Radio handler class for the NDR308-TS.
-#
-# This class implements the CyberRadioDriver.IRadio interface.
-#
-# \section ConnectionModes_NDR308-TS Connection Modes
-#
-# "tcp"
-#
-# \section RadioConfig_NDR308-TS Radio Configuration Options
-#
-# \code
-# configDict = {
-#      "configMode": [0, 1],
-#      "referenceMode": [0, 1, 2, 3, 4],
-#      "bypassMode": [0, 1],
-#      "freqNormalization": [0, 1],
-#      "gpsEnable": [0, 1],
-#      "referenceTuningVoltage": [0-65535],
-#      "tunerConfiguration": {
-#            1: {
-#               "frequency": [20000000.0-3000000000.0, step 1000000.0],
-#               "attenuation": [0.0-46.0, step 1.0],
-#               "enable": [0, 1],
-#               "filter": [0, 1],
-#               "timingAdjustment": [-200000 - 200000, step 1],
-#            },
-#         ...8 (repeat for each tuner)
-#      },
-#      "ddcConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "rateIndex": [0, 1, 2],
-#                 "udpDest": [DIP table index],
-#                 "vitaEnable": [0, 1, 2, 3],
-#                 "streamId": [stream ID],
-#                 "dataPort": [1, 2],
-#              },
-#           ...8 (repeat for each WBDDC)
-#         },
-#         "narrowband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "frequency": [-25600000.0-25600000.0, step 1],
-#                 "rateIndex": [0, 1, 2, 3, 4, 5, 6],
-#                 "udpDest": [DIP table index],
-#                 "vitaEnable": [0, 1, 2, 3],
-#                 "streamId": [stream ID],
-#                 "dataPort": [1, 2],
-#              },
-#           ...16 (repeat for each NBDDC)
-#         },
-#      },
-#      "ddcGroupConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "members": [None, single DDC, or iterable with multiple DDCs],
-#              },
-#           ...4 (repeat for each WBDDC group)
-#         },
-#         "narrowband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "members": [None, single DDC, or iterable with multiple DDCs],
-#              },
-#           ...8 (repeat for each NBDDC group)
-#         },
-#      },
-#      "ipConfiguration": {
-#            1: {
-#               "sourceIP": [IP address],
-#               "destIP": {
-#                   0: {
-#                      "ipAddr": [IP address],
-#                      "macAddr": [MAC address],
-#                      "sourcePort": [port],
-#                      "destPort": [port],
-#                   },
-#                ...31 (repeat for each DIP table entry)
-#               },
-#               "flowControl": [0, 1],
-#            },
-#         ...2 (repeat for each Gigabit Ethernet port)
-#      },
-# }
-# \endcode
-#
-# \section WbddcRates_NDR308-TS WBDDC Rate Settings
-#
-# <table>
-# <tr><th>Rate Index</th><th>WBDDC Rate (samples per second)</th></tr>
-# <tr><td>0</td><td>61440000.0</td></tr>
-# <tr><td>1</td><td>30720000.0</td></tr>
-# <tr><td>2</td><td>15360000.0</td></tr>
-# </table>
-#
-# \section NbddcRates_NDR308-TS NBDDC Rate Settings
-#
-# <table>
-# <tr><th>Rate Index</th><th>NBDDC Rate (samples per second)</th></tr>
-# <tr><td>0</td><td>1920000.0</td></tr>
-# <tr><td>1</td><td>960000.0</td></tr>
-# <tr><td>2</td><td>480000.0</td></tr>
-# <tr><td>3</td><td>180000.0</td></tr>
-# <tr><td>4</td><td>60000.0</td></tr>
-# <tr><td>5</td><td>30000.0</td></tr>
-# <tr><td>6</td><td>15000.0</td></tr>
-# </table>
-#
-# \section VitaEnable_NDR308-TS VITA 49 Enabling Options
-#
-# <table>
-# <tr><th>VITA Enable Option</th><th>Meaning</th></tr>
-# <tr><td>0</td><td>VITA-49 header disabled</td></tr>
-# <tr><td>1</td><td>VITA-49 header enabled, fractional timestamp in picoseconds</td></tr>
-# <tr><td>2</td><td>VITA-49 header disabled</td></tr>
-# <tr><td>3</td><td>VITA-49 header enabled, fractional timestamp in sample counts</td></tr>
-# </table>
-#
-# \implements CyberRadioDriver.IRadio
-class ndr308_ts(ndr308):
-    _name = "NDR308-TS"
-    adcRate = 122.88e6
-    wbddcType = components.ndr308ts_wbddc
-    nbddcType = components.ndr308ts_nbddc
-
-##
-# \brief Radio handler class for the NDR651.
-#
-# This class implements the CyberRadioDriver.IRadio interface.
-#
-# \section ConnectionModes_NDR651 Connection Modes
-#
-# "tcp"
-#
-# \section RadioConfig_NDR651 Radio Configuration Options
-#
-# \code
-# configDict = {
-#      "configMode": [0, 1],
-#      "referenceMode": [0, 1, 2, 3, 4],
-#      "bypassMode": [0, 1],
-#      "calibFrequency": [0, 25.0-3000.0],
-#      "freqNormalization": [0, 1],
-#      "gpsEnable": [0, 1],
-#      "referenceTuningVoltage": [0-65535],
-#      "tunerConfiguration": {
-#            1: {
-#               "frequency": [20000000.0-3000000000.0, step 1000000.0],
-#               "attenuation": [0.0-30.0, step 1.0],
-#               "enable": [0, 1],
-#               "filter": [0, 1],
-#               "timingAdjustment": [-200000 - 200000, step 1],
-#            },
-#         ...2 (repeat for each tuner)
-#      },
-#      "ddcConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "rateIndex": [0, 1, 2],
-#                 "udpDest": [DIP table index],
-#                 "vitaEnable": [0, 1, 2, 3],
-#                 "streamId": [stream ID],
-#                 "dataPort": [1, 2],
-#              },
-#           ...2 (repeat for each WBDDC)
-#         },
-#         "narrowband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "frequency": [-25600000.0-25600000.0, step 1],
-#                 "rateIndex": [0, 1, 2, 3, 4, 5, 6, 7],
-#                 "udpDest": [DIP table index],
-#                 "vitaEnable": [0, 1, 2, 3],
-#                 "streamId": [stream ID],
-#                 "dataPort": [1, 2],
-#              },
-#           ...16 (repeat for each NBDDC)
-#         },
-#      },
-#      "ddcGroupConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "members": [None, single DDC, or iterable with multiple DDCs],
-#              },
-#           ...4 (repeat for each WBDDC group)
-#         },
-#         "narrowband": {
-#              1: {
-#                 "enable": [0, 1],
-#                 "members": [None, single DDC, or iterable with multiple DDCs],
-#              },
-#           ...8 (repeat for each NBDDC group)
-#         },
-#      },
-#      "ipConfiguration": {
-#            1: {
-#               "sourceIP": [IP address],
-#               "destIP": {
-#                   0: {
-#                      "ipAddr": [IP address],
-#                      "macAddr": [MAC address],
-#                      "sourcePort": [port],
-#                      "destPort": [port],
-#                   },
-#                ...31 (repeat for each DIP table entry)
-#               },
-#               "flowControl": [0, 1],
-#            },
-#         ...2 (repeat for each Gigabit Ethernet port)
-#      },
-#      "txConfiguration": {
-#            1: {
-#               "frequency": [20000000.0-6000000000.0, step 1000000.0],
-#               "attenuation": [0.0-10.0, step 1.0],
-#               "enable": [0, 1],
-#               "cwConfiguration": {
-#                     1: {
-#                        "cwFrequency": [-51200000.0-51200000.0, step 1],
-#                        "cwAmplitude": [-32767-32767, step 1],
-#                        "cwPhase": [-180-180, step 1],
-#                        "cwSweepStart": [-51200000.0-51200000.0, step 1],
-#                        "cwSweepStop": [-51200000.0-51200000.0, step 1],
-#                        "cwSweepStep": [-51200000.0-51200000.0, step 1],
-#                        "cwSweepDwell": [0-4294967295, step 1],
-#                     },
-#                  ...2 (repeat for each tone generator)
-#               },
-#            },
-#         ...2 (repeat for each transmitter)
-#      },
-#      "ducConfiguration": {
-#         "wideband": {
-#              1: {
-#                 "dataPort": [0, 1, 2],
-#                 "frequency": [-25600000.0 - 25600000.0],
-#                 "attenuation": [-6.0 - 60.0, step 0.1],
-#                 "rateIndex": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16],
-#                 "txChannels": [0, 1, 2, 3],
-#                 "mode": [0 for streaming, 1 for snapshot],
-#                 "streamId": [stream ID],
-#                 "filename": [snapshot filename],
-#                 "startSample": [starting sample number in snapshot],
-#                 "samples": [number of samples in snapshot],
-#                 "singlePlayback": [0 for no, 1 for yes],
-#              },
-#           ...8 (repeat for each WBDUC)
-#         },
-#      },
-# }
-# \endcode
-#
-# \section WbddcRates_NDR651 WBDDC Rate Settings
-#
-# <table>
-# <tr><th>Rate Index</th><th>WBDDC Rate (samples per second)</th></tr>
-# <tr><td>0</td><td>51200000.0</td></tr>
-# <tr><td>1</td><td>25600000.0</td></tr>
-# <tr><td>2</td><td>12800000.0</td></tr>
-# <tr><td>3</td><td>102400000.0</td></tr>
-# <tr><td>4</td><td>6400000.0</td></tr>
-# <tr><td>5</td><td>3200000.0</td></tr>
-# </table>
-#
-# \section NbddcRates_NDR651 NBDDC Rate Settings
-#
-# <table>
-# <tr><th>Rate Index</th><th>NBDDC Rate (samples per second)</th></tr>
-# <tr><td>0</td><td>1600000.0</td></tr>
-# <tr><td>1</td><td>800000.0</td></tr>
-# <tr><td>2</td><td>400000.0</td></tr>
-# <tr><td>3</td><td>200000.0</td></tr>
-# <tr><td>4</td><td>100000.0</td></tr>
-# <tr><td>5</td><td>50000.0</td></tr>
-# <tr><td>6</td><td>25000.0</td></tr>
-# <tr><td>7</td><td>12500.0</td></tr>
-# </table>
-#
-# \section WbducRates_NDR651 WBDUC Rate Settings
-#
-# <table>
-# <tr><th>Rate Index</th><th>WBDUC Rate (samples per second)</th></tr>
-# <tr><td>0</td><td>102400000.0</td></tr>
-# <tr><td>1</td><td>51200000.0</td></tr>
-# <tr><td>2</td><td>25600000.0</td></tr>
-# <tr><td>3</td><td>12800000.0</td></tr>
-# <tr><td>4</td><td>6400000.0</td></tr>
-# <tr><td>5</td><td>3200000.0</td></tr>
-# <tr><td>6</td><td>1600000.0</td></tr>
-# <tr><td>7</td><td>800000.0</td></tr>
-# <tr><td>8</td><td>400000.0</td></tr>
-# <tr><td>9</td><td>200000.0</td></tr>
-# <tr><td>10</td><td>100000.0</td></tr>
-# <tr><td>11</td><td>50000.0</td></tr>
-# <tr><td>12</td><td>25000.0</td></tr>
-# <tr><td>13</td><td>12500.0</td></tr>
-# <tr><td>16</td><td>270833.0</td></tr>
-# </table>
-#
-# \section VitaEnable_NDR651 VITA 49 Enabling Options
-#
-# <table>
-# <tr><th>VITA Enable Option</th><th>Meaning</th></tr>
-# <tr><td>0</td><td>VITA-49 header disabled</td></tr>
-# <tr><td>1</td><td>VITA-49 header enabled, fractional timestamp in picoseconds</td></tr>
-# <tr><td>2</td><td>VITA-49 header disabled</td></tr>
-# <tr><td>3</td><td>VITA-49 header enabled, fractional timestamp in sample counts</td></tr>
-# </table>
-#
-# \implements CyberRadioDriver.IRadio
-class ndr651(ndr308):
-    _name = "NDR651"
-    numTuner = 2
-    numTunerBoards = 1
-    numWbddc = 2
-    tunerType = components.ndr651_tuner
-    numGigEDipEntries = 32
-    numNbddc = 16
-    wbddcType = components.ndr651_wbddc
-    nbddcType = components.ndr651_nbddc
-    numWbddcGroups = 4
-    wbddcGroupIndexBase = 1
-    wbddcGroupType = components.ndr651_wbddc_group
-    numNbddcGroups = 8
-    nbddcGroupIndexBase = 1
-    nbddcGroupType = components.ndr651_nbddc_group
-    numTxs = 2
-    txType = components.ndr651_tx
-    numWbduc = 8
-    wbducType = components.ndr651_wbduc
-    numNbduc = 0
-    nbducType = None
-
-##
-# \internal
-# \brief Special version of the radio handler class for the NDR651, for Dave M.
-#
-class ndr651dm(ndr651):
-    _name = "NDR651dm"
-    numTuner = 2
-    numWbddc = 4
-
-
 #-- End Radio Handler Objects --------------------------------------------------#
-#-- Any radio handler objects added to this module must be added ABOVE the code #
-#-- snippet below. -------------------------------------------------------------# 
+#-- NOTE: Radio handler objects for supporting specific radios need to be
+#   implemented under the CyberRadioDriver.radios package tree. 
 
-
-# This section of code inspects this module for radio handler objects (objects 
-# derived from _radio, thus implementing the IRadio interface), and adds each 
-# object to the radio class map.
-# To support a new radio, just create a new radio handler object inside this 
-# module, and this code will do the rest.  However, you will need to add the 
-# new radio to the list of supported radios in the "mainpage" documentation
-# section of __init__.py.  :)
-# Radio class map: maps radio name strings to radio handler class names.
-_radio_class_map = {}
-for name, obj in inspect.getmembers(sys.modules[__name__]):
-    if inspect.isclass(obj) and issubclass(obj, _radio) and "_radio" not in name:
-        # Add the object to the radio class map.
-        #_radio_class_map[name] = obj
-        _radio_class_map[name.replace("_","-")] = obj
-
-##
-# \brief Factory method for obtaining a radio handler class from the name
-# of the radio.
-#
-# The name string used to identify the radio can be any string returned 
-# by CyberRadioDriver.getSupportedRadios(), but the check is not case-sensitive.  
-# The returned radio handler class will support the CyberRadioDriver.IRadio 
-# interface.
-#
-# \param nameString The name string for the radio of interest.
-# \returns A radio handler class for the desired radio.
-# \throws RuntimeError if the desired radio is not supported.
-def getRadioObject(nameString):
-    nameString = nameString.strip().lower().replace("_","-")
-    try:
-        return _radio_class_map[nameString]
-    except:
-        raise RuntimeError("Unsupported radio: %s" % nameString)
     

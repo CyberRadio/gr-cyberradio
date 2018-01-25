@@ -55,14 +55,24 @@ namespace LibCyberRadio
 			FD_ZERO(&set);
 			FD_SET(_sockfd, &set);
 
-			cmdVec.push_back(std::string("\n"));
-			cmdVec.push_back(std::string("*IDN?\n"));
-			cmdVec.push_back(std::string("VER?\n"));
-			cmdVec.push_back(std::string("HREV?\n"));
+			// Commenting this out because I make one TCP connection per command --JVM
+			//cmdVec.push_back(std::string("\n"));
+			//cmdVec.push_back(std::string("*IDN?\n"));
+			//cmdVec.push_back(std::string("VER?\n"));
+			//cmdVec.push_back(std::string("HREV?\n"));
+			// for (cmd=cmdVec.begin(); cmd<cmdVec.end(); cmd++) {
+			// 	rspVec.clear();
+			// 	cmdRspError |= sendCmdAndGetRsp(*cmd, rspVec, 2000, _debug);
+			// }
 
-			for (cmd=cmdVec.begin(); cmd<cmdVec.end(); cmd++) {
-				rspVec.clear();
-				cmdRspError |= sendCmdAndGetRsp(*cmd, rspVec, 2000, _debug);
+			// Read radio connection greeting message (but do nothing)
+			struct timeval tout;
+			tout.tv_sec = 2;
+			tout.tv_usec = 0;
+			if (select(FD_SETSIZE, &set, NULL, NULL, &tout)>0) 
+			{
+				_clearRxBuff();
+				_tcpRx();
 			}
 
 			return isConnected();
@@ -73,9 +83,9 @@ namespace LibCyberRadio
 			if (isConnected()) {
 		//		shutdown(_sockfd,SHUT_WR);
 		//		usleep(1000);
-				shutdown(_sockfd,SHUT_RDWR);
+				// shutdown(_sockfd,SHUT_RDWR);
 		//		usleep(1000);
-		//		close(_sockfd);
+				close(_sockfd);
 				_connected = false;
 				//std::cout << "success!";
 			} else {

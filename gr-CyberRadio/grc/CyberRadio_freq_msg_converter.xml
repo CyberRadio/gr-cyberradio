@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] Freq Msg Converter</name>
+  <key>CyberRadio_freq_msg_converter</key>
+  <category>[CyberRadio]/Misc</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.freq_msg_converter(
+      msgKey = $msgKey, 
+      unitsIn = $unitsIn, 
+      unitsOut = $unitsOut, 
+      offset = $offset, 
+      roundOutput = $roundOutput, 
+      triggerOnChange = $triggerOnChange, 
+      debug = $debug, 
+       )</make>
+  <callback>set_unitsIn($unitsIn)</callback>
+  <callback>set_unitsOut($unitsOut)</callback>
+  <callback>set_offset($offset)</callback>
+  <param>
+    <name>Message Key</name>
+    <key>msgKey</key>
+    <value>freq</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Freq Units In</name>
+    <key>unitsIn</key>
+    <value>1.0e6</value>
+    <type>real</type>
+    <option>
+      <name>GHz</name>
+      <key>1.0e9</key>
+    </option>
+    <option>
+      <name>MHz</name>
+      <key>1.0e6</key>
+    </option>
+    <option>
+      <name>kHz</name>
+      <key>1.0e3</key>
+    </option>
+    <option>
+      <name>Hz</name>
+      <key>1.0</key>
+    </option>
+  </param>
+  <param>
+    <name>Freq Units Out</name>
+    <key>unitsOut</key>
+    <value>1.0</value>
+    <type>real</type>
+    <option>
+      <name>GHz</name>
+      <key>1.0e9</key>
+    </option>
+    <option>
+      <name>MHz</name>
+      <key>1.0e6</key>
+    </option>
+    <option>
+      <name>kHz</name>
+      <key>1.0e3</key>
+    </option>
+    <option>
+      <name>Hz</name>
+      <key>1.0</key>
+    </option>
+  </param>
+  <param>
+    <name>Offset (Input Units)</name>
+    <key>offset</key>
+    <value>0.0</value>
+    <type>float</type>
+  </param>
+  <param>
+    <name>Round Output?</name>
+    <key>roundOutput</key>
+    <value>True</value>
+    <type>bool</type>
+    <hide>part</hide>
+    <option>
+      <name>No</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Yes</name>
+      <key>True</key>
+    </option>
+  </param>
+  <param>
+    <name>New message on change?</name>
+    <key>triggerOnChange</key>
+    <value>True</value>
+    <type>bool</type>
+    <hide>part</hide>
+    <option>
+      <name>No</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Yes</name>
+      <key>True</key>
+    </option>
+  </param>
+  <param>
+    <name>Debug</name>
+    <key>debug</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+    <option>
+      <name>No</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Yes</name>
+      <key>True</key>
+    </option>
+  </param>
+  <sink>
+    <name>freq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  <source>
+    <name>freq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+</block>

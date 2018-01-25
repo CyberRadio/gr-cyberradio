@@ -6,14 +6,18 @@
 #
 # \author NH
 # \author DA
-# \copyright Copyright (c) 2014 CyberRadio Solutions, Inc.  All rights 
-# reserved.
+# \author MN
+# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
+#     All rights reserved.
 #
 ###############################################################
 
-import time
-import sys
+# Imports from other modules in this package
+# Imports from external modules
+# Python standard library imports
 import json
+import sys
+import time
 
 ##
 # Base class for objects that produce log output.

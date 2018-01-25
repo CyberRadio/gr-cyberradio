@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=NDR Demo Launcher
+Comment=NDR Radio Demo GUI Configuration Utility & Launcher
+Exec=gksu ndrGuiLauncher
+Type=Application
+Terminal=false
+Categories=Other
+Icon=/usr/share/icons/unity-icon-theme/apps/128/web.svg
+

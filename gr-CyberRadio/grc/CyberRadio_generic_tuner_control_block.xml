@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] NDR Tuner Control Block</name>
+  <key>CyberRadio_generic_tuner_control_block</key>
+  <category>[CyberRadio]/Radio Element Control</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.generic_tuner_control_block(
+            $radioObj, 
+            $index, 
+            $enable, 
+            $freq, 
+            $attenuation, 
+            $filter, 
+            $group, 
+            $otherArgs, 
+            $debug
+             )</make>
+<!--
+  <callback>set_radioParam($radioParam)</callback>
+-->
+  <callback>set_index($index)</callback>
+  <callback>set_enable($enable)</callback>
+  <callback>set_freq($freq)</callback>
+  <callback>set_attenuation($attenuation)</callback>
+  <callback>set_filter($filter)</callback>
+  <callback>set_otherArgs($otherArgs)</callback>
+  <param>
+    <name>Radio Object</name>
+    <key>radioObj</key>
+    <value></value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+    <param>
+    <name>Index</name>
+    <key>index</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Enable</name>
+    <key>enable</key>
+    <value>True</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Frequency (MHz)</name>
+    <key>freq</key>
+    <value>0</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Attenuation</name>
+    <key>attenuation</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>IF Filter</name>
+    <key>filter</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Tuner Group</name>
+    <key>group</key>
+    <value>None</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Other Args (dict)</name>
+    <key>otherArgs</key>
+    <value>{}</value>
+    <type>raw</type>
+    <hide>part</hide>
+    <tab>Misc.</tab>
+  </param>
+  <param>
+    <name>Debug</name>
+    <key>debug</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+    <option>
+      <name>No</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Yes</name>
+      <key>True</key>
+    </option>
+    <tab>Misc.</tab>
+  </param>
+  <sink>
+    <name>control</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  <sink>
+    <name>freq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  <source>
+    <name>status</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+  <source>
+    <name>freq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+</block>

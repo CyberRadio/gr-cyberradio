@@ -16,7 +16,7 @@
 #include <netinet/udp.h>
 #include <stdint.h>
 
-#define SAMPLES_PER_FRAME 2048
+#define SAMPLES_PER_FRAME 1024
 
 #define VRLP 0x56524c50
 #define VEND 0x56454e44
@@ -97,8 +97,11 @@ namespace LibCyberRadio
 		 * \brief Transmit status information.
 		 */
 		struct TxStatusPayload {
-			uint32_t contextIndicator;  //!< Context indicator
+			uint32_t contextIndicator:31;  //!< Context indicator
+			uint32_t CI:1;  //!< Change Indicator
+			
 			uint32_t spaceAvailable;    //!< Space available
+			
 			uint32_t overrunCount:7;    //!< Overrun count
 			uint32_t overrunFlag:1;     //!< Overrun flag
 			uint32_t underrunCount:7;   //!< Underrun count
@@ -108,7 +111,11 @@ namespace LibCyberRadio
 			uint32_t fullFlag:1;        //!< Full flag
 			uint32_t emptyFlag:1;       //!< Empty flag
 			uint32_t RSVD:6;            //!< RESERVED
-			uint32_t PAD;               //!< Padding
+			
+			uint32_t PF:1;               //!< Filling trigger
+			uint32_t PE:1;               //!< Emptying trigger
+			uint32_t PP:1;               //!< Periodic notification
+			uint32_t PAD:29;               //!< Padding
 		} __attribute__((packed));;
 
 		/*!

@@ -1,0 +1,199 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] NDR804-PTT Snapshot FFT Source</name>
+  <key>CyberRadio_ndr804ptt_snapshot_fft_source</key>
+  <category>[CyberRadio]/Radio Sources</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.ndr804ptt_snapshot_fft_source(
+      avgGainList=$avgGainList,
+    dipIndex=$dipIndex,
+    doLog10=$doLog10,
+    enable=$enable,
+    fftSize=$fftSize,
+    fftWindowType=$fftWindowType,
+    index=$index,
+    localInterface=$localInterface,
+    otherDdcArgs=$otherDdcArgs,
+    otherTunerArgs=$otherTunerArgs,
+    outSize=$outSize,
+    radioInterface=$radioInterface,
+    radioParam=$radioParam,
+    rate=$rate,
+    rfAtten=$rfAtten,
+    rfFilter=$rfFilter,
+    rfFreq=$rfFreq,
+    udpPort=$udpPort,
+)</make>
+  <callback>set_avgGainList($avgGainList)</callback>
+  <callback>set_dipIndex($dipIndex)</callback>
+  <callback>set_doLog10($doLog10)</callback>
+  <callback>set_enable($enable)</callback>
+  <callback>set_fftSize($fftSize)</callback>
+  <callback>set_fftWindowType($fftWindowType)</callback>
+  <callback>set_index($index)</callback>
+  <callback>set_localInterface($localInterface)</callback>
+  <callback>set_otherDdcArgs($otherDdcArgs)</callback>
+  <callback>set_otherTunerArgs($otherTunerArgs)</callback>
+  <callback>set_outSize($outSize)</callback>
+  <callback>set_radioInterface($radioInterface)</callback>
+  <callback>set_radioParam($radioParam)</callback>
+  <callback>set_rate($rate)</callback>
+  <callback>set_rfAtten($rfAtten)</callback>
+  <callback>set_rfFilter($rfFilter)</callback>
+  <callback>set_rfFreq($rfFreq)</callback>
+  <callback>set_udpPort($udpPort)</callback>
+  <callback>clearAverage($clearFftAvg)</callback>
+  <param>
+    <name>Avg Gain List</name>
+    <key>avgGainList</key>
+    <value>[1.0/8,1.0/32,]</value>
+    <type>real_vector</type>
+  </param>
+  <param>
+    <name>DIP Index</name>
+    <key>dipIndex</key>
+    <value>-1</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Do log10?</name>
+    <key>doLog10</key>
+    <value>True</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Enable</name>
+    <key>enable</key>
+    <value>True</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>FFT Size (samples)</name>
+    <key>fftSize</key>
+    <value>int(2**17)</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>FFT Window type</name>
+    <key>fftWindowType</key>
+    <value>"flattop"</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Tuner/DDC Index</name>
+    <key>index</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Local Ethernet Interface</name>
+    <key>localInterface</key>
+    <value>""</value>
+    <type>string</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Other DDC Args</name>
+    <key>otherDdcArgs</key>
+    <value>{}</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Other Tuner Args</name>
+    <key>otherTunerArgs</key>
+    <value>{}</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Output Size (samples)</name>
+    <key>outSize</key>
+    <value>int((40.0/51.2)*(2**17))</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Radio Ethernet Interface Index</name>
+    <key>radioInterface</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>radioParam</name>
+    <key>radioParam</key>
+    <value>{"type":"ndr804-ptt", "host":"ndr308", "port":8617, "obj":None}</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>FFT Rate</name>
+    <key>rate</key>
+    <value>16</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>RF Attenuation (dB)</name>
+    <key>rfAtten</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>RF Filter</name>
+    <key>rfFilter</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>RF Freq (MHz)</name>
+    <key>rfFreq</key>
+    <value>1000</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>UDP Port</name>
+    <key>udpPort</key>
+    <value>11000</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Clear Average</name>
+    <key>clearFftAvg</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <sink>
+    <name>rfFreq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  <sink>
+    <name>clearAvg</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  <source>
+    <name>rfFreq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+  <source>
+    <name>Out</name>
+    <type>float</type>
+    <vlen>$outSize</vlen>
+    <optional>1</optional>
+  </source>
+  <source>
+    <name>Avg</name>
+    <type>float</type>
+    <vlen>$outSize</vlen>
+    <nports>len($avgGainList)</nports>
+    <optional>1</optional>
+  </source>
+</block>

@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!--
+###################################################
+##Radio Object: utility block that sets up the 
+## radio object used by the radio control blocks.
+###################################################
+ -->
+<block>
+	<name>[CyberRadio] Radio Object</name>
+	<key>variable_radio_object</key>
+	<category>[CyberRadio]/Radio Element Control</category>
+	<import>import CyberRadioDriver as crd</import>
+	<import>import CyberRadioDriver</import>
+	<var_make>self.$(id) = $(id) = crd.getRadioObject($radioType, verbose=bool($verbose), host=$radioHostname)</var_make>
+	<var_value>crd.getRadioObject($radioType, verbose=False)</var_value>
+	<make></make>
+	<param>
+		<name>Radio Type</name>
+		<key>radioType</key>
+		<value>ndr308</value>
+		<type>string</type>
+		<option>
+			<name>NDR308</name>
+			<key>ndr308</key>
+		</option>
+		<option>
+			<name>NDR651</name>
+			<key>ndr651</key>
+		</option>
+		<option>
+			<name>NDR301</name>
+			<key>ndr301</key>
+		</option>
+		<option>
+			<name>NDR601</name>
+			<key>NDR601</key>
+		</option>
+	</param>
+	<param>
+		<name>Radio Hostname/IP</name>
+		<key>radioHostname</key>
+		<value>ndr308</value>
+		<type>string</type>
+	</param>
+<!--
+	<param>
+		<name>Radio Control Port</name>
+		<key>radioControlPort</key>
+		<value>8617</value>
+		<type>int</type>
+	</param>
+	<param>
+		<name>Radio Connection Method</name>
+		<key>radioConnType</key>
+		<value>tcp</value>
+		<type>string</type>
+		<option>
+			<name>TCP</name>
+			<key>tcp</key>
+		</option>
+		<option>
+			<name>UDP</name>
+			<key>udp</key>
+		</option>
+		<option>
+			<name>HTTPS</name>
+			<key>https</key>
+		</option>
+		<option>
+			<name>Serial</name>
+			<key>tty</key>
+		</option>
+	</param>
+-->
+	<param>
+		<name>Verbose?</name>
+		<key>verbose</key>
+		<value>False</value>
+		<type>bool</type>
+		<hide>part</hide>
+		<option>
+			<name>No</name>
+			<key>False</key>
+		</option>
+		<option>
+			<name>Yes</name>
+			<key>True</key>
+		</option>
+	</param>
+	<doc>
+This block sets up the radio object used by radio control blocks.\
+This variable block has no graphical representation.
+	</doc>
+</block>

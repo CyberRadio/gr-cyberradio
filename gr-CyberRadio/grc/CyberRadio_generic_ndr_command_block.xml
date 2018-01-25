@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] NDR Command Block</name>
+  <key>CyberRadio_generic_ndr_command_block</key>
+  <category>[CyberRadio]/Radio Element Control</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.generic_ndr_command_block(
+            $radioObj, 
+            $cmd, 
+            $debug, 
+             )</make>
+  <callback>send_command($cmd)</callback>
+  <param>
+    <name>Radio Object</name>
+    <key>radioObj</key>
+    <value></value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Command</name>
+    <key>cmd</key>
+    <value>""</value>
+    <type>string</type>
+  </param>
+    <param>
+    <name>Debug Flag</name>
+    <key>debug</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+</block>

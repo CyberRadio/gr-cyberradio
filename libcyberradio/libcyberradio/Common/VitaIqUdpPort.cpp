@@ -63,6 +63,14 @@ namespace LibCyberRadio
 				socket->set_option(loption);
 				boost::asio::socket_base::reuse_address roption(true);
 				socket->set_option(roption);
+				boost::asio::socket_base::receive_buffer_size boption(33554432);
+				socket->set_option(boption);
+				boost::asio::socket_base::receive_buffer_size boption2;
+				socket->get_option(boption2);
+				if (boption2.value()!=33554432) {
+					printf("\nCould not set UDP buffer size!\n");
+					printf("Please run 'sudo sysctl net.core.rmem_max=50000000'.\n\n");
+				}
 				socket->bind(endpoint);
 				connected = true;
 			}

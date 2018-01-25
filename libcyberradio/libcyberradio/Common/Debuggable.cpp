@@ -51,5 +51,10 @@ namespace LibCyberRadio
 		return ret;
 	}
 
+	const char* Debuggable::debugBool(bool val)
+	{
+		return val ? "true" : "false";
+	}
+
 } /* namespace LibCyberRadio */
 

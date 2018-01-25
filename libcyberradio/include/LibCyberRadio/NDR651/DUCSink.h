@@ -70,7 +70,7 @@ namespace LibCyberRadio
 						  /* For the radio in general */
 						  const std::string& radio_host_name = "",
 						  unsigned int radio_tcp_port = 8617,
-						  const std::vector<std::string>& tengig_iface_list = std::vector<std::string>(),
+						  unsigned int tengig_iface_index = 1,
 						  float iq_scale_factor = 1.0,
 						  /* For an individual DUC on the radio */
 						  unsigned int duc_channel = 1,
@@ -79,14 +79,19 @@ namespace LibCyberRadio
 						  long duc_frequency = 0,
 						  float duc_attenuation = 0,
 						  unsigned int duc_tx_channels = 0,
-						  unsigned int duc_tx_frequency = 900,
+						  double duc_tx_frequency = 900,
 						  unsigned int duc_tx_attenuation = 0,
 						  unsigned int duc_stream_id = 40001,
 						  bool config_tx = false,
 						  bool debug = false,
 						  unsigned int fc_update_rate = 20,
 						  bool use_udp = false,
-						  bool use_ring_buffer = false);
+						  bool use_ring_buffer = false,
+						  unsigned int duchsPfThresh = 25, 
+						  unsigned int duchsPeThresh = 24, 
+						  unsigned int duchsPeriod = 10, 
+						  bool updatePE = false, 
+						  int txinv_mode = 0);
 				/*!
 				 * \brief Destroys a DUCSink object.
 				 */
@@ -178,6 +183,12 @@ namespace LibCyberRadio
 				 */
 				void set_duc_frequency(long duc_frequency);
 				/*!
+				 * \brief Sets the TX inversion mode for the DUC
+				 *    in use.
+				 * \param duc_txinv_mode 1 to enable tx inversion, 0 to disable.
+				 */
+				void set_duc_txinv_mode(int duc_txinv_mode);
+				/*!
 				 * \brief Gets the attenuation for the DUC
 				 *    in use.
 				 * \return The attenuation.
@@ -206,13 +217,13 @@ namespace LibCyberRadio
 				 *    the DUC in use.
 				 * \return The transmit center frequency.
 				 */
-				unsigned int get_duc_tx_frequency() const;
+				double get_duc_tx_frequency() const;
 				/*!
 				 * \brief Sets the transmit center frequency (in MHz) for
 				 *    the DUC in use.
 				 * \param duc_tx_frequency The transmit center frequency for the DUC in use.
 				 */
-				void set_duc_tx_frequency(unsigned int duc_tx_frequency);
+				void set_duc_tx_frequency(double duc_tx_frequency);
 				/*!
 				 * \brief Gets the transmit attenuation (in dB) for the DUC in use.
 				 * \return The transmit attenuation.
@@ -240,6 +251,12 @@ namespace LibCyberRadio
 				 * \return The sample rate.
 				 */
 				long get_duc_sample_rate() const;
+				
+				void set_duchs_pf_threshold(unsigned int duchsPfThresh);
+				void set_duchs_pe_threshold(unsigned int duchsPeThresh);
+				void set_duchs_period(unsigned int duchsPeriod);
+				void set_duchs_update_pe(bool updatePE);
+				
 				/*!
 				 * \brief Starts the sink.
 				 */
@@ -277,15 +294,18 @@ namespace LibCyberRadio
 				long d_duc_frequency;
 				float d_duc_attenuation;
 				unsigned int d_duc_tx_channels;
-				unsigned int d_duc_tx_frequency;
+				double d_duc_tx_frequency;
 				unsigned int d_duc_tx_attenuation;
 				unsigned int d_duc_stream_id;
+				int d_duc_txinv_mode;
 				bool    d_config_tx;
 				unsigned int d_fc_update_rate;
 				bool d_use_udp;
 				bool d_use_ring_buffer;
 				TransmitPacketizer* d_tx;
 				short d_sample_buffer[SAMPLES_PER_FRAME * 2];
+				unsigned int d_duchsPfThresh, d_duchsPeThresh, d_duchsPeriod;
+				bool d_updatePE;
 		};
 
 	} // namespace NDR651

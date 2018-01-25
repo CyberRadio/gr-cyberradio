@@ -1,0 +1,370 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] NDR804/328 Control Block</name>
+  <key>ndr_control_ndr_control</key>
+  <category>[CyberRadio]/Radio Element Control</category>
+  <import>import CyberRadio</import>
+<!--
+  <make>ndr_control.ndr_control($radioType, 
+                $hostname, 
+                $verbose, 
+                $interface, 
+                $dataPort, 
+                $tunerFreq, 
+                $tunerAtten, 
+                $tunerIndex, 
+                $calFrequency, 
+                $wbddcEnable, 
+                $wbddcVitaLevel, 
+                $wbddcRate, 
+                $wbddcFormat, 
+                $wbddcFreq, 
+                $wbddcPort, 
+                $wbddcIndex, 
+                $specAlpha, 
+                $specRate, 
+                $nbddcEnable, 
+                $nbddcVitaLevel, 
+                $nbddcRate, 
+                $nbddcFormat, 
+                $nbddcDemodType, 
+                $nbddcDemodBfo, 
+                $nbddcDemodDcBlock, 
+                $nbddcFreq, 
+                $nbddcPort, 
+                $nbddcIndex, 
+                $otherNbddcEnable, 
+                $otherNbddcPort)</make>
+-->
+  <make>CyberRadio.ndr_control($radioType, 
+                $hostname, 
+                $verbose, 
+                $interface, 
+                $dataPort, 
+                $tunerFreq, 
+                $tunerAtten, 
+                $tunerFilter, 
+                $tunerIndex, 
+                $calFrequency, 
+                $wbddcEnable, 
+                $wbddcVitaLevel, 
+                $wbddcRate, 
+                $wbddcFormat, 
+                $wbddcFreq, 
+                $wbddcPort, 
+                $wbddcIndex, 
+                $specRate, 
+                $nbddcEnable, 
+                $nbddcVitaLevel, 
+                $nbddcRate, 
+                $nbddcDemodType, 
+                $nbddcDemodBfo, 
+                $nbddcDemodDcBlock, 
+                $nbddcDemodAlcType, 
+                $nbddcDemodAlcLevel, 
+                $nbddcDemodSquelchLevel, 
+                                $nbddcDagcType, 
+                                $nbddcDagcLevel, 
+                $nbddcFreq, 
+                $nbddcPort, 
+                $nbddcIndex, 
+                $otherNbddcEnable, 
+                $otherNbddcPort)</make>
+  <callback>set_radioType($radioType)</callback>
+  <callback>set_hostname($hostname)</callback>
+  <callback>set_interface($interface)</callback>
+  <callback>set_dataPort($dataPort)</callback>
+  <callback>set_tunerFreq($tunerFreq)</callback>
+  <callback>set_tunerAtten($tunerAtten)</callback>
+  <callback>set_tunerFilter($tunerFilter)</callback>
+  <callback>set_tunerIndex($tunerIndex)</callback>
+  <callback>set_calFrequency($calFrequency)</callback>
+  <callback>set_wbddcEnable($wbddcEnable)</callback>
+  <callback>set_wbddcEnable($wbddcEnable)</callback>
+  <callback>set_wbddcVitaLevel($wbddcVitaLevel)</callback>
+  <callback>set_wbddcRate($wbddcRate)</callback>
+  <callback>set_wbddcFormat($wbddcFormat)</callback>
+  <callback>set_wbddcFreq($wbddcFreq)</callback>
+  <callback>set_wbddcPort($wbddcPort)</callback>
+  <callback>set_wbddcIndex($wbddcIndex)</callback>
+  <callback>set_specRate($specRate)</callback>
+  <callback>set_nbddcEnable($nbddcEnable)</callback>
+  <callback>set_nbddcVitaLevel($nbddcVitaLevel)</callback>
+  <callback>set_nbddcRate($nbddcRate)</callback>
+<!--
+  <callback>set_nbddcFormat($nbddcFormat)</callback>
+-->
+  <callback>set_nbddcDemodType($nbddcDemodType)</callback>
+  <callback>set_nbddcDemodBfo($nbddcDemodBfo)</callback>
+  <callback>set_nbddcDemodDcBlock($nbddcDemodDcBlock)</callback>
+  <callback>set_nbddcDemodAlcType($nbddcDemodAlcType)</callback>
+  <callback>set_nbddcDemodAlcLevel($nbddcDemodAlcLevel)</callback>
+  <callback>set_nbddcDemodSquelchLevel($nbddcDemodSquelchLevel)</callback>
+  <callback>set_nbddcDagcType($nbddcDagcType)</callback>
+  <callback>set_nbddcDagcLevel($nbddcDagcLevel)</callback>
+  <callback>set_nbddcFreq($nbddcFreq)</callback>
+  <callback>set_nbddcPort($nbddcPort)</callback>
+  <callback>set_nbddcIndex($nbddcIndex)</callback>
+  <callback>set_otherNbddcEnable($otherNbddcEnable)</callback>
+  <callback>set_otherNbddcPort($otherNbddcPort)</callback>
+  <callback>set_radio_cmd($radio_cmd)</callback>
+  <callback>send_radio_rsp($send_rsp_trigger)</callback>
+  <param>
+    <name>Radio Type</name>
+    <key>radioType</key>
+    <value>ndr804</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Hostname/IP</name>
+    <key>hostname</key>
+    <value>192.168.0.2</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Verbose</name>
+    <key>verbose</key>
+    <value>True</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Local 10GbE NIC</name>
+    <key>interface</key>
+    <value>eth6</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Radio NIC Index</name>
+    <key>dataPort</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Tuner Frequency (Hz)</name>
+    <key>tunerFreq</key>
+    <value>1000000000</value>
+    <type>float</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Tuner Attenuation</name>
+    <key>tunerAtten</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Tuner IF Filter</name>
+    <key>tunerFilter</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Tuner Index</name>
+    <key>tunerIndex</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Cal Freq (0 to disable)</name>
+    <key>calFrequency</key>
+    <value>0</value>
+    <type>real</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>WBDDC Enable</name>
+    <key>wbddcEnable</key>
+    <value>3</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>wbddcVitaLevel</name>
+    <key>wbddcVitaLevel</key>
+    <value>3</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>WBDDC Rate Index</name>
+    <key>wbddcRate</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>WBDDC Format</name>
+    <key>wbddcFormat</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>WBDDC Frequency (Hz)</name>
+    <key>wbddcFreq</key>
+    <value>0.0</value>
+    <type>float</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>WBDDC UDP Port</name>
+    <key>wbddcPort</key>
+    <value>10100</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>WBDDC Index</name>
+    <key>wbddcIndex</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>specRate</name>
+    <key>specRate</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NBDDC Enable</name>
+    <key>nbddcEnable</key>
+    <value>3</value>
+  </param>
+  <param>
+    <name>nbddcVitaLevel</name>
+    <key>nbddcVitaLevel</key>
+    <value>3</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NBDDC Rate Index</name>
+    <key>nbddcRate</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+<!--
+  <param>
+    <name>NBDDC Format</name>
+    <key>nbddcFormat</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+-->
+  <param>
+    <name>NBDDC Demod Type</name>
+    <key>nbddcDemodType</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NBDDC Demod BFO (Hz)</name>
+    <key>nbddcDemodBfo</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NBDDC Demod DC Block</name>
+    <key>nbddcDemodDcBlock</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NBDDC Demod ALC Type</name>
+    <key>nbddcDemodAlcType</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NBDDC Demod ALC Level</name>
+    <key>nbddcDemodAlcLevel</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NBDDC Demod Squelch Level</name>
+    <key>nbddcDemodSquelchLevel</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NBDDC DAGC Type</name>
+    <key>nbddcDagcType</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NBDDC DAGC Level</name>
+    <key>nbddcDagcLevel</key>
+    <value>0</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NBDDC Frequency (Hz)</name>
+    <key>nbddcFreq</key>
+    <value>0.0</value>
+    <type>float</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NBDDC UDP Port</name>
+    <key>nbddcPort</key>
+    <value>10101</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NBDDC Index</name>
+    <key>nbddcIndex</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Enable other NBDDCs?</name>
+    <key>otherNbddcEnable</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Other NBDDC UDP Port</name>
+    <key>otherNbddcPort</key>
+    <value>10102</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Radio Command</name>
+    <key>radio_cmd</key>
+    <value>"*IDN?"</value>
+    <type>string</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Send Radio RSP trigger</name>
+    <key>send_rsp_trigger</key>
+    <value>None</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <source>
+    <name>log</name>
+    <type>byte</type>
+    <vlen>1</vlen>
+    <optional>1</optional>
+  </source>
+</block>

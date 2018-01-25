@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] VITA I/Q Source v2 (deprecated)</name>
+  <key>CyberRadio_vita_iq_source_2</key>
+  <category>[CyberRadio]/Vita and UDP Sources</category>
+  <import>import CyberRadio</import>
+<!--
+  <name>Vita49 I/Q Source v2</name>
+  <key>vita_vita_iq_source_2</key>
+  <category>CyberRadio/TEST</category>
+  <import>import vita</import>
+-->
+  <make>CyberRadio.vita_iq_source_2(
+    $vitaType, 
+    $payloadSize, 
+    $vitaHeaderSize, 
+    $vitaTailSize, 
+    $byteSwapped, 
+    $iqSwapped, 
+    $host, 
+    $port, 
+    $debug, 
+    $tagOutput, 
+    $coherent, 
+     )</make>
+  <param>
+    <name>Vitatype</name>
+    <key>vitaType</key>
+    <value>3</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Payload Size (Bytes)</name>
+    <key>payloadSize</key>
+    <value>1024*4</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Vita Header Size (Bytes)</name>
+    <key>vitaHeaderSize</key>
+    <value>10*4</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Vita Tail Size (Bytes)</name>
+    <key>vitaTailSize</key>
+    <value>1*4</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Byteswapped</name>
+    <key>byteSwapped</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Iqswapped</name>
+    <key>iqSwapped</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Host</name>
+    <key>host</key>
+    <value>0.0.0.0</value>
+    <type>string</type>
+<!--
+    <hide>part</hide>
+-->
+  </param>
+  <param>
+    <name>Port</name>
+    <key>port</key>
+    <value>41000</value>
+    <type>int</type>
+<!--
+    <hide>part</hide>
+-->
+  </param>
+  <param>
+    <name>Debug?</name>
+    <key>debug</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Tag Output Stream?</name>
+    <key>tagOutput</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>NDR304 Coherent Mode?</name>
+    <key>coherent</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Output Type</name>
+    <key>type</key>
+    <type>enum</type>
+    <option>
+      <name>Complex</name>
+      <key>complex</key>
+      <opt>size:gr.sizeof_gr_complex</opt>
+    </option>
+    <option>
+      <name>Float</name>
+      <key>float</key>
+      <opt>size:gr.sizeof_float</opt>
+    </option>
+    <option>
+      <name>Int</name>
+      <key>int</key>
+      <opt>size:gr.sizeof_int</opt>
+    </option>
+    <option>
+      <name>Short</name>
+      <key>short</key>
+      <opt>size:gr.sizeof_short</opt>
+    </option>
+    <option>
+      <name>Byte</name>
+      <key>byte</key>
+      <opt>size:gr.sizeof_char</opt>
+    </option>
+  </param>
+  <source>
+    <name>Vita49</name>
+    <type>$type</type>
+    <vlen>($payloadSize+$vitaHeaderSize+$vitaTailSize)/$type.size</vlen>
+  </source>
+  <source>
+    <name>IQ</name>
+    <type>complex</type>
+    <vlen>$payloadSize/4</vlen>
+  </source>
+</block>

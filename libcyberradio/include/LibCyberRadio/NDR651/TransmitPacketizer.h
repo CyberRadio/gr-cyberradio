@@ -59,11 +59,12 @@ namespace LibCyberRadio
 								   unsigned int ducChannel = 1,
 								   const std::string& ifname = "eth0",
 								   unsigned int tenGigIndex = 1,
+								   int dipIndex = -1,
 								   unsigned int ducRate = 0,
 								   unsigned int ducTxChannels = 0,
 								   float ducFreq = 900e6,
 								   float ducAtten = 0,
-								   float txFreq = 900,
+								   double txFreq = 900,
 								   float txAtten = 0,
 								   unsigned int streamId = 40001,
 								   bool config_tx = false,
@@ -117,6 +118,12 @@ namespace LibCyberRadio
 				 */
 				bool setDucFreq(float ducFreq);
 				/*!
+				 * \brief Sets the DUC TX Inversion Mode.
+				 * \param txinvMode TX Inversion Mode (0=normal, 1=inverted)
+				 * \returns True if the action succeeds, false otherwise.
+				 */
+				bool setDucTxinvMode(unsigned int txinvMode);
+				/*!
 				 * \brief Sets the DUC attenuation.
 				 * \param ducAtten DUC attenuation (dB)
 				 * \returns True if the action succeeds, false otherwise.
@@ -127,7 +134,7 @@ namespace LibCyberRadio
 				 * \param txFreq Transmitter frequency (Hz)
 				 * \returns True if the action succeeds, false otherwise.
 				 */
-				bool setTxFreq(float txFreq);
+				bool setTxFreq(double txFreq);
 				/*!
 				 * \brief Sets the transmitter attenuation.
 				 * \param txAtten Transmitter attenuation (dB)
@@ -165,6 +172,7 @@ namespace LibCyberRadio
 				 * \param txFreq Transmitter frequency (Hz)
 				 * \param txAtten Transmitter attenuation (dB)
 				 * \param streamId Stream ID
+				 * \param txinvMode TX Inversion Mode
 				 * \returns True if the action succeeds, false otherwise.
 				 */
 				bool setDucParameters(unsigned int tenGigIndex,
@@ -172,7 +180,7 @@ namespace LibCyberRadio
 									  unsigned int ducTxChannels,
 									  float ducFreq,
 									  float ducAtten,
-									  float txFreq,
+									  double txFreq,
 									  float txAtten,
 									  unsigned int streamId);
 				/*!
@@ -200,6 +208,12 @@ namespace LibCyberRadio
 				 * \returns True if the packetizer is ready, false otherwise.
 				 */
 				bool isReadyToReceive(void);
+				
+				void setDuchsParameters(unsigned int duchsPfThresh, unsigned int duchsPeThresh, unsigned int duchsPeriod, bool updatePE);
+				unsigned int getDuchsPfThresh(void) { return _duchsPfThresh; };
+				unsigned int getDuchsPeThresh(void) { return _duchsPeThresh; };
+				unsigned int getDuchsPeriod(void) { return _duchsPeriod; };
+				bool getUpdatePE(void) { return _updatePE; };
 
 			private:
 				unsigned int _waitLoop(void);
@@ -213,6 +227,7 @@ namespace LibCyberRadio
 				bool setVitaHeader(unsigned int streamId);
 
 			private:
+				unsigned int _frameCount, _pauseCount;
 				/* Radio parameters */
 				std::string _radioHostName;
 				int _radioTcpPort;
@@ -220,17 +235,20 @@ namespace LibCyberRadio
 				unsigned int _ducChannel;
 				std::string _ifname;
 				unsigned int _tenGigIndex;
+				int _dipIndex;
 				unsigned int _ducRate;
 				unsigned int _ducTxChannels;
 				float _ducFreq;
 				float _ducAtten;
-				float _txFreq;
+				double _txFreq;
 				float _txAtten;
 				unsigned int _streamId;
 				bool _config_tx;
 				bool _firstFrame;
 				/* Control objects */
 				TransmitSocket * _txSock;
+				std::vector<TransmitSocket *> _txSockVec;
+				unsigned int _numSock, _currentSockIndex;
 				FlowControlClient * _fcClient;
 				UdpStatusReceiver * _statusRx;
 				struct TxFrame _frame;
@@ -246,6 +264,12 @@ namespace LibCyberRadio
 				unsigned short _dPort;
 				bool _configuring;
 				bool _constructing;
+				bool _running;
+				struct timespec _delayTime;
+				unsigned int _samplesPerFrame;
+				unsigned int _duchsPeriod, _duchsPfThresh, _duchsPeThresh;
+				bool _updatePE;
+				unsigned int _txinvMode;
 
 		};
 

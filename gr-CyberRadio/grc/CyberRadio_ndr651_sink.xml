@@ -1,0 +1,190 @@
+<block>
+  <name>[CyberRadio] NDR651 TXClient</name>
+  <key>CyberRadio_ndr651_sink</key>
+  <category>[CyberRadio]/Sinks</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.ndr651_sink($hostname, $vlen, $debug)
+self.$(id).setDUCParameters($ducIndex, $ducRateIndex, $ducTxChannel)
+self.$(id).setDUCFreq($ducFrequency)
+self.$(id).setDUCAtten($ducAttenuation)
+self.$(id).setEthernetInterface($dataPort, $interfaceName, $ducIndex+65000)
+#if $configTx()
+self.$(id).setTxFreq($txFrequency)
+self.$(id).setTxAtten($txAttenuation)
+#end if
+</make>
+  <callback>setDUCRateIndex($ducRateIndex)</callback>
+  <callback>setDUCFreq($ducFrequency)</callback>
+  <callback>setDUCAtten($ducAttenuation)</callback>
+  <callback>#if $configTx()
+setTxFreq($txFrequency)
+#end if</callback>
+  <callback>#if $configTx()
+setTxAtten($txAttenuation)
+#end if</callback>
+  <callback>pauseDUC($ducPaused)</callback>
+  <callback>setTxInversion($txInversion)</callback>
+  <param>
+    <name>Hostname</name>
+    <key>hostname</key>
+    <value>"ndr651"</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Radio Data Port (1,2)</name>
+    <key>dataPort</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>part</hide>
+    <tab>10GbE</tab>
+  </param>
+  <param>
+    <name>UDP Port</name>
+    <key>udpPort</key>
+    <value>65000</value>
+    <type>int</type>
+    <hide>part</hide>
+    <tab>10GbE</tab>
+  </param>
+  <param>
+    <name>Local Interface Name (e.g. ethX)</name>
+    <key>interfaceName</key>
+    <value>"eth2"</value>
+    <type>string</type>
+    <hide>part</hide>
+    <tab>10GbE</tab>
+  </param>
+  <param>
+    <name>DUC Index</name>
+    <key>ducIndex</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>DUC Rate Index</name>
+    <key>ducRateIndex</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>part</hide>
+    <tab>DUC</tab>
+  </param>
+  <param>
+    <name>DUC Frequency Offset (Hz)</name>
+    <key>ducFrequency</key>
+    <value>0.0</value>
+    <type>float</type>
+    <hide>part</hide>
+    <tab>DUC</tab>
+  </param>
+  <param>
+    <name>DUC Attenuation (dB)</name>
+    <key>ducAttenuation</key>
+    <value>0.0</value>
+    <type>float</type>
+    <hide>part</hide>
+    <tab>DUC</tab>
+  </param>
+  <param>
+    <name>DUC Tx Channel</name>
+    <key>ducTxChannel</key>
+    <value>1</value>
+    <type>int</type>
+    <hide>part</hide>
+    <tab>DUC</tab>
+  </param>
+  <param>
+    <name>DUC Tx Inversion</name>
+    <key>txInversion</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+    <option>
+      <name>No</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Yes</name>
+      <key>True</key>
+    </option>
+    <tab>DUC</tab>
+  </param>
+  <param>
+    <name>DUC Paused</name>
+    <key>ducPaused</key>
+    <value>True</value>
+    <type>bool</type>
+    <hide>part</hide>
+    <option>
+      <name>No</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Yes</name>
+      <key>True</key>
+    </option>
+    <tab>DUC</tab>
+  </param>
+  <param>
+    <name>Configure Tx?</name>
+    <key>configTx</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+    <option>
+      <name>No</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Yes</name>
+      <key>True</key>
+    </option>
+    <tab>RF</tab>
+  </param>
+  <param>
+    <name>RF Frequency (MHz)</name>
+    <key>txFrequency</key>
+    <value>1000.0</value>
+    <type>float</type>
+    <hide>#if $configTx() then 'part' else 'all'#</hide>
+    <tab>RF</tab>
+  </param>
+  <param>
+    <name>RF Attenuation (dB)</name>
+    <key>txAttenuation</key>
+    <value>0</value>
+    <type>float</type>
+    <hide>#if $configTx() then 'part' else 'all'#</hide>
+    <tab>RF</tab>
+  </param>
+  <param>
+    <name>Vector Length</name>
+    <key>vlen</key>
+    <value>1024</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Debug</name>
+    <key>debug</key>
+    <value>True</value>
+    <type>bool</type>
+    <hide>part</hide>
+    <option>
+      <name>No</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Yes</name>
+      <key>True</key>
+    </option>
+  </param>
+  <sink>
+    <name>in</name>
+    <type>complex</type>
+    <vlen>$vlen</vlen>
+  </sink>
+  <sink>
+    <name>freq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+</block>

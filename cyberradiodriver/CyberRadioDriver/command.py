@@ -2,31 +2,42 @@
 ###############################################################
 # \package CyberRadioDriver.command
 # 
-# Provides classes that define hardware commands.
+# \brief Provides classes that define hardware commands.
+#
+# \note This module defines standard behavior only.  To customize
+#     a command class for a particular radio, derive a new
+#     class from the appropriate base class.  It is recommended
+#     that behavior specific to a given radio be placed in the
+#     module that supports that radio.
 #
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2014 CyberRadio Solutions, Inc.  All rights 
-# reserved.
+# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
+#     All rights reserved.
 #
 ###############################################################
 
-import json
-# import ast
-import traceback 
-import string
-import log
+# Imports from other modules in this package
 import configKeys
+import log
+# Imports from external modules
+# Python standard library imports
+import json
+import string
+import traceback 
 
 ##
 # \internal
-# \brief Helper method for dealing with hexadecimal return values from
-#    hardware commands
+# \brief Helper method for dealing with return values from hardware commands
+#    that might be hexadecimal
 # \param value Command return value, as a string
 # \return The command return value, as an integer
-def hex(value):
-    return int(value, 16)
+def maybeHex(value):
+    if value.startswith("0x"):
+        return int(value, 16)
+    else:
+        return int(value, 10)
 
 #----------------------------------------------------------------------------#
 #--  Generic Radio Command Object  ------------------------------------------#
@@ -128,19 +139,24 @@ class _commandBase(log._logger):
             self.mnemonic = self.cmd[:self.cmd.find(" ")]
         else:
             self.cmd = ( "%s%s %s"%(self.mnemonic,"?" if self.query else "",", ".join(self.parameterList),) ).strip()
-            for parmName,parmType,parmOpt,parmDefault in self.queryParameters if self.query else self.setParameters:
-#                 self.logIfVerbose((parmName,parmType,parmOpt,parmDefault,repr(kwargs.get(parmName))))
-                if not kwargs.has_key(parmName):
-                    #self.logIfVerbose(parmName,parmType,parmOpt)
-                    if not parmOpt:
-                        self.log( "MISSING MANDATORY PARAMETER %s" % repr(parmName) )
-                    break
+#             for parmName,parmType,parmOpt,parmDefault in self.queryParameters if self.query else self.setParameters:
+            for parm in self.queryParameters if self.query else self.setParameters:
+                if isinstance(parm, tuple):
+                    parmName,parmType,parmOpt,parmDefault = parm
+    #                 self.logIfVerbose((parmName,parmType,parmOpt,parmDefault,repr(kwargs.get(parmName))))
+                    if not kwargs.has_key(parmName):
+                        #self.logIfVerbose(parmName,parmType,parmOpt)
+                        if not parmOpt:
+                            self.log( "MISSING MANDATORY PARAMETER %s" % repr(parmName) )
+                        break
+                    else:
+                        try:
+                            setattr( self, parmName, parmType(kwargs.get(parmName,parmDefault)) )
+                            self.parameterList.append( format( parmType(kwargs.get(parmName,parmDefault)) ) )
+                        except:
+                            pass
                 else:
-                    try:
-                        setattr( self, parmName, parmType(kwargs.get(parmName)) )
-                        self.parameterList.append( format( parmType(kwargs.get(parmName)) ) )
-                    except:
-                        pass
+                    self.parameterList.append( format( parm ) )
             self.cmd = ( "%s%s %s"%(self.mnemonic,"?" if self.query else "",", ".join(self.parameterList),) ).strip()
         ## A list of strings returned by the radio in response to the command.
         self.rsp = None
@@ -198,7 +214,7 @@ class _commandBase(log._logger):
             elif self.error:
                 self.log( "ERROR DETECTED, %s"%( repr(self.errorInfo), ) )
         except:
-            self.log(traceback.format_exc())
+            self.logIfVerbose(traceback.format_exc())
             self.ok = False
         return self.ok
     
@@ -337,14 +353,19 @@ class _jsonCommandBase(log._logger):
     queryable = True
     ## Timeout value for issuing the command and getting the response back.
     timeout = 10.0
-    ## Argument-parameter map.
+    ## Query parameter map.
     # This is a dictionary that maps a keyword argument supplied in the 
     # configuration dictionary (key) to the appropriate parameter actually 
     # sent in the command (value).
-    # For queries, the mapping is reversed when "unpacking" the command
-    # response.
+    # This mapping is reversed when "unpacking" the command response.
     # If the map is empty, then no mapping is performed.  
-    argParamMap = {} 
+    queryParamMap = {} 
+    ## Set parameter map.
+    # This is a dictionary that maps a keyword argument supplied in the 
+    # configuration dictionary (key) to the appropriate parameter actually 
+    # sent in the command (value).
+    # If the map is empty, then no mapping is performed.  
+    setParamMap = {} 
     
     def __init__(self,*args,**kwargs):
         # Consume keyword arguments "verbose" and "logFile" for logging support
@@ -367,9 +388,12 @@ class _jsonCommandBase(log._logger):
         else:
             self.cmd.update({ "cmd": self.mnemonic, })
             parmDict = {}
+            argParamMap = self.queryParamMap if self.query else self.setParamMap
+            for key in argParamMap:
+                setattr(self, key, None)
             for key in kwargs:
-                if key in self.argParamMap:
-                    parmDict.update({ self.argParamMap[key]: kwargs[key] })
+                if key in argParamMap:
+                    parmDict.update({ argParamMap[key]: kwargs[key] })
                     setattr(self, key, kwargs[key])
             self.cmd.update({ "params": parmDict, })
         #self.logIfVerbose("jsonCommandBase init: cmd=%s" % str(self.cmd))
@@ -414,6 +438,10 @@ class _jsonCommandBase(log._logger):
     #    the command's default timeout.
     # \return True if the command succeeded, False otherwise.
     def send(self,transportFunction,timeout=None):
+        # Sanity check: Don't even bother trying to send the command if
+        # the transport function doesn't exist
+        if transportFunction is None:
+            return False
         try:
             rsp = transportFunction( str(self), timeout if timeout is not None else self.timeout )
             self.addResponse(rsp)
@@ -430,7 +458,7 @@ class _jsonCommandBase(log._logger):
             elif not self.ok:
                 self.log( "SOMETHING WENT WRONG" )
         except:
-            self.log(traceback.format_exc())
+            self.logIfVerbose(traceback.format_exc())
             self.ok = False
         return self.ok
     
@@ -468,18 +496,24 @@ class _jsonCommandBase(log._logger):
                     if self.success:
                         # Translate returned results into attributes/response info
                         # -- Reverse the argument-parameter mapping
-                        revMap = dict( (v,k) for (k,v) in self.argParamMap.iteritems() )
+                        argParamMap = self.queryParamMap if self.query else self.setParamMap
+                        revMap = dict( (v,k) for (k,v) in argParamMap.iteritems() )
                         # -- Map parameter to argument, then make an attribute for it
                         #    and enter the value into the response info dictionary
                         self.responseInfo = {}
                         # Queries return their results in "result"
                         if "result" in rspDict:
-                            for key in rspDict["result"]:
-                                if key in revMap:
-                                    setattr(self, revMap[key], rspDict["result"][key])
-                                    self.responseInfo[revMap[key]] = rspDict["result"][key]
-                            self.successInfo = ", ".join(["%s: %s" % (k,v) for k,v in \
-                                                          rspDict["result"].iteritems()])
+                            # If "result" is a dictionary...
+                            if isinstance(rspDict["result"], dict):
+                                for key in rspDict["result"]:
+                                    if key in revMap:
+                                        setattr(self, revMap[key], rspDict["result"][key])
+                                        self.responseInfo[revMap[key]] = rspDict["result"][key]
+                                self.successInfo = ", ".join(["%s: %s" % (k,v) for k,v in \
+                                                              rspDict["result"].iteritems()])
+                            # ...else "result" is a string
+                            else:
+                                self.responseInfo["result"] = rspDict["result"]
                     self.error = "error" in rspDict
                     if self.error:
                         self.errorInfo = ["%s: %s" % (k,v) for k,v in rspDict["error"].iteritems()]
@@ -510,6 +544,21 @@ class _jsonCommandBase(log._logger):
     def getResponseInfo(self):
         return self.responseInfo
 
+    ## 
+    # \brief Returns the string representation of this object's attributes.
+    #
+    # This is available to derived classes as _SelfDescribingMixin__myRepr().
+    #
+    # \returns The string representation.
+#     def attributeDump(self):
+#         tmp = []
+#         cname = str(self.__class__).replace("<class ","").replace("'","").replace(">","")
+#         cname = cname.replace(self.__module__ + ".","")
+#         for (attr, value) in sorted(self.__dict__.iteritems()):
+#             tmp.append( attr + "=\"" + str(value) + "\"" )
+#         ret = cname + "(" + ",".join(tmp) + ")"
+#         return ret
+            
 
 ##--  Generic Radio Command Object  ------------------------------------------##
 #
@@ -553,6 +602,23 @@ class att(_commandBase):
                         (configKeys.TUNER_ATTENUATION, int, True), \
                         ]
 
+#--  AGP Command  ---------------------------------------------------#
+
+##
+# AGP command.
+#
+class agp(_commandBase):
+    mnemonic = "AGP"
+    setParameters = [   (configKeys.INDEX,int,False,None), \
+                        (configKeys.TUNER_AGP,int,False,0), \
+                        ]
+    queryParameters = [ (configKeys.INDEX,int,True,None), \
+                        ]
+    queryResponseData = [ \
+                        (configKeys.INDEX, int, False), \
+                        (configKeys.TUNER_AGP, int, True), \
+                        ]
+                        
 ##--  Tuner Command  -----------------------------------------------------##
 
 #--  DDC Frequency Commands  ------------------------------------------------#
@@ -583,7 +649,7 @@ class nbfrq(wbfrq):
 # WBDDC configuration command.
 #
 class wbddc(_commandBase):
-    ## This should apply to the NDR304
+    ## This should apply to the NDR470, NDR472, and NDR304
     mnemonic = "WBDDC"
     setParameters = [   (configKeys.INDEX,int,False,None), \
                         (configKeys.DDC_RATE_INDEX,int,False,0), \
@@ -603,12 +669,11 @@ class wbddc(_commandBase):
                         (configKeys.DDC_STREAM_ID, int, True), \
                         ]
 
-
 ##
 # NBDDC configuration command.
 #
 class nbddc(wbddc):
-    ## This should apply to the NDR304
+    ## This should apply to the NDR470, NDR472, and NDR304
     mnemonic = "NBDDC"
     setParameters = [   (configKeys.INDEX,int,False,None), \
                         (configKeys.NBDDC_RF_INDEX,int,False,0), \
@@ -627,30 +692,6 @@ class nbddc(wbddc):
                         (configKeys.DDC_VITA_ENABLE, int, True), \
                         (configKeys.DDC_STREAM_ID, int, True), \
                         ]
-
-##
-# NBDDC configuration command specific to the NDR308.
-#
-class nbddc308(nbddc):
-    ## This is a special version for the NDR308
-    setParameters = [   (configKeys.INDEX,int,False,None), \
-                        (configKeys.DDC_FREQUENCY_OFFSET,int,False,0), \
-                        (configKeys.DDC_RATE_INDEX,int,False,0), \
-                        (configKeys.DDC_UDP_DESTINATION,int,False,0), \
-                        (configKeys.ENABLE,int,False,0), \
-                        (configKeys.DDC_VITA_ENABLE,int,True,None), \
-                        (configKeys.DDC_STREAM_ID,int,True,None), \
-                        ]
-    queryResponseData = [ \
-                        (configKeys.INDEX, int, False), \
-                        (configKeys.DDC_FREQUENCY_OFFSET, int, True), \
-                        (configKeys.DDC_RATE_INDEX, int, True), \
-                        (configKeys.DDC_UDP_DESTINATION, int, True), \
-                        (configKeys.ENABLE, int, True), \
-                        (configKeys.DDC_VITA_ENABLE, int, True), \
-                        (configKeys.DDC_STREAM_ID, int, True), \
-                        ]
-
 
 ##
 # NBDDC source select.
@@ -713,32 +754,6 @@ class dip(_commandBase):
                         ]
     
 ##
-# Destination IP address configuration command specific to the NDR308.
-#
-# Supports radios which have dedicated Gigabit Ethernet ports.
-class dip308(_commandBase):
-    mnemonic="DIP"
-    setParameters = [ \
-                        (configKeys.GIGE_PORT_INDEX, int, True, None), \
-                        (configKeys.GIGE_DIP_INDEX, int, True, None), \
-                        (configKeys.GIGE_IP_ADDR, str, True, None), \
-                        (configKeys.GIGE_MAC_ADDR, str, True, None), \
-                        (configKeys.GIGE_SOURCE_PORT, int, True, None), \
-                        (configKeys.GIGE_DEST_PORT, int, True, None), \
-                        ]
-    queryParameters = [ (configKeys.GIGE_PORT_INDEX, int, True, None), \
-                        (configKeys.GIGE_DIP_INDEX, int, True, None), \
-                        ]
-    queryResponseData = [ \
-                        (configKeys.GIGE_PORT_INDEX, int, False), \
-                        (configKeys.GIGE_DIP_INDEX, int, False), \
-                        (configKeys.GIGE_IP_ADDR, str, False), \
-                        (configKeys.GIGE_MAC_ADDR, str, False), \
-                        (configKeys.GIGE_SOURCE_PORT, int, False), \
-                        (configKeys.GIGE_DEST_PORT, int, False), \
-                        ]
-    
-##
 # Destination MAC address configuration command.
 #
 # Supports radios which do not have dedicated Gigabit Ethernet ports.
@@ -760,22 +775,7 @@ class sip(_commandBase):
                         (configKeys.IP_SOURCE, str, False), \
                         ]
     
-##
-# Source IP address configuration command specific to the NDR308.
-#
-# Supports radios which have dedicated Gigabit Ethernet ports.
-class sip308(_commandBase):
-    mnemonic="SIP"
-    setParameters = [ (configKeys.GIGE_PORT_INDEX, int, True, None), \
-                      (configKeys.IP_SOURCE, str, True, None), \
-                     ]
-    queryParameters = [ (configKeys.GIGE_PORT_INDEX, int, True, None), \
-                        ]
-    queryResponseData = [ \
-                        (configKeys.GIGE_PORT_INDEX, int, False), \
-                        (configKeys.IP_SOURCE, str, False), \
-                        ]
-    
+
 ##
 # Flow control configuration command.
 #
@@ -877,7 +877,12 @@ class idn(_commandBase):
                 elif any([q in rspLine.upper() for q in ["OK", "ERROR", "TIMEOUT", "EXCEPTION"]]):
                     continue
                 # Start response parsing
-                if "S/N" in rspLine:
+                # -- NDR301 combines model and serial number in a single-line response
+                if "-SN" in rspLine:
+                    vec = rspLine.split("-SN")
+                    self.responseInfo["model"] = vec[0]
+                    self.responseInfo["serialNumber"] = vec[1]
+                elif "S/N" in rspLine:
                     self.responseInfo["serialNumber"] = rspLine.replace("S/N ", "")
                 else:
                     self.responseInfo["model"] = rspLine.replace(" Receiver", "")
@@ -924,6 +929,10 @@ class ver(_commandBase):
                     self.responseInfo["firmwareDate"] = rspLine[rspLine.find("Date:")+5:].strip()
                 if "Reference Code Version: " in rspLine:
                     self.responseInfo["referenceVersion"] = rspLine[rspLine.find("Version:"):].split(" ")[1]
+                if "NDR301 Version: " in rspLine:
+                    self.responseInfo["softwareVersion"] = rspLine.replace("NDR301 Version: ", "")
+                if "FPGA Revision: " in rspLine:
+                    self.responseInfo["firmwareVersion"] = rspLine.replace("FPGA Revision: ", "")
     
     
 #--  Hardware Revision Command  ---------------------------------------------#
@@ -973,8 +982,12 @@ class hrev(_commandBase):
                     self.responseInfo["model"] = rspLine.replace("Model: ", "").replace(" Receiver", "")
                 elif "S/N: " in rspLine and not self.responseInfo.has_key("serialNumber"):
                     self.responseInfo["serialNumber"] = rspLine.replace("S/N: ", "")
+                elif "Unit Serial Number: " in rspLine and not self.responseInfo.has_key("serialNumber"):
+                    self.responseInfo["serialNumber"] = rspLine.replace("Unit Serial Number: ", "")
                 elif "Serial: " in rspLine and not self.responseInfo.has_key("serialNumber"):
                     self.responseInfo["serialNumber"] = rspLine.replace("Serial: ", "")
+                elif "Unit Revision: " in rspLine and not self.responseInfo.has_key("unitRevision"):
+                    self.responseInfo["unitRevision"] = rspLine.replace("Unit Revision: ", "")
                 elif "Revision: " in rspLine and not self.responseInfo.has_key("unitRevision"):
                     self.responseInfo["unitRevision"] = rspLine.replace("Revision: ", "")
                 else:
@@ -1063,7 +1076,7 @@ class rbyp(_commandBase):
 #
 class rtv(_commandBase):
     mnemonic="RTV"
-    setParameters = [ (configKeys.REF_TUNING_VOLT,int,False,0) ]
+    setParameters = [ (configKeys.REF_TUNING_VOLT, int, False, 0) ]
     queryResponseData = [ (configKeys.REF_TUNING_VOLT, int, False), \
                         ]
 
@@ -1095,20 +1108,6 @@ class fif(_commandBase):
                         ]
     queryResponseData = [ \
                         (configKeys.INDEX, int, False), \
-                        (configKeys.TUNER_FILTER, int, True), \
-                        ]
-    
-##
-# Tuner filter setting command specific to the NDR304.
-#
-class fif304(_commandBase):
-    mnemonic = "FIF"
-    setParameters = [   (configKeys.INDEX,int,False,None), \
-                        (configKeys.TUNER_FILTER,int,False,0), \
-                        ]
-    queryParameters = [ (configKeys.INDEX,int,True,None), \
-                        ]
-    queryResponseData = [ \
                         (configKeys.TUNER_FILTER, int, True), \
                         ]
     
@@ -1178,90 +1177,13 @@ class stat(_commandBase):
                                     self.responseInfo["statText"].append(self.statTextValues.get(mask))
                         break
         except:
-            self.log(traceback.format_exc())
+            self.logIfVerbose(traceback.format_exc())
             self.responseInfo = None
         return self.responseInfo
 
 
 # Radio-specific STAT commands.  Each radio also has a class associated with
 # it that provides the meanings for the bits in its status bitmask.
-
-##
-# Status command bitmask values for the NDR308.
-#
-# Static member "text" is a dictionary where the keys are bits in 
-# the status bitmask, and the values are text strings indicating what those 
-# bits mean when set.
-#
-class stat308Values():
-    RF_TUNER_UNLOCKED = 0x01
-    ADC_OVERFLOW = 0x02
-    REF_UNLOCKED = 0x04
-    POWER_FAILURE = 0x08
-    OVER_TEMP = 0x10
-    RT_TIMER = 0x20
-    GPS_FIX = 0x40
-    TUNER_OFF_OVER_TEMP = 0x80
-    REF_PIC = 0x100
-    FPGA_ERR = 0x200
-    MGT_REF = 0x400
-    UTC_COR = 0x800
-    text = {
-            RF_TUNER_UNLOCKED: "RF Tuner LOs Unlocked (check TSTAT?)", \
-            ADC_OVERFLOW: "ADC Overflow", \
-            REF_UNLOCKED: "Reference not yet locked", \
-            POWER_FAILURE: "Power failure", \
-            OVER_TEMP: "Over-temp condition", \
-            RT_TIMER: "Retune timer not timed-out", \
-            GPS_FIX: "GPS has no valid fix", \
-            TUNER_OFF_OVER_TEMP: "Tuners turned off due to high-temp condition", \
-            REF_PIC: "Reference microcontroller has entered an inoperable state", \
-            FPGA_ERR: "FPGA firmware is not compatible with the TunerControl software", \
-            MGT_REF: "FPGA firmware and the digital board revision and MGT reference " \
-                     "oscillator frequency are not compatible", \
-            UTC_COR: "UTC correction value for leap seconds has not yet been received " \
-                     "by the GPS module", \
-            }
-
-
-##
-# Status command specific to the NDR308.
-#
-# \copydetails stat
-class stat308(stat):
-    statTextValues = stat308Values.text
-
-
-##
-# Status command bitmask values for the NDR304.
-#
-# \copydetails stat308Values
-class stat304Values():
-    RF_TUNER_UNLOCKED = 0x01
-    ADC_OVERFLOW = 0x02
-    REF_UNLOCKED = 0x04
-    POWER_FAILURE = 0x08
-    OVER_TEMP = 0x10
-    RT_TIMER = 0x20
-#    GPS_UNLOCK = 0x40
-    text = {
-            RF_TUNER_UNLOCKED: "RF Tuner LOs Unlocked (check TSTAT?)", \
-            ADC_OVERFLOW: "ADC Overflow", \
-            REF_UNLOCKED: "Reference not yet locked", \
-            POWER_FAILURE: "Power failure", \
-            OVER_TEMP: "Over-temp condition", \
-            RT_TIMER: "Retune timer not timed-out", \
-#            GPS_UNLOCK: "GPS time & position unlocked", \
-            }
-
-
-##
-# Status command specific to the NDR304.
-#
-# \copydetails stat
-class stat304(stat):
-    statTextValues = stat304Values.text
-
 
 #--  TSTAT Commands  --------------------------------------------------------#
 
@@ -1274,117 +1196,6 @@ class tstat(stat):
     mnemonic = "TSTAT"
 
 # Radio-specific TSTAT commands.
-
-##
-# Tuner RF status command bitmask values for the NDR308.
-#
-# \copydetails stat308Values
-class tstat308Values():
-    RF1_LO1_UNLOCKED = 0x1
-    RF1_LO2_UNLOCKED = 0x2
-    RF2_LO1_UNLOCKED = 0x4
-    RF2_LO2_UNLOCKED = 0x8
-    RF3_LO1_UNLOCKED = 0x10
-    RF3_LO2_UNLOCKED = 0x20
-    RF4_LO1_UNLOCKED = 0x40
-    RF4_LO2_UNLOCKED = 0x80
-    TQ1_COH_LO1_UNLOCKED = 0x100
-    TQ1_COH_LO2_UNLOCKED = 0x200
-    TQ1_100MHZ_REF_UNLOCKED = 0x400
-    
-    RF5_LO1_UNLOCKED = 0x1000
-    RF5_LO2_UNLOCKED = 0x2000
-    RF6_LO1_UNLOCKED = 0x4000
-    RF6_LO2_UNLOCKED = 0x8000
-    RF7_LO1_UNLOCKED = 0x10000
-    RF7_LO2_UNLOCKED = 0x20000
-    RF8_LO1_UNLOCKED = 0x40000
-    RF8_LO2_UNLOCKED = 0x80000
-    TQ2_COH_LO1_UNLOCKED     = 0x100000
-    TQ2_COH_LO2_UNLOCKED     = 0x200000
-    TQ2_100MHZ_REF_UNLOCKED = 0x400000
-    
-    text = {
-        RF1_LO1_UNLOCKED: "RF1 LO1 Unlocked", \
-        RF1_LO2_UNLOCKED: "RF1 LO2 Unlocked", \
-        RF2_LO1_UNLOCKED: "RF2 LO1 Unlocked", \
-        RF2_LO2_UNLOCKED: "RF2 LO2 Unlocked", \
-        RF3_LO1_UNLOCKED: "RF3 LO1 Unlocked", \
-        RF3_LO2_UNLOCKED: "RF3 LO2 Unlocked", \
-        RF4_LO1_UNLOCKED: "RF4 LO1 Unlocked", \
-        RF4_LO2_UNLOCKED: "RF5 LO2 Unlocked", \
-        TQ1_COH_LO1_UNLOCKED: "Tuner Quad 1 LO1 Unlocked", \
-        TQ1_COH_LO2_UNLOCKED: "Tuner Quad 1 LO2 Unlocked", \
-        TQ1_100MHZ_REF_UNLOCKED: "Tuner Quad 1 100MHz Unlocked", \
-        RF5_LO1_UNLOCKED: "RF5 LO1 Unlocked", \
-        RF5_LO2_UNLOCKED: "RF5 LO2 Unlocked", \
-        RF6_LO1_UNLOCKED: "RF6 LO1 Unlocked", \
-        RF6_LO2_UNLOCKED: "RF6 LO2 Unlocked", \
-        RF7_LO1_UNLOCKED: "RF7 LO1 Unlocked", \
-        RF7_LO2_UNLOCKED: "RF7 LO2 Unlocked", \
-        RF8_LO1_UNLOCKED: "RF8 LO1 Unlocked", \
-        RF8_LO2_UNLOCKED: "RF8 LO2 Unlocked", \
-        TQ2_COH_LO1_UNLOCKED: "Tuner Quad 2 LO1 Unlocked", \
-        TQ2_COH_LO2_UNLOCKED: "Tuner Quad 2 LO2 Unlocked", \
-        TQ2_100MHZ_REF_UNLOCKED: "Tuner Quad 1 100MHz Unlocked", \
-        }
-
-
-##
-# Tuner RF status command specific to the NDR308.
-#
-# \copydetails tstat
-class tstat308(tstat):
-    statTextValues = tstat308Values.text
-
-
-##
-# Tuner RF status command bitmask values for the NDR304.
-#
-# \copydetails stat308Values
-class tstat304Values():
-    REFERENCE_UNLOCK = 0x4000
-    COHERENT_LO2_UNLOCK = 0x2000
-    COHERENT_LO1_UNLOCK = 0x1000
-    RF_CHANNEL_6_LO1_UNLOCK = 0x800
-    RF_CHANNEL_6_LO2_UNLOCK = 0x400
-    RF_CHANNEL_5_LO1_UNLOCK = 0x200
-    RF_CHANNEL_5_LO2_UNLOCK = 0x100
-    RF_CHANNEL_4_LO1_UNLOCK = 0x80
-    RF_CHANNEL_4_LO2_UNLOCK = 0x40
-    RF_CHANNEL_3_LO1_UNLOCK = 0x20
-    RF_CHANNEL_3_LO2_UNLOCK = 0x10
-    RF_CHANNEL_2_LO1_UNLOCK = 0x8
-    RF_CHANNEL_2_LO2_UNLOCK = 0x4
-    RF_CHANNEL_1_LO1_UNLOCK = 0x2
-    RF_CHANNEL_1_LO2_UNLOCK = 0x1
-    
-    text = {
-        REFERENCE_UNLOCK: "100MHz Reference unlock", \
-        COHERENT_LO2_UNLOCK: "Coherent LO2 unlock", \
-        COHERENT_LO1_UNLOCK: "Coherent LO1 unlock", \
-        RF_CHANNEL_6_LO1_UNLOCK: "RF Channel 6, LO1 unlock", \
-        RF_CHANNEL_6_LO2_UNLOCK: "RF Channel 6, LO2 unlock", \
-        RF_CHANNEL_5_LO1_UNLOCK: "RF Channel 5, LO1 unlock", \
-        RF_CHANNEL_5_LO2_UNLOCK: "RF Channel 5, LO2 unlock", \
-        RF_CHANNEL_4_LO1_UNLOCK: "RF Channel 4, LO1 unlock", \
-        RF_CHANNEL_4_LO2_UNLOCK: "RF Channel 4, LO2 unlock", \
-        RF_CHANNEL_3_LO1_UNLOCK: "RF Channel 3, LO1 unlock", \
-        RF_CHANNEL_3_LO2_UNLOCK: "RF Channel 3, LO2 unlock", \
-        RF_CHANNEL_2_LO1_UNLOCK: "RF Channel 2, LO1 unlock", \
-        RF_CHANNEL_2_LO2_UNLOCK: "RF Channel 2, LO2 unlock", \
-        RF_CHANNEL_1_LO1_UNLOCK: "RF Channel 1, LO1 unlock", \
-        RF_CHANNEL_1_LO2_UNLOCK: "RF Channel 1, LO2 unlock", \
-        }
-
-
-##
-# Tuner RF status command specific to the NDR304.
-#
-# \copydetails tstat
-class tstat304(tstat):
-    statTextValues = tstat304Values.text
-
 
 ##
 # Temperature query command.
@@ -1412,7 +1223,7 @@ class gpio_static(_commandBase):
                         ]
     queryParameters = [ ]
     queryResponseData = [ \
-                        (configKeys.GPIO_VALUE, hex, False), \
+                        (configKeys.GPIO_VALUE, maybeHex, False), \
                         ]
 
 ##
@@ -1430,7 +1241,7 @@ class gpio_sequence(_commandBase):
                         ]
     queryResponseData = [ \
                         (configKeys.INDEX, int, False), \
-                        (configKeys.GPIO_VALUE, hex, False), \
+                        (configKeys.GPIO_VALUE, maybeHex, False), \
                         (configKeys.GPIO_DURATION, int, True), \
                         (configKeys.GPIO_LOOP, int, True), \
                         ]
@@ -1459,13 +1270,13 @@ class txf(_commandBase):
 class txa(_commandBase):
     mnemonic = "TXA"
     setParameters = [   (configKeys.TX_INDEX,int,False,None), \
-                        (configKeys.TX_ATTENUATION,int,False,0), \
+                        (configKeys.TX_ATTENUATION,float,False,0), \
                         ]
     queryParameters = [ (configKeys.TX_INDEX,int,True,None), \
                         ]
     queryResponseData = [ \
                         (configKeys.TX_INDEX, int, False), \
-                        (configKeys.TX_ATTENUATION, int, True), \
+                        (configKeys.TX_ATTENUATION, float, True), \
                         ]
     
 ##
@@ -1715,6 +1526,56 @@ class nbge(_commandBase):
     queryResponseData = [ \
                         (configKeys.INDEX, int, False), \
                         (configKeys.ENABLE, int, True), \
+                        ]
+
+#--  DUC Group Configuration Commands  --------------------------------------------#
+
+##
+# DUC group configuration command.
+#
+class ducg(_commandBase):
+    mnemonic = "DUCG"
+    setParameters = [   (configKeys.INDEX, int, False, None), \
+                        (configKeys.DUC_GROUP_MEMBER, int, False, 0), \
+                        (configKeys.ENABLE, int, False, 0), \
+                        ]
+    queryParameters = [ (configKeys.INDEX,int,True,None), \
+                        (configKeys.DUC_GROUP_MEMBER,int,True,None), \
+                        ]
+    queryResponseData = [ \
+                        (configKeys.INDEX, int, False), \
+                        (configKeys.DUC_GROUP_MEMBER, int, True), \
+                        (configKeys.ENABLE, int, True), \
+                        ]
+
+##
+# DUC group enable command.
+#
+class ducge(_commandBase):
+    mnemonic = "DUCGE"
+    setParameters = [   (configKeys.INDEX, int, False, None), \
+                        (configKeys.ENABLE, int, False, 0), \
+                        ]
+    queryParameters = [ (configKeys.INDEX,int,True,None), \
+                        ]
+    queryResponseData = [ \
+                        (configKeys.INDEX, int, False), \
+                        (configKeys.ENABLE, int, True), \
+                        ]
+
+
+#--  ADC Configuration Commands  --------------------------------------------#
+
+##
+# ADC sample rate mode command.
+#
+class adcsr(_commandBase):
+    mnemonic = "ADCSR"
+    setParameters = [   (configKeys.ADC_RATE_MODE, int, False, None), \
+                        ]
+    queryParameters = [ ]
+    queryResponseData = [ \
+                        (configKeys.ADC_RATE_MODE, int, True), \
                         ]
 
 

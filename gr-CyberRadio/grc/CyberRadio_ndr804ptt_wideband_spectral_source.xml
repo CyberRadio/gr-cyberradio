@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] NDR804-PTT WB Spectral Source</name>
+  <key>CyberRadio_ndr804ptt_wideband_spectral_source</key>
+  <category>[CyberRadio]/Radio Sources</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.ndr804ptt_wideband_spectral_source(
+      radioParam=$radioParam,
+      index=$index, 
+      enable=$enable, 
+      rate=$rate,
+      rfFreq=$rfFreq,
+      rfAtten=$rfAtten,
+      rfFilter=$rfFilter,
+      radioInterface=$radioInterface,
+      dipIndex=$dipIndex,
+      localInterface=$localInterface,
+      udpPort=$udpPort,
+      iirAvgGain=$iirAvgGain,
+      otherDdcArgs=$otherDdcArgs,
+      otherTunerArgs=$otherTunerArgs,
+       )</make>
+  <callback>set_dipIndex($dipIndex)</callback>
+  <callback>set_iirAvgGain($iirAvgGain)</callback>
+  <callback>set_enable($enable)</callback>
+  <callback>set_localInterface($localInterface)</callback>
+  <callback>set_otherDdcArgs($otherDdcArgs)</callback>
+  <callback>set_otherTunerArgs($otherTunerArgs)</callback>
+  <callback>set_radioInterface($radioInterface)</callback>
+  <callback>set_radioParam($radioParam)</callback>
+  <callback>set_rate($rate)</callback>
+  <callback>set_rfAtten($rfAtten)</callback>
+  <callback>set_rfFilter($rfFilter)</callback>
+  <callback>set_rfFreq($rfFreq)</callback>
+  <callback>set_udpPort($udpPort)</callback>
+  <param>
+    <name>Radio Param Dict</name>
+    <key>radioParam</key>
+    <value>{"type":"ndr804-ptt", "host":"ndr308", "port":8617, "obj":None}</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Tuner/DDC Index</name>
+    <key>index</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Enable</name>
+    <key>enable</key>
+    <value>True</value>
+    <type>bool</type>
+  </param>
+  <param>
+    <name>Spectral Rate (0=Full, 1=100Hz, 2=10Hz)</name>
+    <key>rate</key>
+    <value>2</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>RF Freq (MHz)</name>
+    <key>rfFreq</key>
+    <value>1000</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>RF Attenuation (dB)</name>
+    <key>rfAtten</key>
+    <value>0</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>RF Filter</name>
+    <key>rfFilter</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Radio Ethernet Interface Index</name>
+    <key>radioInterface</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>DIP Index</name>
+    <key>dipIndex</key>
+    <value>-1</value>
+    <type>int</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Local Ethernet Interface</name>
+    <key>localInterface</key>
+    <value>"eth6"</value>
+    <type>string</type>
+  </param>
+  <param>
+    <name>UDP Port</name>
+    <key>udpPort</key>
+    <value>11000</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>IIR Avg. Gain Exponent (2^-x)</name>
+    <key>iirAvgGain</key>
+    <value>5</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Other DDC Args</name>
+    <key>otherDdcArgs</key>
+    <value>{}</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Other Tuner Args</name>
+    <key>otherTunerArgs</key>
+    <value>{}</value>
+    <type>raw</type>
+    <hide>part</hide>
+  </param>
+  <sink>
+    <name>rfFreq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  <source>
+    <name>rfFreq</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+  <source>
+    <name>Out</name>
+    <type>float</type>
+    <vlen>3200</vlen>
+    <optional>1</optional>
+  </source>
+  <source>
+    <name>AVG</name>
+    <type>float</type>
+    <vlen>3200</vlen>
+    <optional>1</optional>
+  </source>
+
+</block>

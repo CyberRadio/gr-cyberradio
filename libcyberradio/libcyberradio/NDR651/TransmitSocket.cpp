@@ -101,7 +101,7 @@ namespace LibCyberRadio
 			/* 
 			 * Set the "resuse address" flag
 			 */
-			rv = setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(int));
+			//~ rv = setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(int));
 			
 			/*
 			 * build the server's Internet address
