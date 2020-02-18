@@ -67,7 +67,8 @@ class ndr651_tx(_tx):
     _name = "TX(NDR651)"
     numToneGen = 2
     toneGenType = ndr651_cwToneGen
-
+    attRange = (0.0,16.0)
+    attRes = 0.5
 
 ##
 # WBDUC component class for the NDR651.
@@ -319,6 +320,7 @@ class ndr651(ndr308):
     numTunerBoards = 1
     numWbddc = 2
     tunerType = ndr651_tuner
+    tunerIndexBase = 1
     numGigEDipEntries = 32
     numNbddc = 16
     wbddcType = ndr651_wbddc

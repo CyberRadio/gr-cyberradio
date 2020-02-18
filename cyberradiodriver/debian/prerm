@@ -1,0 +1,15 @@
+#!/bin/bash
+#########################################################
+# prerm
+#
+# Script that is executed before the Debian package is 
+# uninstalled
+#
+# Original Author: DA
+# Copyright: (c) 2018 CyberRadio Solutions, Inc.  All rights
+#     reserved.
+#
+#########################################################
+
+# Remove compiled Python artifacts.
+find /usr/lib/python2.7/dist-packages/CyberRadioDriver -name "*.pyc" | xargs rm -f

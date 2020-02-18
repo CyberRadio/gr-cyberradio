@@ -32,6 +32,7 @@ class ndr301_ifSpec(_ifSpec):
     payloadSizeWords = 2048
     tailSizeWords = 1
     byteOrder = "little"
+    iqSwapped = True
 
 
 ##
@@ -146,7 +147,7 @@ class smac301(_commandBase):
 #
 class ndr301_tuner(_tuner):
     _name = "Tuner(NDR301)"
-    frqRange = (100e6,3200e6)
+    frqRange = (30e6,3200e6)
     frqRes = 1e6
     frqUnits = 1e6
     attRange = (0.0,49.5)
@@ -404,10 +405,10 @@ class ndr301_wbddc(ndr308_wbddc):
     def updateSets(self):
         adc_rate = self.parent.getAdcRate()
 #         self.rateSet[0] = adc_rate
-        self.rateSet[1] = adc_rate / 2
-        for rindex in xrange(2, 7, 1):
+        for rindex in self.rateSet.keys():
             self.rateSet[rindex] = adc_rate / (2**rindex)
             self.bwSet[rindex] = 0.65 * self.rateSet[rindex]
+
 
 # NBDDC component class for the NDR301.
 class ndr301_nbddc(ndr308_nbddc):
@@ -685,7 +686,7 @@ class ndr301_nbddc(ndr308_nbddc):
         # Frequency range
         self.frqRange = (-adc_rate / 4.0, adc_rate / 4.0)
         # Rate set and BW set
-        for rindex in xrange(1, 129, 1):
+        for rindex in self.rateSet.keys():
             self.rateSet[rindex] = adc_rate / (rindex * 64.0)
             self.bwSet[rindex] = 0.75 * self.rateSet[rindex]
 
@@ -719,7 +720,7 @@ class ndr301(_radio):
     numWbddc = 2
     wbddcType = ndr301_wbddc
     wbddcIndexBase = 1
-    numNbddc = 16
+    numNbddc = 8
     nbddcType = ndr301_nbddc
     nbddcIndexBase = 1
     # GigE interfaces: Index 1 is the 1Gig output, 2 is the 10Gig output
@@ -770,10 +771,14 @@ class ndr301(_radio):
     connectionModes = ["tcp", "tty"]
     defaultPort = 10301
     udpDestInfo = "Destination index"
+    vitaEnableOptions = {0: "VITA-49 header disabled",
+                         1: "VITA-49 header enabled, fractional timestamp in picoseconds",
+                         2: "VITA-49 header disabled",
+                         3: "VITA-49 header enabled, fractional timestamp in sample counts",
+                         }
     validConfigurationKeywords = [configKeys.CONFIG_MODE, \
                                   configKeys.REFERENCE_MODE, \
                                   configKeys.FNR_MODE, \
-                                  configKeys.GPS_ENABLE, \
                                   configKeys.REF_TUNING_VOLT, \
                                   configKeys.ADC_RATE_MODE, \
                                  ]
@@ -841,42 +846,43 @@ class ndr301(_radio):
 
     # The following methods override the similarly named class methods so that they 
     # operate on local instance variables.
+    # REMOVING THESE OVERRIDES WILL BREAK EXPECTED FUNCTIONALITY! -- DA
     
-#     # OVERRIDE
-#     def getAdcRate(self):
-#         return self.adcRate
-#      
-#     # OVERRIDE
-#     def getWbddcRateSet(self, index=None):
-#         ret = []
-#         if self.numWbddc > 0:
-#             wbddcIndices = sorted(self.wbddcDict.keys())
-#             if index is None:
-#                 ret = self.wbddcDict[wbddcIndices[0]].rateSet
-#             elif index in wbddcIndices:
-#                 ret = self.wbddcDict[wbddcIndices[index]].rateSet
-#         return ret
-#      
-#     # OVERRIDE
-#     def getWbddcRateList(self, index=None):
-#         rateSet = self.getWbddcRateSet(index)
-#         return [rateSet[q] for q in sorted(rateSet.keys())]
-#      
-#     # OVERRIDE
-#     def getNbddcRateSet(self, index=None):
-#         ret = []
-#         if self.numNbddc > 0:
-#             nbddcIndices = sorted(self.nbddcDict.keys())
-#             if index is None:
-#                 ret = self.nbddcDict[nbddcIndices[0]].rateSet
-#             elif index in nbddcIndices:
-#                 ret = self.nbddcDict[nbddcIndices[index]].rateSet
-#         return ret
-#      
-#     # OVERRIDE
-#     def getNbddcRateList(self, index=None):
-#         rateSet = self.getNbddcRateSet(index)
-#         return [rateSet[q] for q in sorted(rateSet.keys())]
+    # OVERRIDE
+    def getAdcRate(self):
+        return self.adcRate
+
+    # OVERRIDE
+    def getWbddcRateSet(self, index=None):
+        ret = []
+        if self.numWbddc > 0:
+            wbddcIndices = sorted(self.wbddcDict.keys())
+            if index is None:
+                ret = self.wbddcDict[wbddcIndices[0]].rateSet
+            elif index in wbddcIndices:
+                ret = self.wbddcDict[wbddcIndices[index]].rateSet
+        return ret
+      
+    # OVERRIDE
+    def getWbddcRateList(self, index=None):
+        rateSet = self.getWbddcRateSet(index)
+        return [rateSet[q] for q in sorted(rateSet.keys())]
+      
+    # OVERRIDE
+    def getNbddcRateSet(self, index=None):
+        ret = []
+        if self.numNbddc > 0:
+            nbddcIndices = sorted(self.nbddcDict.keys())
+            if index is None:
+                ret = self.nbddcDict[nbddcIndices[0]].rateSet
+            elif index in nbddcIndices:
+                ret = self.nbddcDict[nbddcIndices[index]].rateSet
+        return ret
+      
+    # OVERRIDE
+    def getNbddcRateList(self, index=None):
+        rateSet = self.getNbddcRateSet(index)
+        return [rateSet[q] for q in sorted(rateSet.keys())]
     
 
 

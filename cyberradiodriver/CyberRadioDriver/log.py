@@ -18,6 +18,7 @@
 import json
 import sys
 import time
+#from matplotlib import verbose
 
 ##
 # Base class for objects that produce log output.
@@ -88,4 +89,25 @@ class _logger(object):
     def getVerbose(self):
         return self.verbose
     
+    ##
+    # Sets whether or not the object is in verbose mode.
+    #
+    # \param verbose True if verbose mode is set, False otherwise.
+    def setVerbose(self, verbose):
+        self.verbose = verbose
+        
+    ##
+    # Gets the object's log file.
+    #
+    # \returns The file or file-like object used for logging.
+    def getLogFile(self):
+        return self.logFile
     
+    ##
+    # Sets the object's log file.
+    #
+    # \param logFile The file or file-like object used for logging.  If None,
+    #     disables logging.
+    def setLogFile(self, logFile):
+        self.logFile = logFile
+

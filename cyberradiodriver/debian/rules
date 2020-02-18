@@ -12,6 +12,11 @@
 %:
 	dh $@ --with python2
 
+# Squash auto-build step, since Python distutils installs using setup.py 
+# automatically build during the "install" command, anyway.
+override_dh_auto_build:
+    :
+    
 # To keep the Debian build scripts from complaining about installing
 # things in /usr/local, override dh_usrlocal processing so that it
 # does nothing instead.

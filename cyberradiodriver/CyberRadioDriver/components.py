@@ -55,6 +55,7 @@ def adjustAttenuation(attIn, attRange, attRes, attUnits=1):
 class DDC_DATA_FORMAT():
     IQ = "iq"
     REAL = "real"
+    FFT = "fft"
 
 #----------------------------------------------------------------------------#
 #--  Base Radio Component Object  -------------------------------------------# 
@@ -177,6 +178,8 @@ class _tuner(_base):
     attRange = (0.0,30.0)
     ## Attenuation resolution.
     attRes = 1.0
+    ## ifFilters
+    ifFilters = [0, 1]
     ## Automatic gain control (AGC) supported.
     agc = False
     # Supported commands
@@ -495,6 +498,7 @@ class _ddc(_base):
     ##
     # Gets the list of available DDC rates.
     #
+    # \param index If not None, get the list for the DDC with the given index. 
     # \return A list of DDC rates.
     @classmethod
     def getDdcRates(cls,index=None):
@@ -506,6 +510,7 @@ class _ddc(_base):
     ##
     # Gets the list of available DDC rates.
     #
+    # \param index If not None, get the list for the DDC with the given index. 
     # \return A list of DDC rates.
     @classmethod
     def getDdcRateList(cls,index=None):
@@ -516,13 +521,21 @@ class _ddc(_base):
     
     # EXTENSION
     ##
-    # Gets the list of available DDC rates.
+    # Gets the set of available DDC rates.
     #
-    # \return A list of DDC rates.
+    # \param index If not None, get the set for the DDC with the given index. 
+    # \return A set of DDC rates.  This is a dictionary where the keys are 
+    #    rate indices and the values are the corresponding DDC rates.
     @classmethod
-    def getDdcRateSet(cls, index=None, format=None):
+    def getDdcRateSet(cls, index=None):
         return cls.rateSet
     
+    # EXTENSION
+    ##
+    # Gets the set of available DDC data formats.
+    #
+    # \return A dictionary where the keys are rate indices and the values are 
+    #    the corresponding DDC data formats ("iq" or "real").
     @classmethod
     def getDdcDataFormat(cls,):
         return dict( (i,cls.dataFormat.get(i,DDC_DATA_FORMAT.IQ)) for i in cls.getDdcRateSet().keys() )
@@ -531,7 +544,8 @@ class _ddc(_base):
     ##
     # Gets the list of available DDC bandwidths.
     #
-    # \return A list of DDC rates.
+    # \param index If not None, get the list for the DDC with the given index. 
+    # \return A list of DDC bandwidths.
     @classmethod
     def getDdcBwList(cls,index=None):
         bwDict = cls.getDdcBwSet(index)
@@ -541,9 +555,11 @@ class _ddc(_base):
     
     # EXTENSION
     ##
-    # Gets the list of available DDC bandwidths.
+    # Gets the set of available DDC bandwidths.
     #
-    # \return A list of DDC rates.
+    # \param index If not None, get the set for the DDC with the given index. 
+    # \return A set of DDC rates.  This is a dictionary where the keys are 
+    #    rate indices and the values are the corresponding DDC bandwidths.
     @classmethod
     def getDdcBwSet(cls,index=None):
         return cls.bwSet
@@ -1101,7 +1117,7 @@ class _tx(_base):
         if self.toneGenType is not None:
             self.configuration[configKeys.CONFIG_CW] = {}
             for i in self.toneGenDict:
-                self.configuration[configKeys.CONFIG_CW][i] = self.toneGenDict[i].getConfiguration()
+                self.configuration[configKeys.CONFIG_CW][i] = self.toneGenDict[i].queryConfiguration()
                 self.cmdErrorInfo.extend(self.toneGenDict[i].getLastCommandErrorInfo())
         pass
 

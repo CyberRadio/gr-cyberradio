@@ -418,7 +418,8 @@ class ndr308_nbddc(ndr308_1_nbddc):
 #                             configKeys.DDC_UDP_DESTINATION, 
 #                             configKeys.DDC_VITA_ENABLE, 
 #                             configKeys.DDC_STREAM_ID]:
-                keys = [i[0] for i in self.cfgCmd.queryResponseData]
+                keys = [i[0] for i in self.cfgCmd.queryResponseData \
+                        if i[0] != configKeys.INDEX]
                 for key in keys:
                     self.configuration[key] = rspInfo.get(key, None)
                 freq = rspInfo.get(configKeys.DDC_FREQUENCY_OFFSET, 0)
@@ -585,6 +586,7 @@ class ndr308_ifSpec(_ifSpec):
     payloadSizeWords = 1024
     tailSizeWords = 1
     byteOrder = "little"
+    iqSwapped = True
 
 
 ##
@@ -719,6 +721,7 @@ class ndr308_1(_radio):
     numGigE = 2
     numGigEDipEntries = 64
     tunerType = ndr308_tuner
+    tunerIndexBase = 1
     wbddcType = ndr308_wbddc
     nbddcType = ndr308_1_nbddc
     numWbddcGroups = 4
@@ -938,7 +941,7 @@ class ndr308_1(_radio):
 # \implements CyberRadioDriver.IRadio
 class ndr308(ndr308_1):
     _name = "NDR308"
-    numGigEDipEntries = 128
+    numGigEDipEntries = 64
     numNbddc = 32
     wbddcType = ndr308_wbddc
     nbddcType = ndr308_nbddc
@@ -951,7 +954,7 @@ class ndr308(ndr308_1):
 #
 # This class implements the CyberRadioDriver.IRadio interface.
 #
-# \section ConnectionModes_NDR308 Connection Modes
+# \section ConnectionModes_NDR308_4 Connection Modes
 #
 # "tcp"
 #
@@ -1204,6 +1207,255 @@ class ndr308_ts(ndr308):
     wbddcType = ndr308ts_wbddc
     nbddcType = ndr308ts_nbddc
 
-
+##
+# \brief Radio handler class for the NDR308A.
+#
+# This class implements the CyberRadioDriver.IRadio interface.
+#
+# \section ConnectionModes_NDR308A Connection Modes
+#
+# "tcp"
+#
+# \section RadioConfig_NDR308A Radio Configuration Options
+#
+# \code
+# configDict = {
+#      "configMode": [0, 1],
+#      "referenceMode": [0, 1, 2, 3, 4],
+#      "bypassMode": [0, 1],
+#      "freqNormalization": [0, 1],
+#      "gpsEnable": [0, 1],
+#      "referenceTuningVoltage": [0-65535],
+#      "tunerConfiguration": {
+#            1: {
+#               "frequency": [20000000.0-3000000000.0, step 1000000.0],
+#               "attenuation": [0.0-46.0, step 1.0],
+#               "enable": [0, 1],
+#               "filter": [0, 1],
+#               "timingAdjustment": [-200000 - 200000, step 1],
+#            },
+#         ...8 (repeat for each tuner)
+#      },
+#      "ddcConfiguration": {
+#         "wideband": {
+#              1: {
+#                 "enable": [0, 1],
+#                 "rateIndex": [0, 1, 2],
+#                 "udpDest": [DIP table index],
+#                 "vitaEnable": [0, 1, 2, 3],
+#                 "streamId": [stream ID],
+#                 "dataPort": [1, 2],
+#              },
+#           ...8 (repeat for each WBDDC)
+#         },
+#         "narrowband": {
+#              1: {
+#                 "enable": [0, 1],
+#                 "frequency": [-25600000.0-25600000.0, step 1],
+#                 "rateIndex": [0, 1, 2, 3, 4, 5, 6],
+#                 "udpDest": [DIP table index],
+#                 "vitaEnable": [0, 1, 2, 3],
+#                 "streamId": [stream ID],
+#                 "dataPort": [1, 2],
+#              },
+#           ...16 (repeat for each NBDDC)
+#         },
+#      },
+#      "ddcGroupConfiguration": {
+#         "wideband": {
+#              1: {
+#                 "enable": [0, 1],
+#                 "members": [None, single DDC, or iterable with multiple DDCs],
+#              },
+#           ...4 (repeat for each WBDDC group)
+#         },
+#         "narrowband": {
+#              1: {
+#                 "enable": [0, 1],
+#                 "members": [None, single DDC, or iterable with multiple DDCs],
+#              },
+#           ...8 (repeat for each NBDDC group)
+#         },
+#      },
+#      "ipConfiguration": {
+#            1: {
+#               "sourceIP": [IP address],
+#               "destIP": {
+#                   0: {
+#                      "ipAddr": [IP address],
+#                      "macAddr": [MAC address],
+#                      "sourcePort": [port],
+#                      "destPort": [port],
+#                   },
+#                ...31 (repeat for each DIP table entry)
+#               },
+#               "flowControl": [0, 1],
+#            },
+#         ...2 (repeat for each Gigabit Ethernet port)
+#      },
+# }
+# \endcode
+#
+# \section WbddcRates_NDR308A WBDDC Rate Settings
+#
+# <table>
+# <tr><th>Rate Index</th><th>WBDDC Rate (samples per second)</th></tr>
+# <tr><td>0</td><td>61440000.0</td></tr>
+# <tr><td>1</td><td>30720000.0</td></tr>
+# <tr><td>2</td><td>15360000.0</td></tr>
+# </table>
+#
+# \section NbddcRates_NDR308A NBDDC Rate Settings
+#
+# <table>
+# <tr><th>Rate Index</th><th>NBDDC Rate (samples per second)</th></tr>
+# <tr><td>0</td><td>1920000.0</td></tr>
+# <tr><td>1</td><td>960000.0</td></tr>
+# <tr><td>2</td><td>480000.0</td></tr>
+# <tr><td>3</td><td>180000.0</td></tr>
+# <tr><td>4</td><td>60000.0</td></tr>
+# <tr><td>5</td><td>30000.0</td></tr>
+# <tr><td>6</td><td>15000.0</td></tr>
+# </table>
+#
+# \section VitaEnable_NDR308A VITA 49 Enabling Options
+#
+# <table>
+# <tr><th>VITA Enable Option</th><th>Meaning</th></tr>
+# <tr><td>0</td><td>VITA-49 header disabled</td></tr>
+# <tr><td>1</td><td>VITA-49 header enabled, fractional timestamp in picoseconds</td></tr>
+# <tr><td>2</td><td>VITA-49 header disabled</td></tr>
+# <tr><td>3</td><td>VITA-49 header enabled, fractional timestamp in sample counts</td></tr>
+# </table>
+#
+# \implements CyberRadioDriver.IRadio
+class ndr308a(ndr308):
+    _name = "NDR308A"
+    
+##
+# \brief Radio handler class for the NDR318-TS.
+#
+# This class implements the CyberRadioDriver.IRadio interface.
+#
+# \section ConnectionModes_NDR318-TS Connection Modes
+#
+# "tcp"
+#
+# \section RadioConfig_NDR318-TS Radio Configuration Options
+#
+# \code
+# configDict = {
+#      "configMode": [0, 1],
+#      "referenceMode": [0, 1, 2, 3, 4],
+#      "bypassMode": [0, 1],
+#      "freqNormalization": [0, 1],
+#      "gpsEnable": [0, 1],
+#      "referenceTuningVoltage": [0-65535],
+#      "tunerConfiguration": {
+#            1: {
+#               "frequency": [20000000.0-3000000000.0, step 1000000.0],
+#               "attenuation": [0.0-46.0, step 1.0],
+#               "enable": [0, 1],
+#               "filter": [0, 1],
+#               "timingAdjustment": [-200000 - 200000, step 1],
+#            },
+#         ...8 (repeat for each tuner)
+#      },
+#      "ddcConfiguration": {
+#         "wideband": {
+#              1: {
+#                 "enable": [0, 1],
+#                 "rateIndex": [0, 1, 2],
+#                 "udpDest": [DIP table index],
+#                 "vitaEnable": [0, 1, 2, 3],
+#                 "streamId": [stream ID],
+#                 "dataPort": [1, 2],
+#              },
+#           ...8 (repeat for each WBDDC)
+#         },
+#         "narrowband": {
+#              1: {
+#                 "enable": [0, 1],
+#                 "frequency": [-25600000.0-25600000.0, step 1],
+#                 "rateIndex": [0, 1, 2, 3, 4, 5, 6],
+#                 "udpDest": [DIP table index],
+#                 "vitaEnable": [0, 1, 2, 3],
+#                 "streamId": [stream ID],
+#                 "dataPort": [1, 2],
+#              },
+#           ...16 (repeat for each NBDDC)
+#         },
+#      },
+#      "ddcGroupConfiguration": {
+#         "wideband": {
+#              1: {
+#                 "enable": [0, 1],
+#                 "members": [None, single DDC, or iterable with multiple DDCs],
+#              },
+#           ...4 (repeat for each WBDDC group)
+#         },
+#         "narrowband": {
+#              1: {
+#                 "enable": [0, 1],
+#                 "members": [None, single DDC, or iterable with multiple DDCs],
+#              },
+#           ...8 (repeat for each NBDDC group)
+#         },
+#      },
+#      "ipConfiguration": {
+#            1: {
+#               "sourceIP": [IP address],
+#               "destIP": {
+#                   0: {
+#                      "ipAddr": [IP address],
+#                      "macAddr": [MAC address],
+#                      "sourcePort": [port],
+#                      "destPort": [port],
+#                   },
+#                ...31 (repeat for each DIP table entry)
+#               },
+#               "flowControl": [0, 1],
+#            },
+#         ...2 (repeat for each Gigabit Ethernet port)
+#      },
+# }
+# \endcode
+#
+# \section WbddcRates_NDR318-TS WBDDC Rate Settings
+#
+# <table>
+# <tr><th>Rate Index</th><th>WBDDC Rate (samples per second)</th></tr>
+# <tr><td>0</td><td>61440000.0</td></tr>
+# <tr><td>1</td><td>30720000.0</td></tr>
+# <tr><td>2</td><td>15360000.0</td></tr>
+# </table>
+#
+# \section NbddcRates_NDR318-TS NBDDC Rate Settings
+#
+# <table>
+# <tr><th>Rate Index</th><th>NBDDC Rate (samples per second)</th></tr>
+# <tr><td>0</td><td>1920000.0</td></tr>
+# <tr><td>1</td><td>960000.0</td></tr>
+# <tr><td>2</td><td>480000.0</td></tr>
+# <tr><td>3</td><td>180000.0</td></tr>
+# <tr><td>4</td><td>60000.0</td></tr>
+# <tr><td>5</td><td>30000.0</td></tr>
+# <tr><td>6</td><td>15000.0</td></tr>
+# </table>
+#
+# \section VitaEnable_NDR318-TS VITA 49 Enabling Options
+#
+# <table>
+# <tr><th>VITA Enable Option</th><th>Meaning</th></tr>
+# <tr><td>0</td><td>VITA-49 header disabled</td></tr>
+# <tr><td>1</td><td>VITA-49 header enabled, fractional timestamp in picoseconds</td></tr>
+# <tr><td>2</td><td>VITA-49 header disabled</td></tr>
+# <tr><td>3</td><td>VITA-49 header enabled, fractional timestamp in sample counts</td></tr>
+# </table>
+#
+# \implements CyberRadioDriver.IRadio    
+class ndr318_ts(ndr308a):
+    _name = "NDR318-TS"
+    
 if __name__ == '__main__':
     pass

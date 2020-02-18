@@ -49,6 +49,8 @@ VERINFO_HW = "hardwareVersion"
 CONFIG_MODE = "configMode"
 ## Reference mode.
 REFERENCE_MODE = "referenceMode"
+## Noise State
+NOISE_STATE = "noiseState"
 ## Reference bypass mode.
 BYPASS_MODE = "bypassMode"
 ## Frequency normalization mode.
@@ -95,6 +97,10 @@ CONFIG_WBDUC_GROUP = "wideband"
 CONFIG_TUNER_GROUP = "tunerGroupConfiguration"
 ## ADC sample rate mode.
 ADC_RATE_MODE = "adcRateMode"
+## FPGA state selection.
+FPGA_STATE = "fpgaState"
+## Radio function (mode) selection.
+RADIO_FUNCTION = "function"
 
 #------ Tuner Configuration Keys ----------------------------------------#
 ## Tuner index number.
@@ -270,6 +276,8 @@ DDC_TYPE = "type"
 DDC_TOTAL_REPEAT_PACKETS = "totalRepeatPackets"
 ## DDC active repeat packets
 DDC_ACTIVE_REPEAT_PACKETS = "activeRepeatPackets"
+## DDC group ID
+DDC_GROUP_ID = "groupId"
 
 #------ FFT Stream Configuration Keys ---------------------------------#
 ## FFT Stream index
@@ -282,6 +290,22 @@ FFT_WINDOW = "window"
 FFT_SIZE = "size"
 ## FFT source DDC
 FFT_SOURCE = "source"
+## FFT link number
+FFT_LINK = "link"
+## FFT source MAC address
+FFT_SOURCE_MAC_ADDR = "sourceMacAddr"
+## FFT source IP address
+FFT_SOURCE_IP_ADDR = "sourceIpAddr"
+## FFT source UDP port
+FFT_SOURCE_PORT = "sourcePort"
+## FFT source netmask
+FFT_SOURCE_NETMASK = "sourceNetmask"
+## FFT destination MAC address
+FFT_DEST_MAC_ADDR = "destMacAddr"
+## FFT destination IP address
+FFT_DEST_IP_ADDR = "destIpAddr"
+## FFT destination UDP port
+FFT_DEST_PORT = "destPort"
 
 #------ DUC Configuration Keys ----------------------------------------#
 ## DUC index.
@@ -324,6 +348,7 @@ DDC_GROUP_MEMBER = "member"
 DDC_GROUP_MEMBERS = "members"
 WBDDC_GROUP_MEMBERS = "wbddcMembers"
 NBDDC_GROUP_MEMBERS = "nbddcMembers"
+FFT_GROUP_MEMBERS = "fftMembers"
 
 #------ DUC Group Configuration Keys ----------------------------------------#
 DUC_GROUP_MEMBER = "member"
@@ -554,6 +579,29 @@ STATUS_FASTSCAN_LINK = "fastScanLink"
 STATUS_FASTSCAN_SEC = "fastScanSec"
 ## Number of samples last Fast Scan needed to complete
 STATUS_FASTSCAN_SAMP = "fastScanSamples"
+## Microwave Channel 0 LO1 Status
+STATUS_MW0_LO1 = "mw0lo1"
+## Microwave Channel 1 LO1 Status
+STATUS_MW1_LO1 = "mw1lo1"
+## Microwave LO2 Status
+STATUS_MW_LO2 = "mwlo2"
+## ADC 168 MHz Reference Lock
+STATUS_ADC_168MHZ_REF_LOCK = "adcreflo"
+## ADC 1344 MHz Clock Lock
+STATUS_ADC_1344MHZ_CLK_LOCK = "adcclk"
+## 4000MHZIF_1000MHZ LO LOCK
+STATUS_4000MHZIF_1000MHZ_LO_LOCK = "finaliflo"
+## 650MHZ_1850MHZ_UC LO LOCK
+STATUS_650MHZ_1850MHZ_UC_LO_LOCK = "lowrflo"
+## Microwave LO1 Lock
+STATUS_MICRO_LO1_LOCK = "micro1stlo"
+## Microwave LO2 Lock
+STATUS_MICRO_LO2_LOCK = "micro2ndlo"
+## Final IF Lo Lock
+STATUS_FINAL_IF_LOCK = "finaliflo"
+## Low RF LO
+STATUS_LOW_RF_LOCK = "lowrflo"
+
 
 #--  Reset Type Keys  --------------------------------------------------#
 ## Reset type.

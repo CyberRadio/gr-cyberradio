@@ -43,7 +43,7 @@ def maybeHex(value):
 #--  Generic Radio Command Object  ------------------------------------------#
 
 ##
-# Base hardware command class.
+# \brief Base hardware command class.
 #
 # A radio command object maintains all of the information that it needs to 
 # issue a command to the radio and to parse the response it gets back.  
@@ -105,7 +105,7 @@ class _commandBase(log._logger):
     timeout = 10.0
     
     ##
-    # Constructs a hardware command object.
+    # \brief Constructs a hardware command object.
     #
     # The constructor uses keyword arguments to configure the class.  It 
     # consumes the following keyword arguments:
@@ -180,7 +180,7 @@ class _commandBase(log._logger):
     
     # OVERRIDE
     ##
-    # Writes output to the log.
+    # \brief Writes output to the log.
     #
     # The output sent to the log file will contain information about the object
     # issuing the command and the command itself.
@@ -190,7 +190,7 @@ class _commandBase(log._logger):
         log._logger.log(self, "%s.%s%s :: %s"%(str(self.parent),self.mnemonic,"?" if self.query else "",str(string)))
     
     ##
-    # Sends the command over a connected transport.
+    # \brief Sends the command over a connected transport.
     #
     # \param transportFunction A method called to send the command over a 
     #    transport.
@@ -201,7 +201,9 @@ class _commandBase(log._logger):
         try:
             rsp = transportFunction( str(self), timeout if timeout is not None else self.timeout )
             self.addResponse(rsp)
-            self.parseResponse()
+            # Sanity-check: No point in parsing a response we never received.
+            if self.rsp is not None:
+                self.parseResponse()
             #if self.verbose:
             if False:
                 self.logIfVerbose("\n\t"+"\n\t".join( ( repr(self.cmd), \
@@ -232,7 +234,7 @@ class _commandBase(log._logger):
                     self.success, self.successInfo )
                 
     ##
-    # Adds a command response to the object's internal state.
+    # \brief Adds a command response to the object's internal state.
     #
     # This method checks the returned responses for key strings and sets
     # the object's state variables accordingly.
@@ -259,7 +261,7 @@ class _commandBase(log._logger):
             self.error = True
             
     ##
-    # Parses the command response into the response information dictionary.
+    # \brief Parses the command response into the response information dictionary.
     def parseResponse(self):
         if len(self.queryResponseData) > 0:
             self.responseInfo = {}
@@ -303,7 +305,7 @@ class _commandBase(log._logger):
                             pass
             
     ##
-    # Gets the command response information dictionary.
+    # \brief Gets the command response information dictionary.
     #
     # \return The command response information dictionary.
     def getResponseInfo(self):
@@ -313,7 +315,7 @@ class _commandBase(log._logger):
 #--  Generic Radio Command Object  ------------------------------------------#
 
 ##
-# Generic radio command.
+# \brief Generic radio command.
 #
 # This command class can be used to issue arbitrary commands to the radio
 # hardware, but cannot perform parameter handling.  
@@ -322,7 +324,7 @@ class radio_command(_commandBase):
     pass
 
 ##
-# JSON command configuration class.
+# \brief JSON command configuration class.
 #
 # This class provides a common message ID generation capacity
 # for all JSON commands sent by the driver.  
@@ -337,7 +339,7 @@ class jsonConfig(object):
 
 
 ##
-# Base hardware command class for use with JSON commands.
+# \brief Base hardware command class for use with JSON commands.
 #
 # A radio command object maintains all of the information that it needs to 
 # issue a JSON command to the radio and to parse the JSON response it gets back.  
@@ -430,7 +432,7 @@ class _jsonCommandBase(log._logger):
         log._logger.log(self, "%s.%s :: %s"%(str(self.parent),self.mnemonic,str(string)))
     
     ##
-    # Sends the command over a connected transport.
+    # \brief Sends the command over a connected transport.
     #
     # \param transportFunction A method called to send the command over a 
     #    transport.
@@ -530,7 +532,7 @@ class _jsonCommandBase(log._logger):
             self.errorInfo = ["No command response received"]
                         
     ##
-    # Parses the command response.
+    # \brief Parses the command response.
     #
     # \note For JSON commands, this method does nothing.  The 
     # addResponse() method handles all response parsing. 
@@ -538,7 +540,7 @@ class _jsonCommandBase(log._logger):
         pass
 
     ##
-    # Gets the command response information dictionary.
+    # \brief Gets the command response information dictionary.
     #
     # \return The command response information dictionary.
     def getResponseInfo(self):
@@ -562,7 +564,7 @@ class _jsonCommandBase(log._logger):
 
 ##--  Generic Radio Command Object  ------------------------------------------##
 #
-# This command class can be used to issue arbitrary commands to the radio
+# \brief This command class can be used to issue arbitrary commands to the radio
 # hardware, but cannot perform parameter handling.  
 #
 class json_radio_command(_jsonCommandBase):
@@ -571,7 +573,7 @@ class json_radio_command(_jsonCommandBase):
 #--  Frequency Command  -----------------------------------------------------#
 
 ##
-# Frequency command.
+# \brief Frequency command.
 #
 class frq(_commandBase):
     mnemonic = "FRQ"
@@ -588,7 +590,7 @@ class frq(_commandBase):
 #--  Attenuation Command  ---------------------------------------------------#
 
 ##
-# Attenuation command.
+# \brief Attenuation command.
 #
 class att(_commandBase):
     mnemonic = "ATT"
@@ -605,7 +607,7 @@ class att(_commandBase):
 #--  AGP Command  ---------------------------------------------------#
 
 ##
-# AGP command.
+# \brief AGP command.
 #
 class agp(_commandBase):
     mnemonic = "AGP"
@@ -624,7 +626,7 @@ class agp(_commandBase):
 #--  DDC Frequency Commands  ------------------------------------------------#
 
 ##
-# WBDDC frequency offset command.
+# \brief WBDDC frequency offset command.
 #
 class wbfrq(_commandBase):
     mnemonic = "WBFRQ"
@@ -638,7 +640,7 @@ class wbfrq(_commandBase):
                         ]
 
 ##
-# NBDDC frequency offset command.
+# \brief NBDDC frequency offset command.
 #
 class nbfrq(wbfrq):
     mnemonic = "NBFRQ"
@@ -646,7 +648,7 @@ class nbfrq(wbfrq):
 #--  DDC Configuration Commands  --------------------------------------------#
 
 ##
-# WBDDC configuration command.
+# \brief WBDDC configuration command.
 #
 class wbddc(_commandBase):
     ## This should apply to the NDR470, NDR472, and NDR304
@@ -670,7 +672,7 @@ class wbddc(_commandBase):
                         ]
 
 ##
-# NBDDC configuration command.
+# \brief NBDDC configuration command.
 #
 class nbddc(wbddc):
     ## This should apply to the NDR470, NDR472, and NDR304
@@ -694,7 +696,22 @@ class nbddc(wbddc):
                         ]
 
 ##
-# NBDDC source select.
+# \brief WBDDC source select.
+#
+class wbss(_commandBase):
+    mnemonic="WBSS"
+    setParameters = [   (configKeys.INDEX,int,False,None), \
+                        (configKeys.NBDDC_RF_INDEX,int,True,None), \
+                        ]
+    queryParameters = [ (configKeys.INDEX,int,True,None), \
+                        ]
+    queryResponseData = [ \
+                        (configKeys.INDEX, int, False), \
+                        (configKeys.NBDDC_RF_INDEX, int, True), \
+                        ]
+
+##
+# \brief NBDDC source select.
 #
 class nbss(_commandBase):
     mnemonic="NBSS"
@@ -709,7 +726,7 @@ class nbss(_commandBase):
                         ]
 
 ##
-# WBDDC data port select.
+# \brief WBDDC data port select.
 #
 class wbdp(_commandBase):
     mnemonic="WBDP"
@@ -725,7 +742,7 @@ class wbdp(_commandBase):
 
 
 ##
-# NBDDC data port select.
+# \brief NBDDC data port select.
 #
 class nbdp(_commandBase):
     mnemonic="NBDP"
@@ -743,7 +760,7 @@ class nbdp(_commandBase):
 #--  Networking Commands  ---------------------------------------------------#
 
 ##
-# Destination IP address configuration command.
+# \brief Destination IP address configuration command.
 #
 # Supports radios which do not have dedicated Gigabit Ethernet ports.
 class dip(_commandBase):
@@ -754,7 +771,7 @@ class dip(_commandBase):
                         ]
     
 ##
-# Destination MAC address configuration command.
+# \brief Destination MAC address configuration command.
 #
 # Supports radios which do not have dedicated Gigabit Ethernet ports.
 class dmac(_commandBase):
@@ -765,7 +782,7 @@ class dmac(_commandBase):
                         ]
 
 ##
-# Source IP address configuration command.
+# \brief Source IP address configuration command.
 #
 # Supports radios which do not have dedicated Gigabit Ethernet ports.
 class sip(_commandBase):
@@ -777,7 +794,7 @@ class sip(_commandBase):
     
 
 ##
-# Flow control configuration command.
+# \brief Flow control configuration command.
 #
 # Supports radios which have dedicated Gigabit Ethernet ports.
 class tgfc(_commandBase):
@@ -793,7 +810,7 @@ class tgfc(_commandBase):
                         ]
     
 ##
-# Source MAC address configuration command.
+# \brief Source MAC address configuration command.
 #
 # Supports radios which do not have dedicated Gigabit Ethernet ports.
 class smac(_commandBase):
@@ -807,7 +824,7 @@ class smac(_commandBase):
 #--  GPS/Time Stuff  --------------------------------------------------------#
 
 ##
-# Pulse-per-second (PPS) command.
+# \brief Pulse-per-second (PPS) command.
 #
 class pps(_commandBase):
     mnemonic="PPS"
@@ -815,7 +832,7 @@ class pps(_commandBase):
     timeout=4
     
 ##
-# UTC time command.
+# \brief UTC time command.
 #
 class utc(_commandBase):
     mnemonic="UTC"
@@ -825,7 +842,7 @@ class utc(_commandBase):
                         ]
 
 ##
-# GPS enable command.
+# \brief GPS enable command.
 #
 class gps(_commandBase):
     mnemonic="GPS"
@@ -834,7 +851,7 @@ class gps(_commandBase):
                         ]
 
 ##
-# GPS position query command.
+# \brief GPS position query command.
 #
 class gpos(_commandBase):
     mnemonic="GPOS"
@@ -848,7 +865,7 @@ class gpos(_commandBase):
 #--  Identity Command  ------------------------------------------------------#
 
 ##
-# Identity command.
+# \brief Identity command.
 #
 # This command response differs per radio.
 #
@@ -891,7 +908,7 @@ class idn(_commandBase):
 #--  Software Version Command  ----------------------------------------------#
 
 ##
-# Software version command.
+# \brief Software version command.
 #
 # This command response differs per radio.
 #
@@ -931,6 +948,9 @@ class ver(_commandBase):
                     self.responseInfo["referenceVersion"] = rspLine[rspLine.find("Version:"):].split(" ")[1]
                 if "NDR301 Version: " in rspLine:
                     self.responseInfo["softwareVersion"] = rspLine.replace("NDR301 Version: ", "")
+                if "NDR301PTT Version: " in rspLine:
+                    self.responseInfo["model"] = "NDR301PTT"
+                    self.responseInfo["softwareVersion"] = rspLine.replace("NDR301PTT Version: ", "")
                 if "FPGA Revision: " in rspLine:
                     self.responseInfo["firmwareVersion"] = rspLine.replace("FPGA Revision: ", "")
     
@@ -938,7 +958,7 @@ class ver(_commandBase):
 #--  Hardware Revision Command  ---------------------------------------------#
 
 ##
-# Hardware revision command.
+# \brief Hardware revision command.
 #
 # This command response differs per radio.
 #
@@ -1001,7 +1021,7 @@ class hrev(_commandBase):
 #--  Timing Adjustment Command  ---------------------------------------------#
 
 ##
-# Timing adjustment command.
+# \brief Timing adjustment command.
 #
 class tadj(_commandBase):
     mnemonic="TADJ"
@@ -1018,7 +1038,7 @@ class tadj(_commandBase):
 #--  Calibration Frequency Command  ---------------------------------------------#
 
 ##
-# Calibration frequency command.
+# \brief Calibration frequency command.
 #
 class calf(_commandBase):
     mnemonic="CALF"
@@ -1032,7 +1052,7 @@ class calf(_commandBase):
 #--  Frequency Normalization Command  ---------------------------------------------#
 
 ##
-# Frequency normalization command.
+# \brief Frequency normalization command.
 #
 class fnr(_commandBase):
     mnemonic="FNR"
@@ -1043,7 +1063,7 @@ class fnr(_commandBase):
 #--  Reset Command  ---------------------------------------------------------#
 
 ##
-# Radio reset command.
+# \brief Radio reset command.
 #
 class reset(_commandBase):
     mnemonic = "*RST"
@@ -1051,7 +1071,7 @@ class reset(_commandBase):
 #--  Reference and Bypass Commands  -----------------------------------------#
 
 ##
-# Reference mode command.
+# \brief Reference mode command.
 #
 class ref(_commandBase):
     mnemonic = "REF"
@@ -1061,7 +1081,7 @@ class ref(_commandBase):
                         ]
 
 ##
-# Reference mode bypass command.
+# \brief Reference mode bypass command.
 #
 class rbyp(_commandBase):
     mnemonic = "RBYP"
@@ -1072,7 +1092,7 @@ class rbyp(_commandBase):
 #--  Reference Tuning Voltage Commands  --------------------------------------#
 
 ##
-# Reference tuning voltage command.
+# \brief Reference tuning voltage command.
 #
 class rtv(_commandBase):
     mnemonic="RTV"
@@ -1083,7 +1103,7 @@ class rtv(_commandBase):
 #--  Tuner Commands  ---------------------------------------------------------#
 
 ##
-# Tuner power command.
+# \brief Tuner power command.
 #
 class tpwr(_commandBase):
     mnemonic = "TPWR"
@@ -1097,7 +1117,7 @@ class tpwr(_commandBase):
                         ]
 
 ##
-# Tuner filter setting command.
+# \brief Tuner filter setting command.
 #
 class fif(_commandBase):
     mnemonic = "FIF"
@@ -1114,7 +1134,7 @@ class fif(_commandBase):
 #--  Configuration Commands  -------------------------------------------------#
 
 ##
-# Configuration mode command.
+# \brief Configuration mode command.
 #
 class cfg(_commandBase):
     mnemonic = "CFG"
@@ -1129,7 +1149,7 @@ class cfg(_commandBase):
 #--  Status Commands  ---------------------------------------------------------#
 
 ##
-# Status command.
+# \brief Status command.
 #
 # Static member "statTextValues" is a dictionary where the keys are bits in 
 # the status bitmask, and the values are text strings indicating what those 
@@ -1151,7 +1171,7 @@ class stat(_commandBase):
     
     # OVERRIDE
     ##
-    # Parses the command response into the response information dictionary.
+    # \brief Parses the command response into the response information dictionary.
     def parseResponse(self):
         self.logIfVerbose("Parsing %s response" % self.mnemonic)
         try:
@@ -1182,13 +1202,30 @@ class stat(_commandBase):
         return self.responseInfo
 
 
+##
+# \brief Generic Status Query command for JSON-oriented radios.
+#
+# This is mostly intended for radio auto-detection.
+#
+class status_json(_jsonCommandBase):
+    mnemonic = "status"
+    settable = False
+    queryParamMap = {
+                configKeys.VERINFO_MODEL: "model",
+                configKeys.VERINFO_SN: "sn",
+                configKeys.VERINFO_UNITREV: "unit",
+                configKeys.VERINFO_SW: "sw",
+                configKeys.VERINFO_FW: "fw",
+                }
+    
+        
 # Radio-specific STAT commands.  Each radio also has a class associated with
 # it that provides the meanings for the bits in its status bitmask.
 
 #--  TSTAT Commands  --------------------------------------------------------#
 
 ##
-# Tuner RF status command.
+# \brief Tuner RF status command.
 #
 # \copydetails stat
 #
@@ -1198,7 +1235,7 @@ class tstat(stat):
 # Radio-specific TSTAT commands.
 
 ##
-# Temperature query command.
+# \brief Temperature query command.
 #
 class temp(_commandBase):
     mnemonic="TEMP"
@@ -1215,7 +1252,7 @@ class temp(_commandBase):
 # last GPIO command that was issued.
 
 ##
-# GPIO pin setting command (static mode).
+# \brief GPIO pin setting command (static mode).
 #
 class gpio_static(_commandBase):
     mnemonic = "GPIO"
@@ -1227,7 +1264,7 @@ class gpio_static(_commandBase):
                         ]
 
 ##
-# GPIO pin setting command (sequence mode).
+# \brief GPIO pin setting command (sequence mode).
 #
 class gpio_sequence(_commandBase):
     mnemonic = "GPIO"
@@ -1250,7 +1287,7 @@ class gpio_sequence(_commandBase):
 #--  TX Commands  --------------------------------------------------------#
 
 ##
-# Transmitter center frequency command.
+# \brief Transmitter center frequency command.
 #
 class txf(_commandBase):
     mnemonic = "TXF"
@@ -1265,7 +1302,7 @@ class txf(_commandBase):
                         ]
     
 ##
-# Transmitter attenuation command.
+# \brief Transmitter attenuation command.
 #
 class txa(_commandBase):
     mnemonic = "TXA"
@@ -1280,7 +1317,7 @@ class txa(_commandBase):
                         ]
     
 ##
-# Transmitter power command.
+# \brief Transmitter power command.
 #
 class txp(_commandBase):
     mnemonic = "TXP"
@@ -1297,7 +1334,7 @@ class txp(_commandBase):
 #--  CW Tone Generation Commands  ------------------------------------------#
 
 ##
-# CW tone generator tone characteristics command.
+# \brief CW tone generator tone characteristics command.
 #
 class cwt(_commandBase):
     mnemonic = "CWT"
@@ -1319,7 +1356,7 @@ class cwt(_commandBase):
                         ]
 
 ##
-# CW tone generator sweep command.
+# \brief CW tone generator sweep command.
 #
 class cws(_commandBase):
     mnemonic = "CWS"
@@ -1345,7 +1382,7 @@ class cws(_commandBase):
 #--  DUC Commands  ------------------------------------------#
 
 ##
-# WBDUC configuration command.
+# \brief WBDUC configuration command.
 #
 class wbduc(_commandBase):
     ## This should apply to the NDR651
@@ -1403,8 +1440,8 @@ class duc(_commandBase):
 
 
 ##
-# WBDUC trasmit snapshot command.
-# @deprecated
+# \brief WBDUC trasmit snapshot command.
+# \deprecated
 #
 class txsd(_commandBase):
     ## This should apply to the NDR651
@@ -1423,7 +1460,7 @@ class txsd(_commandBase):
 
 
 ##
-# DUC load waveform command.
+# \brief DUC load waveform command.
 #
 # \note Settable only
 #
@@ -1441,7 +1478,7 @@ class lwf(_commandBase):
 
 
 ##
-# DUC play waveform command.
+# \brief DUC play waveform command.
 #
 # \note Settable only
 class pwf(_commandBase):
@@ -1463,7 +1500,7 @@ class pwf(_commandBase):
 #--  DDC Group Configuration Commands  --------------------------------------------#
 
 ##
-# WBDDC group configuration command.
+# \brief WBDDC group configuration command.
 #
 class wbg(_commandBase):
     mnemonic = "WBG"
@@ -1481,7 +1518,7 @@ class wbg(_commandBase):
                         ]
 
 ##
-# WBDDC group enable command.
+# \brief WBDDC group enable command.
 #
 class wbge(_commandBase):
     mnemonic = "WBGE"
@@ -1496,7 +1533,7 @@ class wbge(_commandBase):
                         ]
 
 ##
-# NBDDC group configuration command.
+# \brief NBDDC group configuration command.
 #
 class nbg(_commandBase):
     mnemonic = "NBG"
@@ -1514,7 +1551,7 @@ class nbg(_commandBase):
                         ]
 
 ##
-# NBDDC group enable command.
+# \brief NBDDC group enable command.
 #
 class nbge(_commandBase):
     mnemonic = "NBGE"
@@ -1531,7 +1568,7 @@ class nbge(_commandBase):
 #--  DUC Group Configuration Commands  --------------------------------------------#
 
 ##
-# DUC group configuration command.
+# \brief DUC group configuration command.
 #
 class ducg(_commandBase):
     mnemonic = "DUCG"
@@ -1549,7 +1586,7 @@ class ducg(_commandBase):
                         ]
 
 ##
-# DUC group enable command.
+# \brief DUC group enable command.
 #
 class ducge(_commandBase):
     mnemonic = "DUCGE"
@@ -1567,7 +1604,7 @@ class ducge(_commandBase):
 #--  ADC Configuration Commands  --------------------------------------------#
 
 ##
-# ADC sample rate mode command.
+# \brief ADC sample rate mode command.
 #
 class adcsr(_commandBase):
     mnemonic = "ADCSR"
@@ -1577,5 +1614,20 @@ class adcsr(_commandBase):
     queryResponseData = [ \
                         (configKeys.ADC_RATE_MODE, int, True), \
                         ]
+
+
+#-- FPGA State Selection Commands  ------------------------------------------#
+
+##
+# \brief FPGA state selection command.
+#
+class fun(_jsonCommandBase):
+    mnemonic = "fun"
+    setParamMap = {
+                configKeys.FPGA_STATE: "state",
+                 }
+    queryParamMap = {
+                configKeys.FPGA_STATE: "state",
+                 }
 
 

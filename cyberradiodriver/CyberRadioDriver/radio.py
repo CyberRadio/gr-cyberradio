@@ -27,11 +27,12 @@ import transport
 # Imports from external modules
 # Python standard library imports
 import copy
+import json
 import math
 import sys
 import time
 import traceback
-
+import threading
 
 ##
 # \internal
@@ -66,6 +67,10 @@ def getInterfaceAddresses(ifname):
 # Radio handler classes need to set static member "ifSpec" to the interface 
 # specification class that the radio uses.
 class _ifSpec():
+    ## Whether Vita 49.1 is used
+    vita49_1 = True
+    ## Whether Vita 49.0 is used
+    vita49_0 = True
     ## Size of the VITA 49 header, in 32-byte words
     headerSizeWords = 0
     ## Size of the payload, in 32-byte words
@@ -77,6 +82,18 @@ class _ifSpec():
     ## Whether the I/Q data in the payload are swapped
     iqSwapped = False
     
+    @classmethod
+    def getFrameInfoDict(cls, self):
+        return {
+                "headerWords": cls.headerSizeWords, 
+                "payloadWords": cls.payloadSizeWords, 
+                "tailWords": cls.tailSizeWords, 
+                "frameSize": (cls.headerSizeWords+cls.payloadSizeWords+cls.tailSizeWords)*4, 
+                "v49.1": cls.vita49_1, 
+                "v49.0": cls.vita49_0, 
+                "byteSwap": cls.byteOrder!=sys.byteorder, 
+                "iqSwap": cls.iqSwapped, 
+                 }
 
 #-- Radio Handler Objects ---------------------------------------------#
 
@@ -111,6 +128,10 @@ class _radio(log._logger, configKeys.Configurable):
     json = False
     ## \brief VITA 49 interface specification class name (see _ifSpec class).
     ifSpec = _ifSpec
+    ## \brief Dictionary of VITA 49 interface specification classes, keyed by 
+    #     payload type strings, for those radios that support more than one VITA 
+    #     packet format.
+    ifSpecMap = {}
     ## \brief Analog-to-digital Converter clock rate
     adcRate = 1.0
     # Tuner settings
@@ -119,9 +140,10 @@ class _radio(log._logger, configKeys.Configurable):
     ## \brief Number of tuner boards
     numTunerBoards = 1
     ## \brief Tuner index base (what number indices start at) 
-    tunerIndexBase = 1
+    tunerIndexBase = 0
     ## \brief Tuner component type 
     tunerType = components._tuner
+    ## \brief Tuner index overrides.  Used for radios with 
     # WBDDC settings
     ## \brief Number of WBDDCs available
     numWbddc = numTuner
@@ -136,6 +158,10 @@ class _radio(log._logger, configKeys.Configurable):
     nbddcIndexBase = 1
     ## \brief NBDDC component type 
     nbddcType = components._nbddc
+    ## \brief NBDDC index list override.  This is a list of discrete indices 
+    #     for radios where the indices are a subset of the full index list.  
+    #     This should be set to None otherwise.
+    nbddcIndexOverride = None
     # FFT Processor Settings
     ## \brief Number of FFT Channels
     numFftStream = 0
@@ -270,6 +296,10 @@ class _radio(log._logger, configKeys.Configurable):
     tgfcCmd = None
     ## \brief Coherent tuning command
     cohTuneCmd = None
+    ## \brief FPGA state selection command
+    fpgaStateCmd = None
+    ## \brief Radio function (mode) selection command
+    funCmd = None
     # Mode settings
     ## \brief Supported reference modes 
     refModes = {}
@@ -283,6 +313,9 @@ class _radio(log._logger, configKeys.Configurable):
     defaultBaudrate = 921600
     ## \brief Default port number (has no effect if radio does not use network connections)
     defaultPort = 8617
+    ## \brief Default timeout for communications over the radio transport
+    defaultTimeout = transport.radio_transport.defaultTimeout
+    
     ##
     # \brief The list of valid configuration keywords supported by this
     # object.  Override in derived classes as needed.
@@ -294,6 +327,7 @@ class _radio(log._logger, configKeys.Configurable):
                                   configKeys.GPS_ENABLE, \
                                   configKeys.REF_TUNING_VOLT, \
                                   configKeys.GIGE_FLOW_CONTROL, \
+                                  configKeys.RADIO_FUNCTION, \
                                  ]
     ## \brief Default "set time" value
     setTimeDefault = False
@@ -301,8 +335,9 @@ class _radio(log._logger, configKeys.Configurable):
     ##
     # \brief Constructs a radio handler object.
     #
-    # \copydetails CyberRadioDriver::IRadio::__init__()
+    # \copydetails CyberRadioDriver::IRadio::\_\_init\_\_()
     def __init__(self, *args, **kwargs):
+        self._setConfigLock = threading.RLock()
         # Set up configuration capability
         configKeys.Configurable.__init__(self)
         # Consume keyword arguments "verbose" and "logFile" for logging support
@@ -310,8 +345,13 @@ class _radio(log._logger, configKeys.Configurable):
         # Now consume our own
         self.setTime = kwargs.get("setTime",self.setTimeDefault)
         self.logCtrl = kwargs.get("logCtrl",None)
+        self.transportTimeout = kwargs.get("timeout", None)
+        if self.transportTimeout is None:
+            self.transportTimeout = self.defaultTimeout
         self.name = "%s%s"%(self._name,"-%s"%kwargs.get("name") if kwargs.has_key("name") else "",)
         self.logIfVerbose("Verbose mode!")
+        # Communication transport in use 
+        self.transport = None
         self.tunerDict = {}
         self.wbddcDict = {}
         self.nbddcDict = {}
@@ -328,19 +368,40 @@ class _radio(log._logger, configKeys.Configurable):
         # Little hack to ensure numWbddc is always set (we didn't always have this attribute).
         if self.numWbddc is None:
             self.numWbddc = self.numTuner
+        # Form the actual index lists for the different components.  Now that certain components
+        # have discrete index values rather than a full sequence, we need to store these for
+        # later use.
+        self.tunerIndexList = range(self.tunerIndexBase, self.tunerIndexBase + self.numTuner)
+        self.wbddcIndexList = range(self.wbddcIndexBase, self.wbddcIndexBase + self.numWbddc)
+        self.nbddcIndexList = self.nbddcIndexOverride if self.nbddcIndexOverride is not None else \
+                              range(self.nbddcIndexBase, self.nbddcIndexBase + self.numNbddc)
+        self.fftStreamIndexList = range(self.fftStreamIndexBase, self.fftStreamIndexBase + self.numFftStream)
+        self.txIndexList = range(self.txIndexBase, self.txIndexBase + self.numTxs)
+        self.wbducIndexList = range(self.wbducIndexBase, self.wbddcIndexBase + self.numWbduc)
+        self.nbducIndexList = range(self.nbducIndexBase, self.nbddcIndexBase + self.numNbduc)
+        self.wbddcGroupIndexList = range(self.wbddcGroupIndexBase, self.wbddcGroupIndexBase + self.numWbddcGroups)
+        self.nbddcGroupIndexList = range(self.nbddcGroupIndexBase, self.nbddcGroupIndexBase + self.numNbddcGroups)
+        self.cddcGroupIndexList = range(self.cddcGroupIndexBase, self.cddcGroupIndexBase + self.numCddcGroups)
+        self.wbducGroupIndexList = range(self.wbducGroupIndexBase, self.wbducGroupIndexBase + self.numWbducGroups)
+        self.tunerGroupIndexList = range(self.tunerGroupIndexBase, self.tunerGroupIndexBase + self.numTunerGroups)
+        self.gigEIndexList = range(self.gigEIndexBase, self.gigEIndexBase + self.numGigE)
+        self.gigEDipEntryIndexList = range(self.gigEDipEntryIndexBase, self.gigEDipEntryIndexBase + self.numGigEDipEntries)
+        self.txToneGenIndexList = [] if self.numTxs == 0 else \
+                                  range(self.txType.toneGenIndexBase, self.txType.toneGenIndexBase + self.txType.numToneGen)
+        # Make component objects
         for objRange,objType,objDict in ( \
-                                        (xrange(self.tunerIndexBase, self.tunerIndexBase + self.numTuner),self.tunerType,self.tunerDict), \
-                                        (xrange(self.wbddcIndexBase, self.wbddcIndexBase + self.numWbddc),self.wbddcType,self.wbddcDict), \
-                                        (xrange(self.nbddcIndexBase, self.nbddcIndexBase + self.numNbddc),self.nbddcType,self.nbddcDict), \
-                                        (xrange(self.fftStreamIndexBase, self.fftStreamIndexBase + self.numFftStream),self.fftStreamType,self.fftStreamDict), \
-                                        (xrange(self.txIndexBase, self.txIndexBase + self.numTxs),self.txType,self.txDict), \
-                                        (xrange(self.wbducIndexBase, self.wbddcIndexBase + self.numWbduc),self.wbducType,self.wbducDict), \
-                                        (xrange(self.nbducIndexBase, self.nbddcIndexBase + self.numNbduc),self.nbducType,self.nbducDict), \
-                                        (xrange(self.wbddcGroupIndexBase, self.wbddcGroupIndexBase + self.numWbddcGroups),self.wbddcGroupType,self.wbddcGroupDict), \
-                                        (xrange(self.nbddcGroupIndexBase, self.nbddcGroupIndexBase + self.numNbddcGroups),self.nbddcGroupType,self.nbddcGroupDict), \
-                                        (xrange(self.cddcGroupIndexBase, self.cddcGroupIndexBase + self.numCddcGroups),self.cddcGroupType,self.cddcGroupDict), \
-                                        (xrange(self.wbducGroupIndexBase, self.wbducGroupIndexBase + self.numWbducGroups),self.wbducGroupType,self.wbducGroupDict), \
-                                        (xrange(self.tunerGroupIndexBase, self.tunerGroupIndexBase + self.numTunerGroups),self.tunerGroupType,self.tunerGroupDict), \
+                                        (self.tunerIndexList,self.tunerType,self.tunerDict), \
+                                        (self.wbddcIndexList,self.wbddcType,self.wbddcDict), \
+                                        (self.nbddcIndexList,self.nbddcType,self.nbddcDict), \
+                                        (self.fftStreamIndexList,self.fftStreamType,self.fftStreamDict), \
+                                        (self.txIndexList,self.txType,self.txDict), \
+                                        (self.wbducIndexList,self.wbducType,self.wbducDict), \
+                                        (self.nbducIndexList,self.nbducType,self.nbducDict), \
+                                        (self.wbddcGroupIndexList,self.wbddcGroupType,self.wbddcGroupDict), \
+                                        (self.nbddcGroupIndexList,self.nbddcGroupType,self.nbddcGroupDict), \
+                                        (self.cddcGroupIndexList,self.cddcGroupType,self.cddcGroupDict), \
+                                        (self.wbducGroupIndexList,self.wbducGroupType,self.wbducGroupDict), \
+                                        (self.tunerGroupIndexList,self.tunerGroupType,self.tunerGroupDict), \
                                          ):
             if objType is not None:
                 for objInd in objRange:
@@ -354,14 +415,12 @@ class _radio(log._logger, configKeys.Configurable):
         # State variables
         # Set the time on the radio 
         self.setTime = False
-        # Communication transport in use 
-        self.transport = None
         self.connectError = ""
     
     ##
     # \brief Destroys a radio handler object.
     #
-    # \copydetails CyberRadioDriver::IRadio::__del__()
+    # \copydetails CyberRadioDriver::IRadio::\_\_del\_\_()
     def __del__(self):
         if self.isConnected():
             self.disconnect()
@@ -432,7 +491,7 @@ class _radio(log._logger, configKeys.Configurable):
         connectionInfo = {}
         # Connection information
         connectionInfo["mode"] = self.mode
-        if self.mode in ("tcp","udp"):
+        if self.mode in ("tcp","udp","https"):
             connectionInfo["hostname"] = self.host_or_dev
             connectionInfo["port"] = "%d" % self.port_or_baudrate
         elif self.mode == "tty":
@@ -460,7 +519,8 @@ class _radio(log._logger, configKeys.Configurable):
             self.transport = transport.radio_transport(parent=self,verbose=self.verbose,
                                                        logFile=self.logFile, 
                                                        logCtrl=self.logCtrl,
-                                                       json=self.json)
+                                                       json=self.json,
+                                                       timeout=self.transportTimeout)
             if self.transport.connect(mode, self.host_or_dev, self.port_or_baudrate):
                 self._queryConfiguration()
                 for obj in self.componentList:
@@ -510,7 +570,15 @@ class _radio(log._logger, configKeys.Configurable):
         if self.transport is None or not self.transport.isConnected():
             return None
         try:
-            x = self.transport.sendCommandAndReceive(cmdString,timeout)
+            if self.json:
+                if isinstance(cmdString, str):
+                    jsonCmd = json.loads(cmdString)
+                elif isinstance(cmdString, dict):
+                    jsonCmd = cmdString
+                jsonCmd["msg"] = command.jsonConfig.newMessageId()
+                x = self.transport.sendCommandAndReceive(json.dumps(jsonCmd),timeout)
+            else:
+                x = self.transport.sendCommandAndReceive(cmdString,timeout)
             if not self.transport.connected:
                 self.transport.disconnect()
                 return None
@@ -527,145 +595,142 @@ class _radio(log._logger, configKeys.Configurable):
     #
     # \copydetails CyberRadioDriver::IRadio::setConfiguration()
     def setConfiguration(self, configDict={}):
-        self.cmdErrorInfo = []
-        # Normalize the incoming configuration dictionary before trying to process it.
-        configDict2 = self._normalizeConfigDict(configDict)
-        success = configKeys.Configurable.setConfiguration(self, **configDict2)
-        # Tuner configuration
-        tunerConfDict = configDict2.get(configKeys.CONFIG_TUNER,{})
-        for index in xrange(self.tunerIndexBase, self.tunerIndexBase + self.numTuner):
-            if tunerConfDict.has_key(index):
-                confDict = tunerConfDict[index]
-                confDict[configKeys.TUNER_INDEX] = index
-                success &= self.setTunerConfigurationNew(**confDict)
-        # DDC configuration
-        for ddcType in [configKeys.CONFIG_WBDDC, configKeys.CONFIG_NBDDC]:
-            isWideband = (ddcType == configKeys.CONFIG_WBDDC)
-            ddcConfDict = configDict2.get(configKeys.CONFIG_DDC,{}).get(ddcType,{})
-            ddcIndexRange = xrange(self.wbddcIndexBase, self.wbddcIndexBase + self.numWbddc) if isWideband \
-                            else xrange(self.nbddcIndexBase, self.nbddcIndexBase + self.numNbddc)
-            for index in ddcIndexRange:
-                if ddcConfDict.has_key(index):
-                    confDict = ddcConfDict[index]
-                    confDict[configKeys.DDC_INDEX] = index
-                    success &= self.setDdcConfigurationNew(wideband=isWideband, **confDict)
-        # IP configuration
-        success &= self.setIpConfigurationNew(configDict2.get(configKeys.CONFIG_IP, {}))
-        # Transmitter configuration
-        txConfDict = configDict2.get(configKeys.CONFIG_TX,{})
-        for index in self.getTransmitterIndexRange():
-            if txConfDict.has_key(index):
-                confDict = txConfDict[index]
-                confDict[configKeys.TX_INDEX] = index
-                success &= self.setTxConfigurationNew(**confDict)
-        for ducType in [configKeys.CONFIG_WBDUC, configKeys.CONFIG_NBDUC]:
-            isWideband = (ducType == configKeys.CONFIG_WBDUC)
-            ducConfDict = configDict2.get(configKeys.CONFIG_DUC,{}).get(ducType,{})
-            ducIndexRange = xrange(self.wbducIndexBase, self.wbducIndexBase + self.numWbduc) if isWideband \
-                            else xrange(self.nbducIndexBase, self.nbducIndexBase + self.numNbduc)
-            for index in ducIndexRange:
-                if ducConfDict.has_key(index):
-                    confDict = ducConfDict[index]
-                    confDict[configKeys.DUC_INDEX] = index
-                    success &= self.setDucConfigurationNew(wideband=isWideband, **confDict)
-        # DDC group configuration
-        for ddcType in [configKeys.CONFIG_WBDDC_GROUP, configKeys.CONFIG_NBDDC_GROUP]:
-            # Flag for forcing the driver to query DDCs for status information
-            forceDdcQuery = False
-            isWideband = (ddcType == configKeys.CONFIG_WBDDC_GROUP)
-            ddcGroupConfDict = configDict2.get(configKeys.CONFIG_DDC_GROUP,{}).get(ddcType,{})
-            ddcGroupIndexRange = xrange(self.wbddcGroupIndexBase, self.wbddcGroupIndexBase + self.numWbddcGroups) if isWideband \
-                            else xrange(self.nbddcGroupIndexBase, self.nbddcGroupIndexBase + self.numNbddcGroups)
-            for index in ddcGroupIndexRange:
-                if ddcGroupConfDict.has_key(index):
-                    confDict = ddcGroupConfDict[index]
-                    confDict[configKeys.INDEX] = index
-                    success &= self.setDdcGroupConfigurationNew(wideband=isWideband, **confDict)
-                    # Force DDC query if DDC grouping configuration gets changed
-                    forceDdcQuery = True
-            # This section forces hardware queries to update the corresponding DDC
-            # and DDC group configurations.
-            if forceDdcQuery:
-                ddcDict = self.wbddcDict if isWideband else self.nbddcDict
-                for i in self._getIndexList(None, ddcDict):
-                    ddcDict[i]._queryConfiguration()
-                ddcGroupDict = self.wbddcGroupDict if isWideband else self.nbddcGroupDict
-                for i in self._getIndexList(None, ddcGroupDict):
-                    ddcGroupDict[i]._queryConfiguration()
-        # Combined DDC group configuration
-        for ddcType in [configKeys.CONFIG_COMBINED_DDC_GROUP]:
-            #self.logIfVerbose("[ndr551][setConfiguration()] Configure combined DDCs")
-            # Flag for forcing the driver to query DDCs for status information
-            forceDdcQuery = False
-            ddcGroupConfDict = configDict2.get(configKeys.CONFIG_DDC_GROUP,{}).get(ddcType,{})
-            ddcGroupIndexRange = xrange(self.cddcGroupIndexBase, self.cddcGroupIndexBase + self.numCddcGroups)
-            for index in ddcGroupIndexRange:
-                if ddcGroupConfDict.has_key(index):
-                    confDict = ddcGroupConfDict[index]
-                    confDict[configKeys.INDEX] = index
-                    #self.logIfVerbose("[ndr551][setConfiguration()] Combined DDC", index)
-                    #self.logIfVerbose("[ndr551][setConfiguration()] %s" % confDict)
-                    success &= self.setCombinedDdcGroupConfigurationNew(**confDict)
-                    # Force DDC query if DDC grouping configuration gets changed
-                    forceDdcQuery = True
-            # This section forces hardware queries to update the corresponding DDC
-            # and DDC group configurations.
-            if forceDdcQuery:
-                for isWideband in [True, False]:
+        with self._setConfigLock:
+            self.cmdErrorInfo = []
+            # Normalize the incoming configuration dictionary before trying to process it.
+            configDict2 = self._normalizeConfigDict(configDict)
+            success = configKeys.Configurable.setConfiguration(self, **configDict2)
+            # Tuner configuration
+            tunerConfDict = configDict2.get(configKeys.CONFIG_TUNER,{})
+            for index in self.tunerIndexList:
+                if tunerConfDict.has_key(index):
+                    confDict = tunerConfDict[index]
+                    confDict[configKeys.TUNER_INDEX] = index
+                    success &= self.setTunerConfigurationNew(**confDict)
+            # DDC configuration
+            for ddcType in [configKeys.CONFIG_WBDDC, configKeys.CONFIG_NBDDC]:
+                isWideband = (ddcType == configKeys.CONFIG_WBDDC)
+                ddcConfDict = configDict2.get(configKeys.CONFIG_DDC,{}).get(ddcType,{})
+                ddcIndexRange = self.wbddcIndexList if isWideband else self.nbddcIndexList
+                for index in ddcIndexRange:
+                    if ddcConfDict.has_key(index):
+                        confDict = ddcConfDict[index]
+                        confDict[configKeys.DDC_INDEX] = index
+                        success &= self.setDdcConfigurationNew(wideband=isWideband, **confDict)
+            # IP configuration
+            success &= self.setIpConfigurationNew(configDict2.get(configKeys.CONFIG_IP, {}))
+            # Transmitter configuration
+            txConfDict = configDict2.get(configKeys.CONFIG_TX,{})
+            for index in self.getTransmitterIndexRange():
+                if txConfDict.has_key(index):
+                    confDict = txConfDict[index]
+                    confDict[configKeys.TX_INDEX] = index
+                    success &= self.setTxConfigurationNew(**confDict)
+            for ducType in [configKeys.CONFIG_WBDUC, configKeys.CONFIG_NBDUC]:
+                isWideband = (ducType == configKeys.CONFIG_WBDUC)
+                ducConfDict = configDict2.get(configKeys.CONFIG_DUC,{}).get(ducType,{})
+                ducIndexRange = self.wbducIndexList if isWideband else self.nbducIndexList
+                for index in ducIndexRange:
+                    if ducConfDict.has_key(index):
+                        confDict = ducConfDict[index]
+                        confDict[configKeys.DUC_INDEX] = index
+                        success &= self.setDucConfigurationNew(wideband=isWideband, **confDict)
+            # DDC group configuration
+            for ddcType in [configKeys.CONFIG_WBDDC_GROUP, configKeys.CONFIG_NBDDC_GROUP]:
+                # Flag for forcing the driver to query DDCs for status information
+                forceDdcQuery = False
+                isWideband = (ddcType == configKeys.CONFIG_WBDDC_GROUP)
+                ddcGroupConfDict = configDict2.get(configKeys.CONFIG_DDC_GROUP,{}).get(ddcType,{})
+                ddcGroupIndexRange = self.wbddcGroupIndexList if isWideband else self.nbddcGroupIndexList
+                for index in ddcGroupIndexRange:
+                    if ddcGroupConfDict.has_key(index):
+                        confDict = ddcGroupConfDict[index]
+                        confDict[configKeys.INDEX] = index
+                        success &= self.setDdcGroupConfigurationNew(wideband=isWideband, **confDict)
+                        # Force DDC query if DDC grouping configuration gets changed
+                        forceDdcQuery = True
+                # This section forces hardware queries to update the corresponding DDC
+                # and DDC group configurations.
+                if forceDdcQuery:
                     ddcDict = self.wbddcDict if isWideband else self.nbddcDict
                     for i in self._getIndexList(None, ddcDict):
                         ddcDict[i]._queryConfiguration()
-                ddcGroupDict = self.cddcGroupDict
-                for i in self._getIndexList(None, ddcGroupDict):
-                    ddcGroupDict[i]._queryConfiguration()
-        # DUC configuration
-        for ducType in [configKeys.CONFIG_WBDUC_GROUP]:
-            # Flag for forcing the driver to query DUCs for status information
-            forceDucQuery = False
-            isWideband = (ducType == configKeys.CONFIG_WBDUC_GROUP)
-            ducGroupConfDict = configDict2.get(configKeys.CONFIG_DUC_GROUP,{}).get(ducType,{})
-            ducGroupIndexRange = xrange(self.wbducGroupIndexBase, self.wbducGroupIndexBase + self.numWbducGroups) if isWideband \
-                            else xrange(self.nbducGroupIndexBase, self.nbducGroupIndexBase + self.numNbducGroups)
-            for index in ducGroupIndexRange:
-                if ducGroupConfDict.has_key(index):
-                    confDict = ducGroupConfDict[index]
+                    ddcGroupDict = self.wbddcGroupDict if isWideband else self.nbddcGroupDict
+                    for i in self._getIndexList(None, ddcGroupDict):
+                        ddcGroupDict[i]._queryConfiguration()
+            # Combined DDC group configuration
+            for ddcType in [configKeys.CONFIG_COMBINED_DDC_GROUP]:
+                #self.logIfVerbose("[ndr551][setConfiguration()] Configure combined DDCs")
+                # Flag for forcing the driver to query DDCs for status information
+                forceDdcQuery = False
+                ddcGroupConfDict = configDict2.get(configKeys.CONFIG_DDC_GROUP,{}).get(ddcType,{})
+                ddcGroupIndexRange = self.cddcGroupIndexList
+                for index in ddcGroupIndexRange:
+                    if ddcGroupConfDict.has_key(index):
+                        confDict = ddcGroupConfDict[index]
+                        confDict[configKeys.INDEX] = index
+                        #self.logIfVerbose("[ndr551][setConfiguration()] Combined DDC", index)
+                        #self.logIfVerbose("[ndr551][setConfiguration()] %s" % confDict)
+                        success &= self.setCombinedDdcGroupConfigurationNew(**confDict)
+                        # Force DDC query if DDC grouping configuration gets changed
+                        forceDdcQuery = True
+                # This section forces hardware queries to update the corresponding DDC
+                # and DDC group configurations.
+                if forceDdcQuery:
+                    for isWideband in [True, False]:
+                        ddcDict = self.wbddcDict if isWideband else self.nbddcDict
+                        for i in self._getIndexList(None, ddcDict):
+                            ddcDict[i]._queryConfiguration()
+                    ddcGroupDict = self.cddcGroupDict
+                    for i in self._getIndexList(None, ddcGroupDict):
+                        ddcGroupDict[i]._queryConfiguration()
+            # DUC configuration
+            for ducType in [configKeys.CONFIG_WBDUC_GROUP]:
+                # Flag for forcing the driver to query DUCs for status information
+                forceDucQuery = False
+                isWideband = (ducType == configKeys.CONFIG_WBDUC_GROUP)
+                ducGroupConfDict = configDict2.get(configKeys.CONFIG_DUC_GROUP,{}).get(ducType,{})
+                ducGroupIndexRange = self.wbducGroupIndexList if isWideband else self.nbducGroupIndexList
+                for index in ducGroupIndexRange:
+                    if ducGroupConfDict.has_key(index):
+                        confDict = ducGroupConfDict[index]
+                        confDict[configKeys.INDEX] = index
+                        success &= self.setDucGroupConfigurationNew(wideband=isWideband, **confDict)
+                        # Force DUC query if DUC grouping configuration gets changed
+                        forceDucQuery = True
+                # This section forces hardware queries to update the corresponding DUC
+                # and DUC group configurations.
+                if forceDucQuery:
+                    ducDict = self.wbducDict if isWideband else self.nbducDict
+                    for i in self._getIndexList(None, ducDict):
+                        ducDict[i]._queryConfiguration()
+                    ducGroupDict = self.wbducGroupDict if isWideband else self.nbducGroupDict
+                    for i in self._getIndexList(None, ducGroupDict):
+                        ducGroupDict[i]._queryConfiguration()
+            # FFT streaming configuration
+            fftStreamConfDict = configDict2.get(configKeys.CONFIG_FFT,{})
+            for index in self.fftStreamIndexList:
+                if fftStreamConfDict.has_key(index):
+                    confDict = fftStreamConfDict[index]
+                    confDict[configKeys.FFT_INDEX] = index
+                    success &= self.setFftStreamConfiguration(**confDict)
+            # Tuner group configuration
+            forceTunerQuery = False
+            tunerGroupConfDict = configDict2.get(configKeys.CONFIG_TUNER_GROUP,{})
+            tunerGroupIndexRange = self.tunerGroupIndexList
+            for index in tunerGroupIndexRange:
+                if tunerGroupConfDict.has_key(index):
+                    confDict = tunerGroupConfDict[index]
                     confDict[configKeys.INDEX] = index
-                    success &= self.setDucGroupConfigurationNew(wideband=isWideband, **confDict)
-                    # Force DUC query if DUC grouping configuration gets changed
-                    forceDucQuery = True
-            # This section forces hardware queries to update the corresponding DUC
-            # and DUC group configurations.
-            if forceDucQuery:
-                ducDict = self.wbducDict if isWideband else self.nbducDict
-                for i in self._getIndexList(None, ducDict):
-                    ducDict[i]._queryConfiguration()
-                ducGroupDict = self.wbducGroupDict if isWideband else self.nbducGroupDict
-                for i in self._getIndexList(None, ducGroupDict):
-                    ducGroupDict[i]._queryConfiguration()
-        # FFT streaming configuration
-        fftStreamConfDict = configDict2.get(configKeys.CONFIG_FFT,{})
-        for index in xrange(self.fftStreamIndexBase, self.fftStreamIndexBase + self.numFftStream):
-            if fftStreamConfDict.has_key(index):
-                confDict = fftStreamConfDict[index]
-                confDict[configKeys.FFT_INDEX] = index
-                success &= self.setFftStreamConfiguration(**confDict)
-        # Tuner group configuration
-        forceTunerQuery = False
-        tunerGroupConfDict = configDict2.get(configKeys.CONFIG_TUNER_GROUP,{})
-        tunerGroupIndexRange = xrange(self.tunerGroupIndexBase, self.tunerGroupIndexBase + self.numTunerGroups)
-        for index in tunerGroupIndexRange:
-            if tunerGroupConfDict.has_key(index):
-                confDict = tunerGroupConfDict[index]
-                confDict[configKeys.INDEX] = index
-                success &= self.setTunerGroupConfigurationNew(**confDict)
-                # Force tuner query if tuner grouping configuration gets changed
-                forceTunerQuery = True
-        if forceTunerQuery:
-            for i in self._getIndexList(None, self.tunerDict):
-                self.tunerDict[i]._queryConfiguration()
-            for i in self._getIndexList(None, self.tunerGroupDict):
-                self.tunerGroupDict[i]._queryConfiguration()
-        return success
+                    success &= self.setTunerGroupConfigurationNew(**confDict)
+                    # Force tuner query if tuner grouping configuration gets changed
+                    forceTunerQuery = True
+            if forceTunerQuery:
+                for i in self._getIndexList(None, self.tunerDict):
+                    self.tunerDict[i]._queryConfiguration()
+                for i in self._getIndexList(None, self.tunerGroupDict):
+                    self.tunerGroupDict[i]._queryConfiguration()
+            return success
     
     ##
     # \brief Sets the radio configuration based on a sequence of configuration
@@ -751,70 +816,145 @@ class _radio(log._logger, configKeys.Configurable):
     #
     # \copydetails CyberRadioDriver::IRadio::queryConfiguration()
     def queryConfiguration(self):
-        self.cmdErrorInfo = []
-        ret = configKeys.Configurable.queryConfiguration(self)
-        # Get tuner configuration
-        if self.numTuner > 0:
-            ret[configKeys.CONFIG_TUNER] = self.queryTunerConfigurationNew()
-        # Get DDC configuration
-        if self.numWbddc > 0:
-            ret[configKeys.CONFIG_DDC] = {}
-            # -- Wideband
-            ret[configKeys.CONFIG_DDC][configKeys.CONFIG_WBDDC] = self.queryDdcConfigurationNew(wideband=True)
-            if self.numNbddc > 0:
-                # -- Narrowband
-                ret[configKeys.CONFIG_DDC][configKeys.CONFIG_NBDDC] = self.queryDdcConfigurationNew(wideband=False)
-        if self.numFftStream > 0:
-            ret[configKeys.CONFIG_FFT] = self.getFftStreamConfiguration()
-        # Get transmitter configuration
-        if self.numTxs > 0:
-            ret[configKeys.CONFIG_TX] = self.queryTxConfigurationNew()
-        # Get DUC configuration
-        if self.numTxs > 0:
-            ret[configKeys.CONFIG_DUC] = {}
-            # -- Wideband
-            ret[configKeys.CONFIG_DUC][configKeys.CONFIG_WBDUC] = self.queryDucConfigurationNew(wideband=True)
-            if self.numNbduc > 0:
-                # -- Narrowband
-                ret[configKeys.CONFIG_DDC][configKeys.CONFIG_NBDUC] = self.queryDucConfigurationNew(wideband=False)
-        # Get DDC group configuration
-        if self.numWbddcGroups > 0:
-            ret[configKeys.CONFIG_DDC_GROUP] = {}
-            # -- Wideband
-            ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_WBDDC_GROUP] = \
-                      self.queryDdcGroupConfigurationNew(wideband=True)
-            if self.numNbddcGroups > 0:
-                # -- Narrowband
-                ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_NBDDC_GROUP] = \
-                      self.queryDdcGroupConfigurationNew(wideband=False)
-        elif self.numCddcGroups > 0:
-            ret[configKeys.CONFIG_DDC_GROUP] = {}
-            # -- Wideband
-            ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_COMBINED_DDC_GROUP] = \
-                      self.queryCombinedDdcGroupConfigurationNew()
-        # Get DUC group configuration
-        if self.numWbducGroups > 0:
-            ret[configKeys.CONFIG_DUC_GROUP] = {}
-            # -- Wideband
-            ret[configKeys.CONFIG_DUC_GROUP][configKeys.CONFIG_WBDUC_GROUP] = \
-                      self.queryDucGroupConfigurationNew(wideband=True)
-#             if self.numNbducGroups > 0:
-#                 # -- Narrowband
-#                 ret[configKeys.CONFIG_DUC_GROUP][configKeys.CONFIG_NBDUC_GROUP] = \
-#                       self.queryDucGroupConfigurationNew(wideband=False)
-        # Get tuner group configuration
-        if self.numTunerGroups > 0:
-            ret[configKeys.CONFIG_TUNER_GROUP] = \
-                      self.queryTunerGroupConfigurationNew()
-        return ret 
+        return self.queryConfigurationByKeys()
     
     ##
-    # \brief Queries radio configuration information based on a sequence of configuration
-    #    dictionary keys.
+    # \brief Queries the radio hardware to get a subset of configuration information, 
+    #    based on a sequence of configuration dictionary keys.
     #
     # \copydetails CyberRadioDriver::IRadio::queryConfigurationByKeys()
     def queryConfigurationByKeys(self, *keys):
-        return self._dictSafeGet(self.queryConfiguration(), None, *keys)
+        self.cmdErrorInfo = []
+        ret = {}
+        if len(keys) == 0:
+            ret = configKeys.Configurable.queryConfiguration(self)
+        # Get tuner configuration
+        if self.numTuner > 0:
+            if len(keys) == 0:
+                ret[configKeys.CONFIG_TUNER] = self.queryTunerConfigurationNew(tunerIndex=None)
+            elif len(keys) > 0 and keys[0] == configKeys.CONFIG_TUNER:
+                tunerIndex = None if len(keys) == 1 else int(keys[1])
+                ret[configKeys.CONFIG_TUNER] = self.queryTunerConfigurationNew(tunerIndex=tunerIndex)
+        # Get DDC configuration
+        if self.numWbddc > 0:
+            if len(keys) == 0 or keys[0] == configKeys.CONFIG_DDC:
+                ret[configKeys.CONFIG_DDC] = {}
+                # -- Wideband
+                if len(keys) < 2:
+                    ret[configKeys.CONFIG_DDC][configKeys.CONFIG_WBDDC] = self.queryDdcConfigurationNew(
+                            wideband=True, ddcIndex=None)
+                elif keys[1] == configKeys.CONFIG_WBDDC:
+                    ddcIndex = None if len(keys) == 2 else int(keys[2])
+                    ret[configKeys.CONFIG_DDC][configKeys.CONFIG_WBDDC] = self.queryDdcConfigurationNew(
+                                wideband=True, ddcIndex=ddcIndex)
+                # -- Narrowband
+                if self.numNbddc > 0:
+                    if len(keys) < 2:
+                        ret[configKeys.CONFIG_DDC][configKeys.CONFIG_NBDDC] = self.queryDdcConfigurationNew(
+                                wideband=False, ddcIndex=None)
+                    elif keys[1] == configKeys.CONFIG_NBDDC:
+                        ddcIndex = None if len(keys) == 2 else int(keys[2])
+                        ret[configKeys.CONFIG_DDC][configKeys.CONFIG_NBDDC] = self.queryDdcConfigurationNew(
+                                    wideband=False, ddcIndex=ddcIndex)
+        # Get FFT Stream configuration
+        if self.numFftStream > 0:
+            if len(keys) == 0:
+                ret[configKeys.CONFIG_FFT] = self.queryFftStreamConfiguration(fftStreamIndex=None)
+            elif len(keys) > 0 and keys[0] == configKeys.CONFIG_FFT:
+                fftStreamIndex = None if len(keys) == 1 else int(keys[1])
+                ret[configKeys.CONFIG_FFT] = self.queryFftStreamConfiguration(fftStreamIndex=fftStreamIndex)
+        # Get transmitter configuration
+        if self.numTxs > 0:
+            if len(keys) == 0:
+                ret[configKeys.CONFIG_TX] = self.queryTxConfigurationNew(txIndex=None)
+            elif len(keys) > 0 and keys[0] == configKeys.CONFIG_TX:
+                txIndex = None if len(keys) == 1 else int(keys[1])
+                ret[configKeys.CONFIG_TX] = self.queryTxConfigurationNew(txIndex=txIndex)
+        # Get DUC configuration
+        if self.numTxs > 0:
+            if len(keys) == 0 or keys[0] == configKeys.CONFIG_DUC:
+                ret[configKeys.CONFIG_DUC] = {}
+                # -- Wideband
+                if len(keys) < 2:
+                    ret[configKeys.CONFIG_DUC][configKeys.CONFIG_WBDUC] = self.queryDucConfigurationNew(
+                            wideband=True, ducIndex=None)
+                elif keys[1] == configKeys.CONFIG_WBDUC:
+                    ducIndex = None if len(keys) == 2 else int(keys[2])
+                    ret[configKeys.CONFIG_DUC][configKeys.CONFIG_WBDUC] = self.queryDucConfigurationNew(
+                                wideband=True, ducIndex=ducIndex)
+                # -- Narrowband
+                if self.numNbduc > 0:
+                    if len(keys) < 2:
+                        ret[configKeys.CONFIG_DUC][configKeys.CONFIG_NBDUC] = self.queryDucConfigurationNew(
+                                wideband=False, ducIndex=None)
+                    elif keys[1] == configKeys.CONFIG_NBDUC:
+                        ducIndex = None if len(keys) == 2 else int(keys[2])
+                        ret[configKeys.CONFIG_DUC][configKeys.CONFIG_NBDUC] = self.queryDucConfigurationNew(
+                                    wideband=False, ducIndex=ducIndex)
+        # Get DDC group configuration
+        if any( [self.numWbddcGroups > 0, self.numNbddcGroups > 0, self.numCddcGroups > 0] ):
+            if len(keys) == 0 or keys[0] == configKeys.CONFIG_DDC_GROUP:
+                ret[configKeys.CONFIG_DDC_GROUP] = {}
+                # -- Wideband
+                if self.numWbddcGroups > 0:
+                    if len(keys) < 2:
+                        ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_WBDDC_GROUP] = \
+                                self.queryDdcGroupConfigurationNew(wideband=True, ddcGroupIndex=None)
+                    elif keys[1] == configKeys.CONFIG_WBDDC_GROUP:
+                        ddcGroupIndex = None if len(keys) == 2 else int(keys[2])
+                        ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_WBDDC_GROUP] = \
+                                self.queryDdcGroupConfigurationNew(wideband=True, ddcGroupIndex=ddcGroupIndex)
+                # -- Narrowband
+                if self.numNbddcGroups > 0:
+                    if len(keys) < 2:
+                        ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_NBDDC_GROUP] = \
+                                self.queryDdcGroupConfigurationNew(wideband=False, ddcGroupIndex=None)
+                    elif keys[1] == configKeys.CONFIG_NBDDC_GROUP:
+                        ddcGroupIndex = None if len(keys) == 2 else int(keys[2])
+                        ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_NBDDC_GROUP] = \
+                                self.queryDdcGroupConfigurationNew(wideband=False, ddcGroupIndex=ddcGroupIndex)
+                # -- Combined (wideband + narrowband)
+                if self.numCddcGroups > 0:
+                    if len(keys) < 2:
+                        ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_COMBINED_DDC_GROUP] = \
+                                self.queryCombinedDdcGroupConfigurationNew(ddcGroupIndex=None)
+                    elif keys[1] == configKeys.CONFIG_COMBINED_DDC_GROUP:
+                        ddcGroupIndex = None if len(keys) == 2 else int(keys[2])
+                        ret[configKeys.CONFIG_DDC_GROUP][configKeys.CONFIG_COMBINED_DDC_GROUP] = \
+                                self.queryCombinedDdcGroupConfigurationNew(ddcGroupIndex=ddcGroupIndex)
+        # Get DUC group configuration
+        if any( [self.numWbducGroups > 0] ):
+            if len(keys) == 0 or keys[0] == configKeys.CONFIG_DUC_GROUP:
+                ret[configKeys.CONFIG_DUC_GROUP] = {}
+                # -- Wideband
+                if self.numWbducGroups > 0:
+                    if len(keys) < 2:
+                        ret[configKeys.CONFIG_DUC_GROUP][configKeys.CONFIG_WBDUC_GROUP] = \
+                                self.queryDucGroupConfigurationNew(wideband=True, ducGroupIndex=None)
+                    elif keys[1] == configKeys.CONFIG_WBDUC_GROUP:
+                        ducGroupIndex = None if len(keys) == 2 else int(keys[2])
+                        ret[configKeys.CONFIG_DUC_GROUP][configKeys.CONFIG_WBDUC_GROUP] = \
+                                self.queryDucGroupConfigurationNew(wideband=True, ducGroupIndex=ducGroupIndex)
+        # Get tuner group configuration
+        if self.numTunerGroups > 0:
+            if len(keys) == 0:
+                ret[configKeys.CONFIG_TUNER_GROUP] = self.queryTunerGroupConfigurationNew(
+                        tunerGroupIndex=None)
+            elif len(keys) > 0 and keys[0] == configKeys.CONFIG_TUNER_GROUP:
+                tunerGroupIndex = None if len(keys) == 1 else int(keys[1])
+                ret[configKeys.CONFIG_TUNER_GROUP] = self.queryTunerGroupConfigurationNew(
+                        tunerGroupIndex=tunerGroupIndex)
+        # Query IP configuration
+        if len(keys) == 0 or keys[0] == configKeys.CONFIG_IP:
+            if len(keys) == 0:
+                ret[configKeys.CONFIG_IP] = self.queryIpConfigurationNew(gigEPortIndex=None)
+            elif len(keys) > 0 and keys[0] == configKeys.CONFIG_IP:
+                gigEPortIndex = None if len(keys) == 1 else int(keys[1])
+                ret[configKeys.CONFIG_IP] = self.queryIpConfigurationNew(gigEPortIndex=gigEPortIndex)
+        # Update the internal configuration dictionary based on query results
+        self.configuration.update(ret)
+        # Return the result
+        return ret 
 
     ##
     # \protected
@@ -831,6 +971,8 @@ class _radio(log._logger, configKeys.Configurable):
                                 (self.fnrCmd, configKeys.FNR_MODE), \
                                 (self.gpsCmd, configKeys.GPS_ENABLE), \
                                 (self.rtvCmd, configKeys.REF_TUNING_VOLT), \
+                                (self.fpgaStateCmd, configKeys.FPGA_STATE), \
+                                (self.funCmd, configKeys.RADIO_FUNCTION), \
                               ]:
             if cmdClass is not None:
                 cmd = cmdClass(parent=self, 
@@ -844,108 +986,9 @@ class _radio(log._logger, configKeys.Configurable):
                     self.configuration[configKey] = rspInfo.get(configKey, 0)
         # IP configuration query -- The format of this section depends on whether
         # the radio has Gigabit Ethernet ports on it or not.
-        self.configuration[configKeys.CONFIG_IP] = {}
-        # -- No GigE ports
-        if self.numGigE == 0:
-            for cmdClass, configKey in [ \
-                                    (self.sipCmd, configKeys.IP_SOURCE), \
-                                    (self.dipCmd, configKeys.IP_DEST), \
-                                    (self.smacCmd, configKeys.MAC_SOURCE), \
-                                    (self.dmacCmd, configKeys.MAC_DEST), \
-                                  ]:
-                self.configuration[configKey] = None
-                if cmdClass is not None and cmdClass.queryable:
-                    cmd = cmdClass(parent=self, 
-                                   query=True,
-                                    verbose=self.verbose, logFile=self.logFile)
-                    cmd.send( self.sendCommand, )
-                    self._addLastCommandErrorInfo(cmd)
-                    rspInfo = cmd.getResponseInfo()
-                    if rspInfo is not None:
-                        self.configuration[configKeys.CONFIG_IP][configKey] = \
-                               rspInfo.get(configKey, "")
-        # -- Has GigE ports
-        else:
-            for gigEPortNum in xrange(self.gigEIndexBase, 
-                                      self.gigEIndexBase + self.numGigE, 1):
-                self.configuration[configKeys.CONFIG_IP][gigEPortNum] = {}
-                # Query source IP address for this GigE port   
-                if self.sipCmd is not None and self.sipCmd.queryable:
-                    # Default source IP info
-                    if self.json:
-                        self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE] = {
-                                configKeys.GIGE_MAC_ADDR: None,
-                                configKeys.GIGE_IP_ADDR: None,
-                                configKeys.GIGE_NETMASK: None,
-                                configKeys.GIGE_SOURCE_PORT: None,
-                             }
-                    else:
-                        self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE] = None
-                    cDict = { "parent": self, \
-                              "query": True, \
-                              "verbose": self.verbose, \
-                              "logFile": self.logFile, \
-                              configKeys.GIGE_PORT_INDEX: gigEPortNum, \
-                             }
-                    cmd = self.sipCmd(**cDict)
-                    cmd.send( self.sendCommand, )
-                    self._addLastCommandErrorInfo(cmd)
-                    rspInfo = cmd.getResponseInfo()
-                    if rspInfo is not None:
-                        # How to parse this depends on whether the response info contains a 
-                        # "sourceIP" key (NDR308-class) or not (NDR551-class)
-                        if rspInfo.has_key(configKeys.IP_SOURCE):
-                            # Do it NDR308-style
-                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE] = \
-                                   rspInfo.get(configKeys.IP_SOURCE, "")
-                        else:
-                            # Do it NDR551-style
-                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE] = {}
-                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_MAC_ADDR] = \
-                                 rspInfo.get(configKeys.GIGE_MAC_ADDR, "")
-                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_IP_ADDR] = \
-                                 rspInfo.get(configKeys.GIGE_IP_ADDR, "")
-                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_NETMASK] = \
-                                 rspInfo.get(configKeys.GIGE_NETMASK, "")
-                            self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_SOURCE_PORT] = \
-                                 rspInfo.get(configKeys.GIGE_SOURCE_PORT, 0)
-                # Query destination IP table for this GigE port
-                if self.dipCmd is not None and self.dipCmd.queryable:
-                    self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST] = {}
-                    for gigEDipEntryNum in xrange(self.gigEDipEntryIndexBase, 
-                                                  self.gigEDipEntryIndexBase + self.numGigEDipEntries, 
-                                                  1):
-                        self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum] = {}
-                        cmd = self.dipCmd(**{})
-                        for configKey in [configKeys.GIGE_IP_ADDR, \
-                                          configKeys.GIGE_MAC_ADDR, \
-                                          configKeys.GIGE_SOURCE_PORT, \
-                                          configKeys.GIGE_DEST_PORT, \
-                                          configKeys.GIGE_ARP]:
-                            if hasattr(cmd, "queryParamMap") and cmd.queryParamMap.has_key(configKey):
-                                self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum][configKey] = None
-                            elif hasattr(cmd, "queryResponseData") and configKey in [q[0] for q in cmd.queryResponseData]:
-                                self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum][configKey] = None
-                        cDict = { "parent": self, \
-                                  "query": True, \
-                                  "verbose": self.verbose, \
-                                  "logFile": self.logFile, \
-                                  configKeys.GIGE_PORT_INDEX: gigEPortNum, \
-                                  configKeys.GIGE_DIP_INDEX: gigEDipEntryNum, \
-                                 }
-                        cmd = self.dipCmd(**cDict)
-                        cmd.send( self.sendCommand, )
-                        rspInfo = cmd.getResponseInfo()
-                        self._addLastCommandErrorInfo(cmd)
-                        if rspInfo is not None:
-                            for configKey in [configKeys.GIGE_IP_ADDR, \
-                                              configKeys.GIGE_MAC_ADDR, \
-                                              configKeys.GIGE_SOURCE_PORT, \
-                                              configKeys.GIGE_DEST_PORT, \
-                                              configKeys.GIGE_ARP]:
-                                if rspInfo.has_key(configKey):
-                                    self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum][configKey] = \
-                                       rspInfo[configKey]
+        if not self.configuration.has_key(configKeys.CONFIG_IP):
+            self.configuration[configKeys.CONFIG_IP] = {}
+        self.configuration[configKeys.CONFIG_IP].update( self.queryIpConfigurationNew() )
 
     ##
     # \protected
@@ -960,6 +1003,7 @@ class _radio(log._logger, configKeys.Configurable):
                                 (self.fnrCmd, configKeys.FNR_MODE), \
                                 (self.gpsCmd, configKeys.GPS_ENABLE), \
                                 (self.rtvCmd, configKeys.REF_TUNING_VOLT), \
+                                (self.fpgaStateCmd, configKeys.FPGA_STATE), \
                               ]:
             cDict = { "parent": self, \
                       "verbose": self.verbose, \
@@ -1390,7 +1434,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getNumTuner()
     @classmethod
     def getNumTuner(cls):
-        return cls.numTuner
+        return len(cls.getTunerIndexRange())
     
     ##
     # \brief Gets the number of tuner boards on the radio.
@@ -1447,6 +1491,14 @@ class _radio(log._logger, configKeys.Configurable):
     @classmethod
     def getTunerAttenuationRes(cls):
         return cls.tunerType.attRes
+
+    ##
+    # \brief Gets the ifFilter list for the tuners of the radio
+    #
+    # \copydetails CyberRadioDriver::IRadio::getTunerIfFilterList()
+    @classmethod
+    def getTunerIfFilterList(cls):
+        return cls.tunerType.ifFilters
     
     ##
     # \brief Gets the number of wideband DDCs on the radio.
@@ -1454,11 +1506,10 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getNumWbddc()
     @classmethod
     def getNumWbddc(cls):
-        return cls.numWbddc
+        return len(cls.getWbddcIndexRange())
     
     ##
-    # \brief Gets whether the wideband or narrobwand DDCs on the radio have 
-    # selectable sources.
+    # \brief Gets whether the DDCs on the radio have selectable sources.
     #
     # \copydetails CyberRadioDriver::IRadio::isDdcSelectableSource()
     @classmethod
@@ -1533,29 +1584,28 @@ class _radio(log._logger, configKeys.Configurable):
         return cls.getDdcRateList(True, index)
     
     ##
-    # \brief Gets the allowed rate set for the narrowband DDCs on the radio.
+    # \brief Gets the allowed rate set for the wideband DDCs on the radio.
     #
     # \copydetails CyberRadioDriver::IRadio::getWbddcBwSet()
     @classmethod
-    def getWbddcBwSet(cls,index=None):
+    def getWbddcBwSet(cls, index=None):
         return cls.getDdcBwSet(True, index)
     
     ##
-    # \brief Gets the allowed rate list for the narrowband DDCs on the radio.
+    # \brief Gets the allowed rate list for the wideband DDCs on the radio.
     #
     # \copydetails CyberRadioDriver::IRadio::getWbddcBwList()
     @classmethod
-    def getWbddcBwList(cls,index=None):
+    def getWbddcBwList(cls, index=None):
         return cls.getDdcBwList(True, index)
         
-
     ##
     # \brief Gets the number of narrowband DDCs on the radio.
     #
     # \copydetails CyberRadioDriver::IRadio::getNumNbddc()
     @classmethod
     def getNumNbddc(cls):
-        return cls.numNbddc
+        return len(cls.getNbddcIndexRange())
     
     ##
     # \brief Gets the index range for the narrowband DDCs on the radio.
@@ -1563,8 +1613,12 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getNbddcIndexRange()
     @classmethod
     def getNbddcIndexRange(cls):
-        return [] if cls.numNbddc == 0 else \
-               range(cls.nbddcIndexBase, cls.nbddcIndexBase + cls.numNbddc, 1)
+        if cls.numNbddc == 0:
+            return []
+        elif cls.nbddcIndexOverride is not None:
+            return cls.nbddcIndexOverride
+        else:
+            return range(cls.nbddcIndexBase, cls.nbddcIndexBase + cls.numNbddc, 1)
     
     ##
     # \brief Gets whether the narrowband DDCs on the radio are tunable.
@@ -1604,7 +1658,7 @@ class _radio(log._logger, configKeys.Configurable):
     #
     # \copydetails CyberRadioDriver::IRadio::getNbddcRateSet()
     @classmethod
-    def getNbddcRateSet(cls,index=None):
+    def getNbddcRateSet(cls, index=None):
         return cls.getDdcRateSet(False, index)
     
     ##
@@ -1612,7 +1666,7 @@ class _radio(log._logger, configKeys.Configurable):
     #
     # \copydetails CyberRadioDriver::IRadio::getNbddcRateList()
     @classmethod
-    def getNbddcRateList(cls,index=None):
+    def getNbddcRateList(cls, index=None):
         return cls.getDdcRateList(False, index)
         
     ##
@@ -1620,7 +1674,7 @@ class _radio(log._logger, configKeys.Configurable):
     #
     # \copydetails CyberRadioDriver::IRadio::getNbddcBwSet()
     @classmethod
-    def getNbddcBwSet(cls,index=None):
+    def getNbddcBwSet(cls, index=None):
         return cls.getDdcBwSet(False, index)
     
     ##
@@ -1628,17 +1682,16 @@ class _radio(log._logger, configKeys.Configurable):
     #
     # \copydetails CyberRadioDriver::IRadio::getNbddcBwList()
     @classmethod
-    def getNbddcBwList(cls,index=None):
+    def getNbddcBwList(cls, index=None):
         return cls.getDdcBwList(False, index)
         
-
     ##
     # \brief Gets the number of narrowband DDCs on the radio.
     #
     # \copydetails CyberRadioDriver::IRadio::getNumFftStream()
     @classmethod
     def getNumFftStream(cls):
-        return cls.numFftStream
+        return len(cls.getFftStreamIndexRange())
     
     ##
     # \brief Gets the index range for the narrowband DDCs on the radio.
@@ -1710,49 +1763,55 @@ class _radio(log._logger, configKeys.Configurable):
     #
     # \copydetails CyberRadioDriver::IRadio::getVitaHeaderSize()
     @classmethod
-    def getVitaHeaderSize(cls):
-        return 4 * cls.ifSpec.headerSizeWords
+    def getVitaHeaderSize(cls, payloadType=None):
+        return 4 * cls.ifSpecMap.get(payloadType, cls.ifSpec).headerSizeWords
     
     ##
     # \brief Gets the VITA 49 payload size for the radio.
     #
     # \copydetails CyberRadioDriver::IRadio::getVitaPayloadSize()
     @classmethod
-    def getVitaPayloadSize(cls):
-        return 4 * cls.ifSpec.payloadSizeWords
+    def getVitaPayloadSize(cls, payloadType=None):
+        return 4 * cls.ifSpecMap.get(payloadType, cls.ifSpec).payloadSizeWords
     
     ##
     # \brief Gets the VITA 49 tail size for the radio.
     #
     # \copydetails CyberRadioDriver::IRadio::getVitaTailSize()
     @classmethod
-    def getVitaTailSize(cls):
-        return 4 * cls.ifSpec.tailSizeWords
-    
+    def getVitaTailSize(cls, payloadType=None):
+        return 4 * cls.ifSpecMap.get(payloadType, cls.ifSpec).tailSizeWords    
     ##
+    # \brief Gets dictionary with information about VITA 49 framing.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getVitaFrameInfoDict()
+    @classmethod
+    def getVitaFrameInfoDict(cls, payloadType=None):
+        return cls.ifSpecMap.get(payloadType, cls.ifSpec).getVitaFrameInfoDict()
+    
     # \brief Gets whether data coming from the radio is byte-swapped with 
     # respect to the endianness of the host operating system.
     #
     # \copydetails CyberRadioDriver::IRadio::isByteswapped()
     @classmethod
-    def isByteswapped(cls):
-        return (cls.ifSpec.byteOrder != sys.byteorder)
+    def isByteswapped(cls, payloadType=None):
+        return (cls.ifSpecMap.get(payloadType, cls.ifSpec).byteOrder != sys.byteorder)
     
     ##
     # \brief Gets whether data coming from the radio has I and Q data swapped.
     #
     # \copydetails CyberRadioDriver::IRadio::isIqSwapped()
     @classmethod
-    def isIqSwapped(cls):
-        return cls.ifSpec.iqSwapped
+    def isIqSwapped(cls, payloadType=None):
+        return cls.ifSpecMap.get(payloadType, cls.ifSpec).iqSwapped
     
     ##
     # \brief Gets the byte order for data coming from the radio.
     #
     # \copydetails CyberRadioDriver::IRadio::getByteOrder()
     @classmethod
-    def getByteOrder(cls):
-        return cls.ifSpec.byteOrder
+    def getByteOrder(cls, payloadType=None):
+        return cls.ifSpecMap.get(payloadType, cls.ifSpec).byteOrder
     
     ##
     # \brief Gets the number of Gigabit Ethernet interfaces on the radio.
@@ -1760,7 +1819,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getNumGigE()
     @classmethod
     def getNumGigE(cls):
-        return cls.numGigE
+        return len(cls.getGigEIndexRange())
     
     ##
     # \brief Gets the index range for the Gigabit Ethernet interfaces on the radio.
@@ -1778,7 +1837,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getNumGigEDipEntries()
     @classmethod
     def getNumGigEDipEntries(cls):
-        return cls.numGigEDipEntries
+        return len(cls.getGigEDipEntryIndexRange())
     
     ##
     # \brief Gets the index range for the destination IP address table entries 
@@ -1837,7 +1896,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getNumTransmitters() 
     @classmethod
     def getNumTransmitters(cls):
-        return cls.numTxs
+        return len(cls.getTransmitterIndexRange())
     
     ##
     # \brief Gets the index range for the transmitters on the radio.
@@ -1905,7 +1964,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getTransmitterCWNum()
     @classmethod
     def getTransmitterCWNum(cls):
-        return 0 if not cls.transmitterSupportsCW() else cls.txType.numToneGen
+        return len(cls.getTransmitterCWIndexRange())
 
     ##
     # \brief Gets the CW tone generator index range for transmitters on the radio.
@@ -2060,7 +2119,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getNumWbduc()
     @classmethod
     def getNumWbduc(cls):
-        return cls.numWbduc
+        return len(cls.getWbducIndexRange())
     
     ##
     # \brief Gets the index range for the wideband DUCs on the radio.
@@ -2150,12 +2209,34 @@ class _radio(log._logger, configKeys.Configurable):
         return (cls.wbducType is not None and cls.wbducType.snapshotTxCmd is not None)
 
     ##
+    # \brief Gets the index range for the DDC groups on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getWbddcGroupIndexRange()
+    @classmethod
+    def getDdcGroupIndexRange(cls, wideband):
+        return cls.getWbddcGroupIndexRange() if wideband else cls.getNbddcGroupIndexRange()
+
+    ##
+    # \brief Gets the number of wideband DDC groups on the radio.
+    # \copydetails CyberRadioDriver::IRadio::getNumWbddcGroups()
+    @classmethod
+    def getNumWbddcGroups(cls):
+        return len(cls.getWbddcGroupIndexRange())
+    
+    ##
     # \brief Gets the index range for the wideband DDC groups on the radio.
     #
     # \copydetails CyberRadioDriver::IRadio::getWbddcGroupIndexRange()
     @classmethod
     def getWbddcGroupIndexRange(cls):
         return range(cls.wbddcGroupIndexBase, cls.wbddcGroupIndexBase + cls.numWbddcGroups, 1)
+    
+    ##
+    # \brief Gets the number of narrowband DDC groups on the radio.
+    # \copydetails CyberRadioDriver::IRadio::getNumNbddcGroups()
+    @classmethod
+    def getNumNbddcGroups(cls):
+        return len(cls.getNbddcGroupIndexRange())
     
     ##
     # \brief Gets the index range for the narrowband DDC groups on the radio.
@@ -2166,6 +2247,13 @@ class _radio(log._logger, configKeys.Configurable):
         return range(cls.nbddcGroupIndexBase, cls.nbddcGroupIndexBase + cls.numNbddcGroups, 1)
     
     ##
+    # \brief Gets the number of combined DDC groups on the radio.
+    # \copydetails CyberRadioDriver::IRadio::getNumCombinedDdcGroups()
+    @classmethod
+    def getNumCombinedDdcGroups(cls):
+        return len(cls.getCombinedDdcGroupIndexRange())
+    
+    ##
     # \brief Gets the index range for the combined DDC groups on the radio.
     #
     # \copydetails CyberRadioDriver::IRadio::getCombinedDdcGroupIndexRange()
@@ -2173,6 +2261,14 @@ class _radio(log._logger, configKeys.Configurable):
     def getCombinedDdcGroupIndexRange(cls):
         return range(cls.cddcGroupIndexBase, cls.cddcGroupIndexBase + cls.numCddcGroups, 1)
     
+    ##
+    # \brief Gets the number of wideband DUC groups on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getNumWbducGroups()
+    @classmethod
+    def getNumWbducGroups(cls):
+        return len(cls.getWbducGroupIndexRange())
+
     ##
     # \brief Gets the index range for the wideband DUC groups on the radio.
     #
@@ -2213,10 +2309,9 @@ class _radio(log._logger, configKeys.Configurable):
     # <li> Performing specialization for individual entries
     #
     # \param configDict The incoming configuration dictionary.
-    # \param entryMin The minimum entry index (used in expanding "all" keys)
-    # \param entryMax The maximum entry index (used in expanding "all" keys)
+    # \param entryIndexList The list of entry indices (used in expanding "all" keys).
     # \return The new configuration dictionary.
-    def _normalizeConfigDictSection(self, configDict, entryMin, entryMax):
+    def _normalizeConfigDictSection(self, configDict, entryIndexList):
         newConfigDict = {}
         # Fix keys in config dictionary
         convertKeys = []
@@ -2235,7 +2330,7 @@ class _radio(log._logger, configKeys.Configurable):
             configDict[int(key)] = configDict.pop(key)
         if configKeys.ALL in configDict:
             tmpDict = configDict.pop(configKeys.ALL)
-            for entryNum in xrange(entryMin, entryMax+1, 1):
+            for entryNum in entryIndexList:
                 newConfigDict[entryNum] = copy.deepcopy(tmpDict)
         for entryNum in configDict:
             if newConfigDict.has_key(entryNum):
@@ -2263,51 +2358,45 @@ class _radio(log._logger, configKeys.Configurable):
             if configKey == configKeys.CONFIG_TUNER:
                 newConfigDict[configKeys.CONFIG_TUNER] = self._normalizeConfigDictSection( \
                                                             configDict[configKeys.CONFIG_TUNER], \
-                                                            self.tunerIndexBase, \
-                                                            self.tunerIndexBase + self.numTuner - 1)
+                                                            self.tunerIndexList)
             elif configKey == configKeys.CONFIG_DDC:
                 newConfigDict[configKeys.CONFIG_DDC] = {}
                 for ddcType in [configKeys.CONFIG_WBDDC, configKeys.CONFIG_NBDDC]:
                     isWideband = (ddcType == configKeys.CONFIG_WBDDC)
                     ddcConfDict = configDict[configKeys.CONFIG_DDC].get(ddcType,{})
-                    ddcIndexRange = (self.wbddcIndexBase, self.wbddcIndexBase + self.numWbddc - 1) if isWideband \
-                                    else (self.nbddcIndexBase, self.nbddcIndexBase + self.numNbddc - 1)
+                    ddcIndexRange = self.wbddcIndexList if isWideband else self.nbddcIndexList
                     newConfigDict[configKeys.CONFIG_DDC][ddcType] = self._normalizeConfigDictSection(\
-                            ddcConfDict, ddcIndexRange[0], ddcIndexRange[1])                    
+                            ddcConfDict, ddcIndexRange)                    
             elif self.numGigE > 0 and configKey == configKeys.CONFIG_IP:
                 tmpDict = copy.deepcopy(configDict[configKeys.CONFIG_IP])
                 newConfigDict[configKeys.CONFIG_IP] = self._normalizeConfigDictSection( \
-                            tmpDict, self.gigEIndexBase, self.gigEIndexBase + self.numGigE - 1)
-                for gigEPortNum in xrange(self.gigEIndexBase, self.gigEIndexBase + self.numGigE, 1):
+                            tmpDict, self.gigEIndexList)
+                for gigEPortNum in self.gigEIndexList:
                     if newConfigDict[configKeys.CONFIG_IP].has_key(gigEPortNum) and \
                        newConfigDict[configKeys.CONFIG_IP][gigEPortNum].has_key(configKeys.IP_DEST):
                         tmpDict = copy.deepcopy(newConfigDict[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST])
                         newConfigDict[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST] = \
                               self._normalizeConfigDictSection(tmpDict, \
-                                                               self.gigEDipEntryIndexBase, \
-                                                               self.gigEDipEntryIndexBase + self.numGigEDipEntries - 1)
+                                                               self.gigEDipEntryIndexList)
             elif self.numTxs > 0 and configKey == configKeys.CONFIG_TX:
                 tmpDict = copy.deepcopy(configDict[configKeys.CONFIG_TX])
                 newConfigDict[configKeys.CONFIG_TX] = self._normalizeConfigDictSection( \
                                                             tmpDict, \
-                                                            self.getTransmitterIndexRange()[0], \
-                                                            self.getTransmitterIndexRange()[1])
+                                                            self.txIndexList)
                 for txNum in self.getTransmitterIndexRange():
                     if newConfigDict[configKeys.CONFIG_TX].has_key(txNum):
                         if newConfigDict[configKeys.CONFIG_TX][txNum].has_key(configKeys.CONFIG_CW):
                             newConfigDict[configKeys.CONFIG_TX][txNum][configKeys.CONFIG_CW] = \
                                  self._normalizeConfigDictSection( newConfigDict[configKeys.CONFIG_TX][txNum][configKeys.CONFIG_CW], \
-                                                                   self.txType.toneGenIndexBase, \
-                                                                   self.txType.toneGenIndexBase + self.txType.numToneGen - 1)
+                                                                   self.txToneGenIndexList)
             elif configKey == configKeys.CONFIG_DUC:
                 newConfigDict[configKeys.CONFIG_DUC] = {}
                 for ducType in [configKeys.CONFIG_WBDUC, configKeys.CONFIG_NBDUC]:
                     isWideband = (ducType == configKeys.CONFIG_WBDUC)
                     ducConfDict = configDict[configKeys.CONFIG_DUC].get(ducType,{})
-                    ducIndexRange = (self.wbducIndexBase, self.wbducIndexBase + self.numWbduc - 1) if isWideband \
-                                    else (self.nbducIndexBase, self.nbducIndexBase + self.numNbduc - 1)
+                    ducIndexRange = self.wbducIndexList if isWideband else self.nbducIndexList
                     newConfigDict[configKeys.CONFIG_DUC][ducType] = self._normalizeConfigDictSection(\
-                            ducConfDict, ducIndexRange[0], ducIndexRange[1])                    
+                            ducConfDict, ducIndexRange)                    
                     pass
             elif configKey == configKeys.CONFIG_DDC_GROUP:
                 newConfigDict[configKeys.CONFIG_DDC_GROUP] = {}
@@ -2315,17 +2404,15 @@ class _radio(log._logger, configKeys.Configurable):
                                 configKeys.CONFIG_COMBINED_DDC_GROUP]:
                     isWideband = (ddcType == configKeys.CONFIG_WBDDC_GROUP)
                     ddcGroupConfDict = configDict[configKeys.CONFIG_DDC_GROUP].get(ddcType,{})
-                    ddcGroupIndexRange = (self.wbddcGroupIndexBase, self.wbddcGroupIndexBase + self.numWbddcGroups - 1) if isWideband \
-                                    else (self.nbddcGroupIndexBase, self.nbddcGroupIndexBase + self.numNbddcGroups - 1)
+                    ddcGroupIndexRange = self.wbddcGroupIndexList if isWideband else self.nbddcGroupIndexList
                     if ddcType == configKeys.CONFIG_COMBINED_DDC_GROUP:
-                        ddcGroupIndexRange = (self.cddcGroupIndexBase, self.cddcGroupIndexBase + self.numCddcGroups - 1)
+                        ddcGroupIndexRange = self.cddcGroupIndexList
                     newConfigDict[configKeys.CONFIG_DDC_GROUP][ddcType] = self._normalizeConfigDictSection(\
-                            ddcGroupConfDict, ddcGroupIndexRange[0], ddcGroupIndexRange[1])                    
+                            ddcGroupConfDict, ddcGroupIndexRange)                    
             elif configKey == configKeys.CONFIG_FFT:
                 newConfigDict[configKeys.CONFIG_FFT] = self._normalizeConfigDictSection( \
                                                             configDict[configKeys.CONFIG_FFT], \
-                                                            self.fftStreamIndexBase, \
-                                                            self.fftStreamIndexBase + self.numFftStream - 1)
+                                                            self.fftStreamIndexList)
             else:
                 newConfigDict[configKey] = copy.deepcopy(configDict[configKey])
         return newConfigDict
@@ -2451,8 +2538,7 @@ class _radio(log._logger, configKeys.Configurable):
             pass
         # -- Has GigE ports
         else:
-            for gigEPortNum in xrange(self.gigEIndexBase, 
-                                      self.gigEIndexBase + self.numGigE, 1):
+            for gigEPortNum in self.gigEIndexList:
                 if gigEPortNum in confDict:
                     # Set source IP address for this GigE port
                     if self.sipCmd is not None and self.sipCmd.settable and \
@@ -2507,13 +2593,12 @@ class _radio(log._logger, configKeys.Configurable):
                                     self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_SOURCE_PORT] = \
                                         getattr(cmd, configKeys.GIGE_SOURCE_PORT)
                             else:
-                                self.cmdErrorInfo.extend(cmd.errorInfo)
+                                if cmd.errorInfo is not None:
+                                    self.cmdErrorInfo.extend(cmd.errorInfo)
                     # Set destination IP table info for this GigE port
                     if self.dipCmd is not None and self.dipCmd.settable and \
                        configKeys.IP_DEST in confDict[gigEPortNum]:
-                        for gigEDipEntryNum in xrange(self.gigEDipEntryIndexBase, 
-                                                      self.gigEDipEntryIndexBase + self.numGigEDipEntries, 
-                                                      1):
+                        for gigEDipEntryNum in self.gigEDipEntryIndexList:
                             if gigEDipEntryNum in confDict[gigEPortNum][configKeys.IP_DEST]:
                                 cDict = { "parent": self, \
                                           "verbose": self.verbose, \
@@ -2542,7 +2627,8 @@ class _radio(log._logger, configKeys.Configurable):
                                             self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum][key] = \
                                                getattr(cmd, key)
                                 else:
-                                    self.cmdErrorInfo.extend(cmd.errorInfo)
+                                    if cmd.errorInfo is not None:
+                                        self.cmdErrorInfo.extend(cmd.errorInfo)
                                 pass
                     # Set flow control for this GigE port
                     if self.tgfcCmd is not None and self.tgfcCmd.settable and \
@@ -2559,10 +2645,137 @@ class _radio(log._logger, configKeys.Configurable):
                             self.configuration[configKeys.CONFIG_IP][gigEPortNum][configKeys.GIGE_FLOW_CONTROL] = \
                                     getattr(cmd, configKeys.GIGE_FLOW_CONTROL)
                         else:
-                            self.cmdErrorInfo.extend(cmd.errorInfo)
+                            if cmd.errorInfo is not None:
+                                self.cmdErrorInfo.extend(cmd.errorInfo)
             pass
         return success
 
+    ##
+    # \internal
+    # \brief Helper function for querying the IP configuration.
+    # \param gigEPortIndex 10-Gig data port index, or None to query all data ports.
+    def queryIpConfigurationNew(self, gigEPortIndex=None):
+        # IP configuration query -- The format of this section depends on whether
+        # the radio has Gigabit Ethernet ports on it or not.
+        ret = {}
+        # -- No GigE ports
+        if self.numGigE == 0:
+            ret = self._queryIpConfigurationNo10Gig()
+        # -- Has GigE ports
+        else:
+            ret = self._queryIpConfiguration10Gig(gigEPortIndex=gigEPortIndex)
+        return ret
+
+    ##
+    # \internal
+    # \brief Helper function for querying the IP configuration for radios without
+    #     10-Gig Ethernet interfaces.
+    def _queryIpConfigurationNo10Gig(self):
+        ret = {}
+        for cmdClass, configKey in [ \
+                                (self.sipCmd, configKeys.IP_SOURCE), \
+                                (self.dipCmd, configKeys.IP_DEST), \
+                                (self.smacCmd, configKeys.MAC_SOURCE), \
+                                (self.dmacCmd, configKeys.MAC_DEST), \
+                              ]:
+            ret[configKey] = None
+            if cmdClass is not None and cmdClass.queryable:
+                cmd = cmdClass(parent=self, 
+                               query=True,
+                                verbose=self.verbose, logFile=self.logFile)
+                cmd.send( self.sendCommand, )
+                self._addLastCommandErrorInfo(cmd)
+                rspInfo = cmd.getResponseInfo()
+                if rspInfo is not None:
+                    ret[configKey] = rspInfo.get(configKey, "")
+        return ret
+    
+    ##
+    # \internal
+    # \brief Helper function for querying the IP configuration for radios with
+    #     10-Gig Ethernet interfaces.
+    # \param gigEPortIndex 10-Gig data port index, or None to query all data ports.
+    def _queryIpConfiguration10Gig(self, gigEPortIndex=None):
+        ret = {}
+        gigEPortIndexRange = self.getGigEIndexRange() if gigEPortIndex is None else [gigEPortIndex]
+        for gigEPortNum in gigEPortIndexRange:
+            ret[gigEPortNum] = {}
+            # Query source IP address for this GigE port   
+            if self.sipCmd is not None and self.sipCmd.queryable:
+                # Default source IP info
+                if self.json:
+                    ret[gigEPortNum][configKeys.IP_SOURCE] = {
+                            configKeys.GIGE_MAC_ADDR: None,
+                            configKeys.GIGE_IP_ADDR: None,
+                            configKeys.GIGE_NETMASK: None,
+                            configKeys.GIGE_SOURCE_PORT: None,
+                         }
+                else:
+                    ret[gigEPortNum][configKeys.IP_SOURCE] = None
+                cDict = { "parent": self, \
+                          "query": True, \
+                          "verbose": self.verbose, \
+                          "logFile": self.logFile, \
+                          configKeys.GIGE_PORT_INDEX: gigEPortNum, \
+                         }
+                cmd = self.sipCmd(**cDict)
+                cmd.send( self.sendCommand, )
+                self._addLastCommandErrorInfo(cmd)
+                rspInfo = cmd.getResponseInfo()
+                if rspInfo is not None:
+                    # How to parse this depends on whether the radio is JSON or not
+                    if self.json:
+                        # Do it NDR551-style
+                        ret[gigEPortNum][configKeys.IP_SOURCE] = {}
+                        ret[gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_MAC_ADDR] = \
+                             rspInfo.get(configKeys.GIGE_MAC_ADDR, "")
+                        ret[gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_IP_ADDR] = \
+                             rspInfo.get(configKeys.GIGE_IP_ADDR, "")
+                        ret[gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_NETMASK] = \
+                             rspInfo.get(configKeys.GIGE_NETMASK, "")
+                        ret[gigEPortNum][configKeys.IP_SOURCE][configKeys.GIGE_SOURCE_PORT] = \
+                             rspInfo.get(configKeys.GIGE_SOURCE_PORT, 0)
+                    else:
+                        # Do it NDR308-style
+                        ret[gigEPortNum][configKeys.IP_SOURCE] = \
+                               rspInfo.get(configKeys.IP_SOURCE, "")
+            # Query destination IP table for this GigE port
+            if self.dipCmd is not None and self.dipCmd.queryable:
+                ret[gigEPortNum][configKeys.IP_DEST] = {}
+                for gigEDipEntryNum in self.gigEDipEntryIndexList:
+                    ret[gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum] = {}
+                    cmd = self.dipCmd(**{})
+                    for configKey in [configKeys.GIGE_IP_ADDR, \
+                                      configKeys.GIGE_MAC_ADDR, \
+                                      configKeys.GIGE_SOURCE_PORT, \
+                                      configKeys.GIGE_DEST_PORT, \
+                                      configKeys.GIGE_ARP]:
+                        if hasattr(cmd, "queryParamMap") and cmd.queryParamMap.has_key(configKey):
+                            ret[gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum][configKey] = None
+                        elif hasattr(cmd, "queryResponseData") and configKey in [q[0] for q in cmd.queryResponseData]:
+                            ret[gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum][configKey] = None
+                    cDict = { "parent": self, \
+                              "query": True, \
+                              "verbose": self.verbose, \
+                              "logFile": self.logFile, \
+                              configKeys.GIGE_PORT_INDEX: gigEPortNum, \
+                              configKeys.GIGE_DIP_INDEX: gigEDipEntryNum, \
+                             }
+                    cmd = self.dipCmd(**cDict)
+                    cmd.send( self.sendCommand, )
+                    rspInfo = cmd.getResponseInfo()
+                    self._addLastCommandErrorInfo(cmd)
+                    if rspInfo is not None:
+                        for configKey in [configKeys.GIGE_IP_ADDR, \
+                                          configKeys.GIGE_MAC_ADDR, \
+                                          configKeys.GIGE_SOURCE_PORT, \
+                                          configKeys.GIGE_DEST_PORT, \
+                                          configKeys.GIGE_ARP]:
+                            if rspInfo.has_key(configKey):
+                                ret[gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum][configKey] = \
+                                   rspInfo[configKey]
+        return ret
+    
     ##
     # \internal
     # \brief Helper function for setting the transmitter configuration.
@@ -2893,10 +3106,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getNumDdc()
     @classmethod
     def getNumDdc(cls, wideband):
-        if wideband:
-            return cls.numWbddc
-        else:
-            return cls.numNbddc
+        return len(cls.getDdcIndexRange(wideband))
     
     ##
     # \brief Gets the allowed rate set for the DDCs on the radio.
@@ -2917,31 +3127,31 @@ class _radio(log._logger, configKeys.Configurable):
         return ddcObj.getDdcRateList(index) if ddcObj is not None else []
     
     ##
-    # \brief Gets the allowed rate set for the DDCs on the radio.
+    # \brief Gets the allowed bandwidth set for the DDCs on the radio.
     #
-    # \copydetails CyberRadioDriver::IRadio::getDdcRateSet()
+    # \copydetails CyberRadioDriver::IRadio::getDdcBwSet()
     @classmethod
     def getDdcBwSet(cls, wideband, index=None):
         ddcObj = cls.wbddcType if wideband else cls.nbddcType
         return ddcObj.getDdcBwSet(index) if ddcObj is not None else {}
     
     ##
-    # \brief Gets the allowed rate set for the DDCs on the radio.
+    # \brief Gets the allowed bandwidth list for the DDCs on the radio.
     #
-    # \copydetails CyberRadioDriver::IRadio::getDdcRateSet()
-    @classmethod
-    def getDdcDataFormat(cls, wideband):
-        ddcObj = cls.wbddcType if wideband else cls.nbddcType
-        return ddcObj.getDdcDataFormat() if ddcObj is not None else {}
-    
-    ##
-    # \brief Gets the allowed rate list for the DDCs on the radio.
-    #
-    # \copydetails CyberRadioDriver::IRadio::getDdcRateList()
+    # \copydetails CyberRadioDriver::IRadio::getDdcBwList()
     @classmethod
     def getDdcBwList(cls, wideband, index=None):
         ddcObj = cls.wbddcType if wideband else cls.nbddcType
         return ddcObj.getDdcBwList(index) if ddcObj is not None else []
+    
+    ##
+    # \brief Gets the set of available DDC data formats.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getDdcDataFormat()
+    @classmethod
+    def getDdcDataFormat(cls, wideband):
+        ddcObj = cls.wbddcType if wideband else cls.nbddcType
+        return ddcObj.getDdcDataFormat() if ddcObj is not None else {}
     
     ##
     # \brief Gets the frequency offset range for the narrowband DDCs on the radio.
@@ -3183,6 +3393,48 @@ class _radio(log._logger, configKeys.Configurable):
         else:
             ret = False
         return ret
+    ##
+    # \brief Gets the current FPGA state.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getFpgaState()
+    def getFpgaState(self):
+        ret = None
+        if self.fpgaStateCmd is not None:
+            ret = self.getConfigurationByKeys("fpgaState")
+        return ret
+    
+    ##
+    # \brief Sets the current FPGA state.
+    #
+    # \copydetails CyberRadioDriver::IRadio::setFpgaState()
+    def setFpgaState(self, state):
+        ret = False
+        if self.fpgaStateCmd is not None:
+            ret = self.setConfiguration({"fpgaState": state})
+        return ret
+    
+    # OVERRIDE
+    ##
+    # \brief Sets whether or not the object is in verbose mode.
+    #
+    # \copydetails CyberRadioDriver::IRadio::setVerbose()
+    def setVerbose(self, verbose):
+        # Set this object's verbose mode
+        log._logger.setVerbose(self, verbose)
+        # Set verbose mode on all components
+        for obj in self.componentList:
+            obj.setVerbose(verbose)
+        
+    ##
+    # \brief Sets the log file.
+    #
+    # \copydetails CyberRadioDriver::IRadio::setLogFile()
+    def setLogFile(self, logFile):
+        # Set this object's log file
+        log._logger.setLogFile(self, logFile)
+        # Set log file on all components
+        for obj in self.componentList:
+            obj.setLogFile(logFile)
 
 
 ##
@@ -3249,9 +3501,150 @@ class _radio_identifier(_radio):
     refModes = {}
     rbypModes = {}
     vitaEnableOptions = {}
-    connectionModes = ["https", "tcp", "tty"]
+    connectionModes = ["https", "tcp", "udp", "tty"]
     validConfigurationKeywords = []
     setTimeDefault = False
+
+    # OVERRIDE
+    ##
+    # \protected
+    # \brief Queries hardware to determine the object's current configuration.  
+    def _queryConfiguration(self):
+        # Call the base-class implementation
+        configKeys.Configurable._queryConfiguration(self)
+        # This radio has nothing further that it can configure
+
+
+##
+# \brief Radio function (mode) command used by JSON-based radios.
+#
+class funJSON(command._jsonCommandBase):
+    mnemonic = "fun"
+    queryParamMap = {
+            configKeys.RADIO_FUNCTION: "state",
+        }
+    setParamMap = {
+            configKeys.RADIO_FUNCTION: "state",
+        }
+
+
+##
+# \internal
+# \brief Radio handler class that supports nothing more complicated than 
+#     identifying a connected radio.
+#
+# Used internally to support radio auto-detection.
+#
+# This class implements the CyberRadioDriver.IRadio interface.
+#
+class _radio_identifier_json(_radio):
+    _name = "Radio Identifier"
+    json = True
+    ifSpec = _ifSpec
+    adcRate = 1.0
+    numTuner = 0
+    numTunerBoards = 0
+    tunerType = None
+    numWbddc = 0
+    wbddcType = None
+    numNbddc = 0
+    nbddcType = None
+    numTxs = 0
+    txType = None
+    numWbduc = 0
+    wbducType = None
+    numNbduc = 0
+    nbducType = None
+    numWbddcGroups = 0
+    wbddcGroupType = None
+    numNbddcGroups = 0
+    nbddcGroupType = None
+    numTunerGroups = 0
+    tunerGroupType = None
+    numGigE = 0
+    numGigEDipEntries = 0
+    idnQry = None
+    verQry = None
+    hrevQry = None
+    statQry = command.status_json
+    tstatQry = None
+    tadjCmd = None
+    resetCmd = None
+    cfgCmd = None
+    ppsCmd = None
+    utcCmd = None
+    refCmd = None
+    rbypCmd = None
+    sipCmd = None
+    dipCmd = None
+    smacCmd = None
+    dmacCmd = None
+    calfCmd = None
+    nbssCmd = None
+    fnrCmd = None
+    gpsCmd = None
+    gposCmd = None
+    rtvCmd = None
+    tempCmd = None
+    gpioStaticCmd = None
+    gpioSeqCmd = None
+    tgfcCmd = None
+    funCmd = funJSON
+    refModes = {}
+    rbypModes = {}
+    vitaEnableOptions = {}
+    connectionModes = ["https", "tcp", "udp", "tty"]
+    validConfigurationKeywords = [
+            configKeys.RADIO_FUNCTION
+        ]
+    setTimeDefault = False
+
+    # OVERRIDE
+    ##
+    # \brief Returns version information for the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getVersionInfo()
+    def getVersionInfo(self):
+        # Query hardware for details if we don't have them already
+        keys = [configKeys.VERINFO_MODEL, configKeys.VERINFO_SN, 
+                configKeys.VERINFO_SW, configKeys.VERINFO_FW, 
+                configKeys.VERINFO_REF, configKeys.VERINFO_UNITREV, 
+                configKeys.VERINFO_HW]
+        if not all([self.versionInfo.has_key(key) for key in keys]):
+            cmd = self.statQry(parent=self, 
+                               query=True,
+                               verbose=self.verbose, logFile=self.logFile)
+            cmd.send( self.sendCommand, )
+            self._addLastCommandErrorInfo(cmd)
+            rspInfo = cmd.getResponseInfo()
+            if rspInfo is not None:
+                self._dictUpdate(self.versionInfo, rspInfo, {}, keys)
+        for key in keys:
+            if not self.versionInfo.has_key(key):
+                self.versionInfo[key] = "N/A"
+        return self.versionInfo
+
+    # OVERRIDE
+    ##
+    # \protected
+    # \brief Queries hardware to determine the object's current configuration.  
+    def _queryConfiguration(self):
+        # Call the base-class implementation
+        configKeys.Configurable._queryConfiguration(self)
+        # Call the radio function command
+        if self.funCmd is not None:
+            cmd = self.funCmd(parent=self, 
+                              query=True,
+                              verbose=self.verbose, logFile=self.logFile)
+            cmd.send( self.sendCommand, )
+            self._addLastCommandErrorInfo(cmd)
+            rspInfo = cmd.getResponseInfo()
+            if rspInfo is not None:
+                for key in self.validConfigurationKeywords:
+                    val = rspInfo.get(key, None)
+                    if val is not None:
+                        self.configuration[key] = val
+        # This radio has nothing further that it can configure
 
 
 #-- End Radio Handler Objects --------------------------------------------------#
