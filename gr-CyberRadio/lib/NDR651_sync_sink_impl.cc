@@ -97,7 +97,7 @@ NDR651_sync_sink_impl::NDR651_sync_sink_impl(INPUT_ARGUMENTS_TYPE)
 		}
 	}
 
-	syncTXClient = new LibCyberRadio::NDR651::SyncTXClient(txClients, debug);
+	syncTXClient = new LibCyberRadio::NDR651::SyncTXClient(txClients, radioHostname, debug);
 	syncTXClient->setDucGroup(groupIndex);
 	syncTXClient->start();
 }

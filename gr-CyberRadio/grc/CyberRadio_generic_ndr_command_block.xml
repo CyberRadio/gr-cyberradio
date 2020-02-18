@@ -21,7 +21,7 @@
     <name>Command</name>
     <key>cmd</key>
     <value>""</value>
-    <type>string</type>
+    <type>raw</type>
   </param>
     <param>
     <name>Debug Flag</name>

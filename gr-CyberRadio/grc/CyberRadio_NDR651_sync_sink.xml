@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <block>
-	<name>NDR651_sync_sink</name>
+	<name>[CyberRadio] NDR651 Synch. Sink</name>
 	<key>CyberRadio_NDR651_sync_sink</key>
 	<category>[CyberRadio]/Sinks</category>
 	<import>import CyberRadio</import>

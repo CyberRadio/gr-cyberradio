@@ -5,6 +5,7 @@
   <category>[CyberRadio]/DSP Functions</category>
   <import>import CyberRadio</import>
   <make>CyberRadio.vector_keep_m_in_n($type.size, $m, $n, $offset)</make>
+  <callback>set_offset($offset)</callback>
   <param>
     <name>Type</name>
     <key>type</key>

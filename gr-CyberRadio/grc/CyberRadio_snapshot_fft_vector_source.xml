@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] NDR358 Snapshot FFT Source</name>
+  <key>CyberRadio_snapshot_fft_vector_source</key>
+  <category>[CyberRadio]/Vita and UDP Sources</category>
+  <flags>throttle</flags>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.snapshot_fft_vector_source($(radioObj).name.lower(), $ip, $port, $block_size, $block_rate)
+print("%s = CyberRadio.snapshot_fft_vector_source(%r, %r, %r, %r, %r)"%("$(id)", $ip, $port, $block_size, $block_rate, $(radioObj).name.lower()))
+  </make>
+  <param>
+    <name>Radio Object</name>
+    <key>radioObj</key>
+    <type>raw</type>
+  </param>
+  <param>
+    <name>IP</name>
+    <key>ip</key>
+    <value>0.0.0.0</value>
+    <type>string</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Port</name>
+    <key>port</key>
+    <value>11000</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Block Size</name>
+    <key>block_size</key>
+    <value>131072</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Block Rate</name>
+    <key>block_rate</key>
+    <value>10</value>
+    <type>int</type>
+  </param>
+  <sink>
+    <name>control</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  <source>
+    <name>out</name>
+    <type>byte</type>
+    <vlen>$block_size</vlen>
+  </source>
+  <source>
+    <name>status</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+</block>

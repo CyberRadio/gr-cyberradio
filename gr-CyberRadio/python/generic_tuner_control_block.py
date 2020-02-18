@@ -50,6 +50,7 @@ class generic_tuner_control_block(generic_radio_control_block, gr.basic_block):
 					 ):
 		self._configParams = {"freq": self.set_freq, 
 						"attenuation": self.set_attenuation, 
+						"ifFilter": self.set_filter, 
 						 }
 		self._init=True
 		self._name = "Tuner%d_ctrl"%(index)
@@ -77,7 +78,7 @@ class generic_tuner_control_block(generic_radio_control_block, gr.basic_block):
 		if (self._init and param is None) or ((not self._init) and (param=="index")):
 			confDict = { crd.configKeys.CONFIG_TUNER: { self.index: {crd.configKeys.TUNER_FREQUENCY:int(self.rfFreq*1e6), 
 																			crd.configKeys.TUNER_ATTENUATION:self.attenuation, 
-																			crd.configKeys.TUNER_FILTER: self.filter, 
+																			crd.configKeys.TUNER_IF_FILTER: self.filter, 
 # 																			crd.configKeys.ENABLE: self.enable, 
 																			 } } }
 			if ( isinstance(self.group,int) and (self.group>=0) ):
@@ -90,14 +91,18 @@ class generic_tuner_control_block(generic_radio_control_block, gr.basic_block):
 			elif param=="attenuation":
 				confDict = { crd.configKeys.CONFIG_TUNER: { self.index: { crd.configKeys.TUNER_ATTENUATION:self.attenuation, } } }
 			elif param=="filter":
-				confDict = { crd.configKeys.CONFIG_TUNER: { self.index: { crd.configKeys.TUNER_FILTER: self.filter, } } }
+				confDict = { crd.configKeys.CONFIG_TUNER: { self.index: { crd.configKeys.TUNER_IF_FILTER: self.filter, } } }
 			elif param=="group":
 				confDict = { crd.configKeys.CONFIG_TUNER: { self.index: { crd.configKeys.TUNER_COHERENT_GROUP: self.group, } } }
 			elif param=="enable":
 				confDict = { crd.configKeys.CONFIG_TUNER: { self.index: { crd.configKeys.ENABLE: self.enable, } } }
 		if confDict is not None:
 			self.log.debug( json.dumps(confDict, sort_keys=True) )
-			self.radioObj.setConfiguration(confDict)
+			if self.radioObj.isConnected():
+				self.radioObj.setConfiguration(confDict)
+				errorMsg = self.radioObj.cmdErrorInfo
+				if (len(errorMsg) > 0):
+					self.txStatusMsg("Status", "Frequency out of range")
 		if sendFreqMsg:
 			self.txFreqMsg("freq",self.freq*self.freqUnits)
 	
@@ -158,7 +163,7 @@ class generic_tuner_control_block(generic_radio_control_block, gr.basic_block):
 
 	## Setter & getter for attenuation
 	def set_attenuation(self, attenuation=0):
-		print "set_attenuation( {0} )".format(attenuation)
+		self.log.debug( "set_attenuation( {0} )".format(attenuation) )
 		if self._init or not hasattr(self, "attenuation"):
 			self.attenuation = attenuation
 			self.log.debug("%s.set_attenuation: %s -> %s"%(self._name, repr(self.attenuation), repr(attenuation),))

@@ -20,6 +20,9 @@
 ########################################################################
 # Setup library
 ########################################################################
+## Setup C++11
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 include(GrPlatform) #define LIB_SUFFIX
 
 include_directories(${Boost_INCLUDE_DIR})
@@ -37,7 +40,10 @@ list(APPEND CyberRadio_sources
     ndr651_sink_impl.cc
     snapshot_vector_source_impl.cc
     NDR651_sync_sink_impl.cc
-    vector_mag_squared_log10_cf_impl.cc )
+    vector_mag_squared_log10_cf_impl.cc
+    single_pole_iir_filter_ff_impl.cc
+    snapshot_vector_source_mk2_impl.cc 
+    snapshot_fft_vector_source_impl.cc )
 
 set(CyberRadio_sources "${CyberRadio_sources}" PARENT_SCOPE)
 if(NOT CyberRadio_sources)
@@ -64,30 +70,30 @@ GR_LIBRARY_FOO(gnuradio-CyberRadio RUNTIME_COMPONENT "CyberRadio_runtime" DEVEL_
 ########################################################################
 # Build and register unit test
 ########################################################################
-include(GrTest)
+#include(GrTest)
 
-include_directories(${CPPUNIT_INCLUDE_DIRS})
+#include_directories(${CPPUNIT_INCLUDE_DIRS} ${LIBCYBERRADIO_INCLUDE_DIR})
 
-list(APPEND test_CyberRadio_sources
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_CyberRadio.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/qa_CyberRadio.cc
-)
+#list(APPEND test_CyberRadio_sources
+#    ${CMAKE_CURRENT_SOURCE_DIR}/test_CyberRadio.cc
+#    ${CMAKE_CURRENT_SOURCE_DIR}/qa_CyberRadio.cc
+#)
 
-add_executable(test-CyberRadio ${test_CyberRadio_sources})
+#add_executable(test-CyberRadio ${test_CyberRadio_sources})
 
-target_link_libraries(
-  test-CyberRadio
-  ${GNURADIO_RUNTIME_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${CPPUNIT_LIBRARIES}
-  gnuradio-CyberRadio
-)
+#target_link_libraries(
+#  test-CyberRadio
+#  ${GNURADIO_RUNTIME_LIBRARIES}
+#  ${LIBCYBERRADIO_LIB_DIR}
+#  ${Boost_LIBRARIES}
+#  ${CPPUNIT_LIBRARIES}
+#  gnuradio-CyberRadio
+#)
 
-GR_ADD_TEST(test_CyberRadio test-CyberRadio)
+#GR_ADD_TEST(test_CyberRadio test-CyberRadio)
 
 ########################################################################
 # Print summary
 ########################################################################
 message(STATUS "Using install prefix: ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "Building for version: ${VERSION} / ${LIBVER}")
-

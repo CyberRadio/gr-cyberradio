@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] Single Pole IIR</name>
+  <key>CyberRadio_single_pole_iir_filter_ff</key>
+  <category>[CyberRadio]/DSP Functions</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.single_pole_iir_filter_ff($alpha, $vlen, $resetOnAlphaChange)</make>
+	<callback>set_taps($alpha)</callback>
+	<callback>reset($reset)</callback>
+<!--
+	<param>
+		<name>Type</name>
+		<key>type</key>
+		<type>enum</type>
+		<option>
+			<name>Complex</name>
+			<key>complex</key>
+			<opt>fcn:cc</opt>
+		</option>
+		<option>
+			<name>Float</name>
+			<key>float</key>
+			<opt>fcn:ff</opt>
+		</option>
+	</param>
+-->
+	<param>
+		<name>Alpha</name>
+		<key>alpha</key>
+		<value>1.0</value>
+		<type>real</type>
+	</param>
+	<param>
+		<name>Reset Filter on Alpha change?</name>
+		<key>resetOnAlphaChange</key>
+		<value>True</value>
+		<type>bool</type>
+	</param>
+	<param>
+		<name>Reset Filter State</name>
+		<key>reset</key>
+		<value>False</value>
+		<type>bool</type>
+	</param>
+	<param>
+		<name>Vec Length</name>
+		<key>vlen</key>
+		<value>1</value>
+		<type>int</type>
+	</param>
+	<check>$vlen &gt; 0</check>
+	<sink>
+		<name>in</name>
+<!--
+		<type>$type</type>
+-->
+		<type>float</type>
+		<vlen>$vlen</vlen>
+	</sink>
+  <sink>
+    <name>reset</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+
+	<source>
+		<name>out</name>
+<!--
+		<type>$type</type>
+-->
+		<type>float</type>
+		<vlen>$vlen</vlen>
+  </source>
+</block>

@@ -86,6 +86,18 @@ namespace gr {
       return noutput_items;
     }
 
+    void 
+    vector_keep_m_in_n_impl::set_offset(int offset) {
+      if (d_offset!=offset) {
+        d_offset = offset;
+        if(d_offset > (d_n - d_m)) {
+          std::string s = boost::str(boost::format("keep_m_in_n: offset (%1%) <= n (%2%) - m (%3%)") \
+                                     % d_offset % d_n % d_m);
+          throw std::runtime_error(s);
+        }
+      }
+    }
+
   } /* namespace CyberRadio */
 } /* namespace gr */
 

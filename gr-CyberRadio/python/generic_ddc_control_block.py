@@ -58,12 +58,14 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 					udpPort=12345, 
 					otherArgs={}, 
 					debug=False,
-					totalRepeatPackets=1,
-					activeRepeatPackets=1,
+					# totalRepeatPackets=1,
+					# activeRepeatPackets=1,
 					autoStart=True, 
 					 ):
 		self._configParams = {"enable":self.set_enable, 
 						"rate": self.set_rate, 
+                        "index":self.set_index,
+                        "freq":self.set_freq
 						 }
 		
 		self._name = "%sBDDC%d_ctrl"%("W" if wideband else "N",index)
@@ -72,6 +74,12 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 		generic_radio_control_block.__init__(self, radioObj=radioObj, debug=debug)
 		self.log.debug("hello")
 		self.freqUnits = 1
+		
+		self.log.debug("%s.__init__(radioObj=%r, index=%r, rate=%s)"%(self._name,radioObj,index,rate))
+
+		self.totalRepeatPackets = None
+		self.activeRepeatPackets = None
+		self.phaseOffset = None
 		
 		self.set_index(index)
 		self.set_enable(enable)
@@ -86,15 +94,15 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 		self.set_localInterface(localInterface)
 		self.set_udpPort(udpPort)
 		self.set_otherArgs(otherArgs)
-		self.set_phaseOffset(0.0)
-		self.set_totalRepeatPackets(totalRepeatPackets)
-		self.set_activeRepeatPackets(activeRepeatPackets)
+		# self.set_phaseOffset(0.0)
+		# self.set_totalRepeatPackets(totalRepeatPackets)
+		# self.set_activeRepeatPackets(activeRepeatPackets)
 		
 		self.updateConfig()
 		self._init = False
 	
 	def __del__(self,):
-		print (self._name+".__del__()").center(80,"~")
+		self.log.debug( (self._name+".__del__()").center(80,"~") )
 		self.set_enable(False)
 	
 	def getStreamId(self):
@@ -111,14 +119,14 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 			dipConfDict[radioInterface] = {
 								crd.configKeys.IP_DEST: { 
 									dipIndex: { 
-										crd.configKeys.GIGE_SOURCE_PORT:self.udpPort,
+										crd.configKeys.GIGE_SOURCE_PORT:self.index+(10000 if self.wideband else 20000),
 										crd.configKeys.GIGE_DEST_PORT:self.udpPort,
 										 }, 
 									 }, 
 								 }
 		if self.localInterface is not None and len(self.localInterface)>0:
 			dmac, dip = crd.getInterfaceAddresses(self.localInterface)
-			print( "interface = {0}, dmac = {1}, dip = {2}".format(self.localInterface, dmac, dip,) )
+			self.log.debug( "interface = {0}, dmac = {1}, dip = {2}".format(self.localInterface, dmac, dip,) )
 			temp = [int(i) for i in dip.split(".")]
 			temp[-1] = (~temp[-1])&0xff
 			#~ sip = ".".join(str(i) for i in temp)
@@ -142,7 +150,7 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 		return dipConfDict
 	
 	def updateConfig(self,param=None):
-		print("%s.updateConfig( %s ), init=%s"%(self._name, param, self._init))
+		self.log.debug("%s.updateConfig( %s ), init=%s"%(self._name, param, self._init))
 		if self.dipIndex<0:
 			dipIndex = self.index-self.radioObj.getDdcIndexRange(self.wideband)[0] + (0 if self.wideband else self.radioObj.getNumWbddc())
 		else:
@@ -158,33 +166,45 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 		rateKey = crd.configKeys.DDC_RATE_INDEX
 		
 		#for gpr configurations force packet type and set spectral rate
-		if self.enable and self.radioObj.name.lower() in ("ndr804","ndr328","ndr804-ptt"):
+		if self.enable and self.radioObj.name.lower() in ("ndr804","ndr328","ndr804-ptt","ndr301-ptt"):
+			self.log.debug('if self.enable and self.radioObj.name.lower() in ("ndr804","ndr328","ndr804-ptt","ndr301-ptt")')
 			enableVal = 2
 			if self.wideband:
 				rateKey = crd.configKeys.DDC_SPECTRAL_FRAME_RATE
 			vitaVal = None
+			udpDest = dipIndex
 		else:
 			enableVal = self.enable
-			vitaVal = 3
+			if any(i in self.radioObj.name.lower() for i in ("470","472","304",)):
+				vitaVal = 2
+				udpDest = self.udpPort
+			else:
+				vitaVal = 3
+				udpDest = dipIndex
 		if (self._init and param is None) or ((not self._init) and (param=="index")):
 			ddcConfDict = { rateKey: self.rate, 
 							crd.configKeys.DDC_STREAM_ID: self.getStreamId(), 
 							crd.configKeys.ENABLE: enableVal, 
 							crd.configKeys.DDC_OUTPUT_FORMAT: self.mode, 
-							crd.configKeys.DDC_UDP_DESTINATION: dipIndex, 
+							crd.configKeys.DDC_UDP_DESTINATION: udpDest, 
 							crd.configKeys.DDC_DATA_PORT: self.radioInterface, 
-							crd.configKeys.DDC_PHASE_OFFSET: self.phaseOffset,
-							crd.configKeys.DDC_TOTAL_REPEAT_PACKETS: self.totalRepeatPackets,
-							crd.configKeys.DDC_ACTIVE_REPEAT_PACKETS: self.activeRepeatPackets, 
 							 }
+			if "364" in self.radioObj.name.lower():
+				for key,value in (
+						(crd.configKeys.DDC_PHASE_OFFSET, self.phaseOffset),
+						(crd.configKeys.DDC_TOTAL_REPEAT_PACKETS, self.totalRepeatPackets),
+						(crd.configKeys.DDC_ACTIVE_REPEAT_PACKETS, self.activeRepeatPackets), 
+						 ):
+					if value is not None:
+						ddcConfDict[key] = value
 			if self.radioObj.isDdcSelectableSource(self.wideband):
 				ddcConfDict[crd.configKeys.DDC_RF_INDEX] = self.rfSource
 			if self.radioObj.isDdcTunable(self.wideband):
 				ddcConfDict[crd.configKeys.DDC_FREQUENCY_OFFSET] = self.ddcFreq
 			if vitaVal is not None:
-				ddcConfDict[ crd.configKeys.DDC_VITA_ENABLE ] = 3
-			if self.radioObj.name.lower() in ("ndr354","ndr364",):
-				ddcConfDict[ crd.configKeys.DDC_CLASS_ID ] = True
+				ddcConfDict[ crd.configKeys.DDC_VITA_ENABLE ] = vitaVal
+			# if self.radioObj.name.lower() in ("ndr354","ndr364",):
+			# 	ddcConfDict[ crd.configKeys.DDC_CLASS_ID ] = True
 			dipConfDict = self.getDipConf(dipIndex)
 			sendFreqMsgFlag = True
 		else:
@@ -196,11 +216,11 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 					ddcConfDict[ crd.configKeys.ENABLE ] = enableVal
 					if enableVal:
 						ddcConfDict[ crd.configKeys.DDC_STREAM_ID ] = self.getStreamId()
-						ddcConfDict[ crd.configKeys.DDC_UDP_DESTINATION ] = dipIndex
-						if self.radioObj.name.lower() in ("ndr354","ndr364",):
-							ddcConfDict[ crd.configKeys.DDC_CLASS_ID ] = True
+						ddcConfDict[ crd.configKeys.DDC_UDP_DESTINATION ] = udpDest
+						# if self.radioObj.name.lower() in ("ndr354","ndr364",):
+						# 	ddcConfDict[ crd.configKeys.DDC_CLASS_ID ] = True
 					if vitaVal is not None:
-						ddcConfDict[ crd.configKeys.DDC_VITA_ENABLE ] = 3
+						ddcConfDict[ crd.configKeys.DDC_VITA_ENABLE ] = vitaVal
 				elif param=="rate":
 					ddcConfDict[ rateKey ] = self.rate
 				elif param=="freq":
@@ -211,11 +231,11 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 						ddcConfDict[ crd.configKeys.DDC_RF_INDEX ] = self.rfSource
 				elif param=="mode":
 					ddcConfDict[ crd.configKeys.DDC_OUTPUT_FORMAT ] = self.mode
-				elif param=="phaseOffset":
+				elif param=="phaseOffset" and ("364" in self.radioObj.name.lower()) and (self.phaseOffset is not None):
 					ddcConfDict[ crd.configKeys.DDC_PHASE_OFFSET ] = self.phaseOffset
-				elif param==crd.configKeys.DDC_TOTAL_REPEAT_PACKETS:
+				elif param=="totalRepeatPackets" and ("364" in self.radioObj.name.lower()) and (self.totalRepeatPackets is not None):
 					ddcConfDict[ crd.configKeys.DDC_TOTAL_REPEAT_PACKETS ] = self.totalRepeatPackets
-				elif param==crd.configKeys.DDC_ACTIVE_REPEAT_PACKETS:
+				elif param=="activeRepeatPackets" and ("364" in self.radioObj.name.lower()) and (self.activeRepeatPackets is not None):
 					ddcConfDict[ crd.configKeys.DDC_ACTIVE_REPEAT_PACKETS ] = self.activeRepeatPackets
 				#~ else:
 					#~ raise Exception("Error: unknown command " + param)
@@ -225,9 +245,16 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 			if ddcConfDict is not None:
 				confDict[crd.configKeys.CONFIG_DDC] = { ddcType: { self.index: ddcConfDict } }
 			if dipConfDict is not None:
-				confDict[crd.configKeys.CONFIG_IP] = dipConfDict
+				if "562" in self.radioObj.name.lower():
+					pass
+				else:
+					confDict[crd.configKeys.CONFIG_IP] = dipConfDict
 			self.log.debug( json.dumps(confDict, sort_keys=True) )
-			self.radioObj.setConfiguration(confDict)
+			if self.radioObj.isConnected():
+				self.radioObj.setConfiguration(confDict)
+				errorMsg = self.radioObj.cmdErrorInfo
+				if (len(errorMsg) > 0):
+					self.txStatusMsg("Status", "Frequency out of range")
 		if sendFreqMsgFlag:
 			self.txFreqMsg("nbddc_freq",self.freq)
 	
@@ -245,6 +272,10 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 			if toggle:
 				self.set_enable(False)
 			self.index = index
+			'''
+			if "562" in self.radioObj.name.lower():
+				self.index = 0
+			'''
 			self.updateConfig("index")
 			if toggle:
 				self.set_enable(True)
@@ -279,8 +310,8 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 	## Setter & getter for wideband
 	def set_wideband(self, wideband=True):
 		if self._init or not hasattr(self, "wideband"):
+			self.log.debug("%s.set_wideband: %s -> %s"%(self._name, "n/a", repr(wideband),))
 			self.wideband = wideband
-			self.log.debug("%s.set_wideband: %s -> %s"%(self._name, repr(self.wideband), repr(wideband),))
 		elif wideband!=self.wideband:
 			self.log.debug("%s.set_wideband: %s -> %s"%(self._name, repr(self.wideband), repr(wideband),))
 			self.wideband = wideband
@@ -295,7 +326,7 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 	def set_rate(self, rate=0):
 		if self._init or not hasattr(self, "rate"):
 			self.rate = rate
-			self.log.debug("%s.set_rate: %s -> %s"%(self._name, repr(self.rate), repr(rate),))
+			self.log.debug("%s.set_rate: %s -> %s"%(self._name, "n/a", repr(rate),))
 		elif rate!=self.rate:
 			self.log.debug("%s.set_rate: %s -> %s"%(self._name, repr(self.rate), repr(rate),))
 			self.rate = rate
@@ -320,22 +351,35 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 		return self.mode
 
 	## Setter & getter for mode
-	def set_phaseOffset(self, phaseOffset=0):
+	def set_phaseOffset(self, phaseOffset=None):
 		if self._init or not hasattr(self, "phaseOffset"):
 			self.phaseOffset = phaseOffset
 			self.log.debug("%s.set_phaseOffset: %s -> %s"%(self._name, repr(self.phaseOffset), repr(phaseOffset),))
 		elif phaseOffset!=self.phaseOffset:
 			self.log.debug("%s.set_phaseOffset: %s -> %s"%(self._name, repr(self.phaseOffset), repr(phaseOffset),))
 			self.phaseOffset = phaseOffset
-			self.updateConfig("phaseOffset")
+			if self.phaseOffset is not None:
+				self.updateConfig("phaseOffset")
 	
-	def set_totalRepeatPackets(self, totalRepeatPackets=1):
-		self.totalRepeatPackets=totalRepeatPackets
-		self.updateConfig(crd.configKeys.DDC_TOTAL_REPEAT_PACKETS)
+	def set_totalRepeatPackets(self, totalRepeatPackets=None):
+		if self._init or not hasattr(self, "totalRepeatPackets"):
+			self.totalRepeatPackets = totalRepeatPackets
+			self.log.debug("%s.set_totalRepeatPackets: %s -> %s"%(self._name, repr(self.totalRepeatPackets), repr(totalRepeatPackets),))
+		elif totalRepeatPackets!=self.totalRepeatPackets:
+			self.log.debug("%s.set_totalRepeatPackets: %s -> %s"%(self._name, repr(self.totalRepeatPackets), repr(totalRepeatPackets),))
+			self.totalRepeatPackets = totalRepeatPackets
+			if self.totalRepeatPackets is not None:
+				self.updateConfig("totalRepeatPackets")
 
 	def set_activeRepeatPackets(self,activeRepeatPackets=1):
-		self.activeRepeatPackets=activeRepeatPackets
-		self.updateConfig(crd.configKeys.DDC_ACTIVE_REPEAT_PACKETS)
+		if self._init or not hasattr(self, "activeRepeatPackets"):
+			self.activeRepeatPackets = activeRepeatPackets
+			self.log.debug("%s.set_activeRepeatPackets: %s -> %s"%(self._name, repr(self.activeRepeatPackets), repr(activeRepeatPackets),))
+		elif activeRepeatPackets!=self.activeRepeatPackets:
+			self.log.debug("%s.set_activeRepeatPackets: %s -> %s"%(self._name, repr(self.activeRepeatPackets), repr(activeRepeatPackets),))
+			self.activeRepeatPackets = activeRepeatPackets 
+			if self.activeRepeatPackets is not None:
+				self.updateConfig("activeRepeatPackets")
 
 	def get_mode(self,):
 		return self.mode
@@ -361,6 +405,7 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 			self.freq = freq
 			self.ddcFreq = ddcFreq
 			self.updateConfig("freq")
+			self.updateConfig("ddcFreq")
 		else:
 			self.log.debug("%s.set_freq: %s(%s) == %s(%s)"%(self._name, repr(self.freq), repr(self.ddcFreq), repr(freq), repr(ddcFreq),))
 
@@ -465,7 +510,7 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 		self.fs = self.radioObject.getDdcRateSet(self.wideband,self.index).get(self.rate,1.0)
 	
 	def getSampleRate(self,):
-		print("%s.getSampleRate"%(self.blockName,))
+		self.log.debug("%s.getSampleRate"%(self.blockName,))
 		return self.fs
 
 #   def forecast(self, noutput_items, ninput_items_required):

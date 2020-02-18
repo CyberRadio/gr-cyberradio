@@ -2,7 +2,7 @@
 <block>
   <name>[CyberRadio] NDR804-PTT Snapshot FFT Source</name>
   <key>CyberRadio_ndr804ptt_snapshot_fft_source</key>
-  <category>[CyberRadio]/Radio Sources</category>
+  <category>[CyberRadio]/Vita and UDP Sources/NDR804</category>
   <import>import CyberRadio</import>
   <make>CyberRadio.ndr804ptt_snapshot_fft_source(
       avgGainList=$avgGainList,

@@ -3,11 +3,12 @@
   <key>CyberRadio_vita_udp_rx</key>
   <category>[CyberRadio]/Vita and UDP Sources</category>
   <import>import CyberRadio</import>
-  <make>CyberRadio.vita_udp_rx($src_ip, $port, $header_byte_offset, $samples_per_packet, $bytes_per_packet, $swap_bytes, $swap_iq, $tag_packets, $vector_output)</make>
+  <make>CyberRadio.vita_udp_rx($src_ip, $port, $header_byte_offset, $samples_per_packet, $bytes_per_packet, $swap_bytes, $swap_iq, $tag_packets, $vector_output, $uses_v491, $narrowband, $debug)</make>
 <!--
   <param>
     <name>Radio Object</name>
     <key>radioObj</key>
+    <value>radioObj</value>
     <type>raw</type>
   </param>
 -->
@@ -103,6 +104,51 @@
       <name>False</name>
       <key>False</key>
       <opt>size:1</opt>
+    </option>
+  </param>
+  <param>
+    <name>Uses VITA 49.1</name>
+    <key>uses_v491</key>
+    <value>True</value>
+    <type>enum</type>
+    <hide>part</hide>
+    <option>
+      <name>True</name>
+      <key>True</key>
+    </option>
+    <option>
+      <name>False</name>
+      <key>False</key>
+    </option>
+  </param>
+  <param>
+    <name>Narrowband?</name>
+    <key>narrowband</key>
+    <value>False</value>
+    <type>enum</type>
+    <hide>part</hide>
+    <option>
+      <name>True</name>
+      <key>True</key>
+    </option>
+    <option>
+      <name>False</name>
+      <key>False</key>
+    </option>
+  </param>
+  <param>
+    <name>Debug</name>
+    <key>debug</key>
+    <value>False</value>
+    <type>enum</type>
+    <hide>part</hide>
+    <option>
+      <name>True</name>
+      <key>True</key>
+    </option>
+    <option>
+      <name>False</name>
+      <key>False</key>
     </option>
   </param>
   <sink>

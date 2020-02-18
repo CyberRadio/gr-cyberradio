@@ -55,7 +55,10 @@ namespace gr {
                         bool swap_bytes,
                         bool swap_iq,
                         bool tag_packets,
-                        bool vector_output);
+                        bool vector_output,
+                        bool uses_v49_1 = true,
+                        bool narrowband = false,
+                        bool debug = false);
     
       virtual bool start() = 0;
       virtual bool stop() = 0;

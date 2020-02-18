@@ -1,0 +1,72 @@
+<block>
+  <name>[CyberRadio] Vita/IQ Snapshot Vector Source MK2</name>
+  <key>CyberRadio_snapshot_vector_source_mk2</key>
+  <category>[CyberRadio]/Vita and UDP Sources</category>
+  <flags>throttle</flags>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.snapshot_vector_source_mk2($(radioObj).name.lower(), $ip, $port, $block_size, $block_rate, $demod)
+print("%s = CyberRadio.snapshot_vector_source_mk2(%r, %r, %r, %r, %r)"%("$(id)", $ip, $port, $block_size, $block_rate, $(radioObj).name.lower()))
+  </make>
+  <param>
+    <name>Radio Object</name>
+    <key>radioObj</key>
+    <type>raw</type>
+  </param>
+  <param>
+    <name>IP</name>
+    <key>ip</key>
+    <value>0.0.0.0</value>
+    <type>string</type>
+    <hide>part</hide>
+  </param>
+  <param>
+    <name>Port</name>
+    <key>port</key>
+    <value>11000</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Block Size</name>
+    <key>block_size</key>
+    <value>131072</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Block Rate</name>
+    <key>block_rate</key>
+    <value>10</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Demod samples?</name>
+    <key>demod</key>
+    <type>enum</type>
+    <option>
+      <name>Off</name>
+      <key>True</key>
+      <opt>type:complex</opt>
+      <opt>num:1</opt>
+    </option>
+    <option>
+      <name>On</name>
+      <key>False</key>
+      <opt>type:float</opt>
+      <opt>num:1</opt>
+    </option>
+  </param>
+  <sink>
+    <name>control</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  <source>
+    <name>out</name>
+    <type>$demod.type</type>
+    <vlen>$block_size</vlen>
+  </source>
+  <source>
+    <name>status</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+</block>

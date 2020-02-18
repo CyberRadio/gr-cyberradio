@@ -66,6 +66,25 @@ namespace gr
 			uint32_t timeFracSecMSB; //!< Timestamp fractional field, MSW
 			uint32_t timeFracSecLSB; //!< Timestamp fractional field, LSW
 		} __attribute__((packed));
+		
+		struct Vita49Header_NoClassId {
+			uint32_t frameStart;     //!< Frame start word (ASCII string "VRLP")
+			uint32_t frameSize:20;   //!< Frame size, in 32-bit words
+			uint32_t frameCount:12;  //!< Frame Count
+			uint16_t packetSize;     //!< Packet size, in 32-bit words
+			uint16_t packetCount:4;  //!< Packet counter
+			uint16_t TSF:2;          //!< Timestamp fractional field format
+			uint16_t TSI:2;          //!< Timestamp integer field format
+			uint16_t RSVD:2;         //!< RESERVED
+			uint16_t T:1;            //!< Frame trailer present indicator
+			uint16_t C:1;            //!< Class ID field present indicator
+			uint16_t packetType:4;   //!< Packet type
+			uint32_t streamId;       //!< Stream ID
+			uint32_t timeSeconds;    //!< Timestamp integer field
+			uint32_t timeFracSecMSB; //!< Timestamp fractional field, MSW
+			uint32_t timeFracSecLSB; //!< Timestamp fractional field, LSW
+		} __attribute__((packed));
+
 
 		/*!
 		 * \brief VITA 49 frame payload information.

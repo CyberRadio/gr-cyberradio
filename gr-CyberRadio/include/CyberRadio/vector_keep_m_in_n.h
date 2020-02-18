@@ -47,6 +47,8 @@ namespace gr {
        * creating new instances.
        */
       static sptr make(size_t itemsize, int m, int n, int offset);
+
+      virtual void set_offset(int offset) = 0;
     };
 
   } // namespace CyberRadio

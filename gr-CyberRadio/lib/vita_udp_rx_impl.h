@@ -67,6 +67,16 @@ typedef struct {
   unsigned int frac_timestamp_lsw;
 } V49_308_Header;
 
+// VITA 49 VRT IF data packet header, no class ID
+// (used without external framing on NDR354/364)
+typedef struct {
+  unsigned int packet_info;
+  unsigned int stream_id;
+  unsigned int int_timestamp;
+  unsigned int frac_timestamp_msw;
+  unsigned int frac_timestamp_lsw;
+} V49_No491_Header;
+
 namespace gr {
   namespace CyberRadio {
 
@@ -80,9 +90,11 @@ namespace gr {
         std::string src_ip;  
         unsigned short port;
         unsigned int header_byte_offset;   
-        unsigned int bytes_per_packet;   
+        unsigned int bytes_per_packet;
+        bool uses_v491, is_narrowband;
         int sock_fd;
         bool tag_packets;
+        bool debug;
         uint8_t *buffer;
         struct pollfd pfd;
 
@@ -99,7 +111,10 @@ namespace gr {
 						  bool swap_bytes,
 						  bool swap_iq,
 						  bool tag_packets,
-						  bool vector_output);
+						  bool vector_output,
+	                      bool uses_v491 = true,
+                        bool narrowband = false,
+	                      bool debug = false);
       ~vita_udp_rx_impl();
 
       void rxControlMsg(pmt::pmt_t msg);

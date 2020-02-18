@@ -103,14 +103,14 @@ def testRadioConnection(radioType, connType, hostnameOrSerialPort, tcpPortOrBaud
 		
 		
 		initialConfig = copy.deepcopy(baseConfig)
-		tenGigRadio = any( i in radioType for i in ("308","651",) )
+		tenGigRadio = radio.getNumGigE() > 0
 		basePort = random.randint(10000,60000)
 		ipList = []
 		if tenGigRadio:
 			initialConfig[ cfgKeys.CONFIG_IP ] = {}
 			udpPortList = []
 			for ind,iface in enumerate(interfaceList):
-				ifaceInd = ind+1
+				ifaceInd = radio.getGigEIndexRange()[ind]
 				initialConfig[cfgKeys.CONFIG_IP][ifaceInd] = {}
 				dmac,dip = getInterfaceAddresses(str(iface))
 				ipList.append(dip)
@@ -119,20 +119,39 @@ def testRadioConnection(radioType, connType, hostnameOrSerialPort, tcpPortOrBaud
 				temp = [int(i) for i in dip.split(".")]
 				temp[-1] = (temp[-1]+100)%255+1
 				sip = ".".join(str(i) for i in temp)
-				initialConfig[cfgKeys.CONFIG_IP][ifaceInd][cfgKeys.IP_SOURCE] = sip
-				initialConfig[cfgKeys.CONFIG_IP][ifaceInd][cfgKeys.IP_DEST] = {}
-				tempPortList = []
-				for i in range(32):
-					randport = random.randint(basePort,65535)
-					temp = { cfgKeys.GIGE_IP_ADDR: dip, \
-								cfgKeys.GIGE_MAC_ADDR: dmac, \
-								cfgKeys.GIGE_DEST_PORT: randport,#basePort, \
-								cfgKeys.GIGE_SOURCE_PORT: randport^0xffff, \
-								 }
-					initialConfig[cfgKeys.CONFIG_IP][ifaceInd][cfgKeys.IP_DEST][i] = temp
-					tempPortList.append(randport)
-# 					tempPortList.append(basePort)
-# 					basePort += 1
+				randport = random.randint(basePort,65535)
+				if radio.json:
+					initialConfig[cfgKeys.CONFIG_IP][ifaceInd][cfgKeys.IP_SOURCE] = {
+							cfgKeys.GIGE_IP_ADDR: sip,
+							cfgKeys.GIGE_NETMASK: "255.255.255.0",
+							cfgKeys.GIGE_SOURCE_PORT: randport^0xffff,
+						}
+					initialConfig[cfgKeys.CONFIG_IP][ifaceInd][cfgKeys.IP_DEST] = {}
+					tempPortList = []
+					for i in range(32):
+						temp = { cfgKeys.GIGE_IP_ADDR: dip, \
+									cfgKeys.GIGE_MAC_ADDR: dmac, \
+									cfgKeys.GIGE_DEST_PORT: randport,#basePort, \
+								}
+						initialConfig[cfgKeys.CONFIG_IP][ifaceInd][cfgKeys.IP_DEST][i] = temp
+						tempPortList.append(randport)
+	# 					tempPortList.append(basePort)
+	# 					basePort += 1
+				else:
+					initialConfig[cfgKeys.CONFIG_IP][ifaceInd][cfgKeys.IP_SOURCE] = sip
+					initialConfig[cfgKeys.CONFIG_IP][ifaceInd][cfgKeys.IP_DEST] = {}
+					tempPortList = []
+					for i in range(32):
+						randport = random.randint(basePort,65535)
+						temp = { cfgKeys.GIGE_IP_ADDR: dip, \
+									cfgKeys.GIGE_MAC_ADDR: dmac, \
+									cfgKeys.GIGE_DEST_PORT: randport,#basePort, \
+									cfgKeys.GIGE_SOURCE_PORT: randport^0xffff, \
+									 }
+						initialConfig[cfgKeys.CONFIG_IP][ifaceInd][cfgKeys.IP_DEST][i] = temp
+						tempPortList.append(randport)
+	# 					tempPortList.append(basePort)
+	# 					basePort += 1
 				udpPortList.append(tempPortList)
 		else:
 			dmac,dip = getInterfaceAddresses(str(interfaceList[0]))
@@ -147,6 +166,10 @@ def testRadioConnection(radioType, connType, hostnameOrSerialPort, tcpPortOrBaud
 		
 		ddcTestIndex = 0
 		for wideband in (True,False):
+			if wideband and radio.getNumWbddc() == 0:
+				continue
+			elif not wideband and radio.getNumNbddc() == 0:
+				continue
 			tag = "WB" if wideband else "NB"
 			ddcCfgKey = cfgKeys.CONFIG_WBDDC if wideband else cfgKeys.CONFIG_NBDDC
 			ddcIndexList = radio.getWbddcIndexRange() if wideband else radio.getNbddcIndexRange()
@@ -175,18 +198,26 @@ def testRadioConnection(radioType, connType, hostnameOrSerialPort, tcpPortOrBaud
 # 											 }, \
 							 }
 				if tenGigRadio:
-					ifIndex = random.randint(0, len(interfaceList)-1)
+					# NDR354/364 don't have settable data ports.  Which data port
+					# each DDC is linked to is found in the configuration.
+					if radioType in ["ndr354", "ndr364"]:
+						ifIndex = radio.getConfigurationByKeys(
+								cfgKeys.CONFIG_DDC, ddcCfgKey, ddcIndex, cfgKeys.DDC_DATA_PORT
+							)
+					else:
+						ifIndex = random.randint(0, len(interfaceList)-1)
 					udpDest = random.randint(0,len(udpPortList[ifIndex])-1)
 					udpPort = udpPortList[ifIndex][udpDest]
 				else:
 					ifIndex = 0
 					udpDest = udpPort = random.randint(basePort,65535)
 				interface = interfaceList[ifIndex]
+				dport = radio.getGigEIndexRange()[ifIndex]
 				config[cfgKeys.CONFIG_DDC][ddcCfgKey][ddcIndex] = { cfgKeys.ENABLE: True, \
 																	cfgKeys.DDC_RATE_INDEX: random.choice(radio.getDdcRateSet(wideband).keys()), \
 																	cfgKeys.DDC_VITA_ENABLE: 1, \
 																	cfgKeys.DDC_UDP_DESTINATION: udpDest, \
-																	cfgKeys.DDC_DATA_PORT: ifIndex+1, \
+																	cfgKeys.DDC_DATA_PORT: dport, \
 																	cfgKeys.DDC_STREAM_ID: random.randint(0x000f,0xfff0), \
 																	 }
 				if radio.isDdcTunable(wideband):
@@ -203,7 +234,7 @@ def testRadioConnection(radioType, connType, hostnameOrSerialPort, tcpPortOrBaud
 				radio.setConfiguration(copy.deepcopy(config))
 				success,failReason = grabData(udpPort, 128 if wideband else 8, interfaceList[ifIndex])
 				if not success:
-					return False, "Did not capture data from %s%02d; is radio port %d connected to local port %s?"%(tag,ddcNum,ifIndex+1,interface)
+					return False, "Did not capture data from %s%02d; is radio port %d connected to local port %s?"%(tag,ddcNum,dport,interface)
 				else:
 					config.pop(cfgKeys.CONFIG_TUNER)
 					config[cfgKeys.CONFIG_DDC][ddcCfgKey][ddcIndex][cfgKeys.ENABLE] = False
@@ -269,10 +300,13 @@ USAGE
 		
 		radioType = args.radioType.lower()
 		useSerial = args.connType.lower() in ("tty","serial")
-		connType = "tty" if useSerial else "tcp"
+		connType = args.connType.lower()
+		if useSerial:
+			connType = "tty"
 		name = args.serialPort if useSerial else args.hostname
 		port = args.baudrate if useSerial else args.tcpPort
-		ifList = args.ifList if any(i in radioType for i in ("308","651")) else ["eth0"]
+		rcls = CyberRadioDriver.getRadioClass(radioType)
+		ifList = args.ifList if rcls.getNumGigE() > 0 else ["eth0"]
 		success,failReason = testRadioConnection(args.radioType.lower(), connType, name, port, args.ifList, args.verbose)
 
 		if not success:

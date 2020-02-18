@@ -8,15 +8,21 @@ Source: DEB_PKG_NAME
 Section: devel
 Priority: extra
 Maintainer: CyberRadio Solutions, Inc. <sales@cyberradiosolutions.com>
-Build-Depends: debhelper (>= 8.0.0), python (>= 2.6.6.3~), libpcap-dev
+Build-Depends: debhelper (>= 8.0.0), 
+               python (>= 2.7), 
+               libcyberradio, 
+               gnuradio-dev | gnuradio, 
+               libpcap-dev, 
+               libjsoncpp-dev
 Standards-Version: 3.9.2
 Homepage: http://www.cyberradiosolutions.com
-X-Python-Version: >= 2.6
+X-Python-Version: >= 2.7
 
 Package: DEB_PKG_NAME
-Architecture: any
-Depends: python-cyberradiodriver, python-netifaces, libcyberradio (>= 17.11.13), libpcap0.8
-Breaks: gr-cyberradio-base, gr-cyberradio-docs, gr-cyberradio-ndr304, gr-cyberradio-ndr308, gr-cyberradio-ndr470, gr-cyberradio-ndr472, gr-cyberradio-ndr651, gr-cyberradio-signals
+Architecture: DEB_PKG_ARCH
+Depends: python-cyberradiodriver, 
+         python-netifaces, 
+         ${shlibs:Depends}
 Description: GNU Radio Blocks for CyberRadio Solutions, Inc. Radios
  This package provides blocks for controlling CyberRadio Solutions, Inc. 
  radios using GNU Radio and GNU Radio Companion.

@@ -46,7 +46,7 @@ namespace gr {
        * class. CyberRadio::snapshot_vector_source::make is the public interface for
        * creating new instances.
        */
-      static sptr make(const std::string &ip, unsigned int port, unsigned int block_size, unsigned int block_rate);
+      static sptr make(const std::string radio_type, const std::string &ip, unsigned int port, unsigned int block_size, unsigned int block_rate);
     };
 
   } // namespace CyberRadio

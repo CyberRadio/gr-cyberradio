@@ -2,8 +2,16 @@
   <name>[CyberRadio] Vita/IQ Snapshot Vector Source</name>
   <key>CyberRadio_snapshot_vector_source</key>
   <category>[CyberRadio]/Vita and UDP Sources</category>
+  <flags>throttle</flags>
   <import>import CyberRadio</import>
-  <make>CyberRadio.snapshot_vector_source($ip, $port, $block_size, $block_rate)</make>
+  <make>CyberRadio.snapshot_vector_source($(radioObj).name.lower(), $ip, $port, $block_size, $block_rate)
+print("%s = CyberRadio.snapshot_vector_source(%r, %r, %r, %r, %r)"%("$(id)", $ip, $port, $block_size, $block_rate, $(radioObj).name.lower()))
+  </make>
+  <param>
+    <name>Radio Object</name>
+    <key>radioObj</key>
+    <type>raw</type>
+  </param>
   <param>
     <name>IP</name>
     <key>ip</key>
@@ -29,9 +37,19 @@
     <value>10</value>
     <type>int</type>
   </param>
+  <sink>
+    <name>control</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
   <source>
     <name>out</name>
     <type>complex</type>
     <vlen>$block_size</vlen>
+  </source>
+  <source>
+    <name>status</name>
+    <type>message</type>
+    <optional>1</optional>
   </source>
 </block>

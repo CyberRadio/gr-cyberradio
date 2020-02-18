@@ -24,6 +24,7 @@ GR_PYTHON_INSTALL(
     ../examples/ndr_qt_demo_gui.py
     ../examples/ndrGuiLauncher
     ../examples/testRadioConnection
+    ../examples/ndr804_display.py
     ../examples/ndr651_txrx_gui.py
     configureRadioDataPorts
     DESTINATION bin
@@ -44,3 +45,9 @@ install(
     DESTINATION share/applications
 )
 
+install(
+	FILES
+	../debian/postinst
+	RENAME grc_template_mod.cyberradio
+	DESTINATION bin
+)

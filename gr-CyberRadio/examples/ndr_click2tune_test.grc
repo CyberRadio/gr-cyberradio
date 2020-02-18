@@ -590,7 +590,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(216, 468)</value>
+      <value>(216, 580)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -680,7 +680,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(112, 468)</value>
+      <value>(112, 580)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -707,7 +707,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(8, 404)</value>
+      <value>(8, 516)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -971,7 +971,81 @@
     </param>
     <param>
       <key>value</key>
-      <value>dict( [(k,v) for k,v in radioObj.getNbddcBwSet().iteritems() if radioObj.getDdcDataFormat(True).get(k,"iq")!="real"] )</value>
+      <value>dict( [(k,v) for k,v in radioObj.getNbddcBwSet().iteritems() if radioObj.getDdcDataFormat(False).get(k,"iq")!="real"] )</value>
+    </param>
+  </block>
+  <block>
+    <key>variable_qtgui_check_box</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>false</key>
+      <value>False</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1160, 576)</value>
+    </param>
+    <param>
+      <key>gui_hint</key>
+      <value>controlTabs@0</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>nbddcEnable</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>NBDDC Enable</value>
+    </param>
+    <param>
+      <key>true</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>int</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1160, 676)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>nbddcEnable</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>True</value>
     </param>
   </block>
   <block>
@@ -1267,6 +1341,10 @@
     <param>
       <key>comment</key>
       <value></value>
+    </param>
+    <param>
+      <key>connect</key>
+      <value>True</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -1624,7 +1702,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(8, 468)</value>
+      <value>(8, 580)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1691,6 +1769,80 @@
     <param>
       <key>value</key>
       <value>dict( [(k,v) for k,v in radioObj.getWbddcBwSet().iteritems() if radioObj.getDdcDataFormat(True).get(k,"iq")!="real"] )</value>
+    </param>
+  </block>
+  <block>
+    <key>variable_qtgui_check_box</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>false</key>
+      <value>False</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(992, 576)</value>
+    </param>
+    <param>
+      <key>gui_hint</key>
+      <value>controlTabs@0</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>wbddcEnable</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>WBDDC Enable</value>
+    </param>
+    <param>
+      <key>true</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>int</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(992, 676)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>wbddcEnable</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>True</value>
     </param>
   </block>
   <block>
@@ -1851,7 +2003,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(832, 1548)</value>
+      <value>(832, 1444)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1918,7 +2070,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(832, 1452)</value>
+      <value>(832, 1348)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1985,7 +2137,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(184, 1308)</value>
+      <value>(184, 1204)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2023,6 +2175,10 @@
   <block>
     <key>CyberRadio_generic_ddc_control_block</key>
     <param>
+      <key>activeRepeatPackets</key>
+      <value>1</value>
+    </param>
+    <param>
       <key>alias</key>
       <value></value>
     </param>
@@ -2036,7 +2192,7 @@
     </param>
     <param>
       <key>enable</key>
-      <value>True</value>
+      <value>wbddcEnable</value>
     </param>
     <param>
       <key>freq</key>
@@ -2072,7 +2228,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(184, 988)</value>
+      <value>(184, 776)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2084,7 +2240,7 @@
     </param>
     <param>
       <key>localInterface</key>
-      <value></value>
+      <value>localDataInterface</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -2119,12 +2275,20 @@
       <value>radioObj</value>
     </param>
     <param>
+      <key>totalRepeatPackets</key>
+      <value>1</value>
+    </param>
+    <param>
       <key>wideband</key>
       <value>True</value>
     </param>
   </block>
   <block>
     <key>CyberRadio_generic_ddc_control_block</key>
+    <param>
+      <key>activeRepeatPackets</key>
+      <value>1</value>
+    </param>
     <param>
       <key>alias</key>
       <value></value>
@@ -2139,7 +2303,7 @@
     </param>
     <param>
       <key>enable</key>
-      <value>True</value>
+      <value>nbddcEnable</value>
     </param>
     <param>
       <key>freq</key>
@@ -2175,7 +2339,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(440, 1468)</value>
+      <value>(448, 1340)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2187,7 +2351,7 @@
     </param>
     <param>
       <key>localInterface</key>
-      <value></value>
+      <value>localDataInterface</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -2220,6 +2384,10 @@
     <param>
       <key>radioObj</key>
       <value>radioObj</value>
+    </param>
+    <param>
+      <key>totalRepeatPackets</key>
+      <value>1</value>
     </param>
     <param>
       <key>wideband</key>
@@ -2262,7 +2430,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(512, 1000)</value>
+      <value>(504, 776)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2302,6 +2470,69 @@
     </param>
   </block>
   <block>
+    <key>CyberRadio_log_mag_fft</key>
+    <param>
+      <key>numInputs</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>iirAlpha</key>
+      <value>iirAlpha</value>
+    </param>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>fftSize</key>
+      <value>fftSize</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(512, 1092)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>CyberRadio_log_mag_fft_0</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>resetOnAlphaChange</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>secondaryOutput</key>
+      <value>log_mag_unfiltered</value>
+    </param>
+    <param>
+      <key>windowType</key>
+      <value>"blackmanharris"</value>
+    </param>
+  </block>
+  <block>
     <key>CyberRadio_vector_nlog10_ff</key>
     <param>
       <key>alias</key>
@@ -2317,11 +2548,11 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>1</value>
+      <value>0</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(800, 1356)</value>
+      <value>(800, 1252)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2368,11 +2599,11 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>1</value>
+      <value>0</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(800, 1276)</value>
+      <value>(800, 1172)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2404,14 +2635,10 @@
     </param>
   </block>
   <block>
-    <key>CyberRadio_vita_udp_rx</key>
+    <key>CyberRadio_vita49_source</key>
     <param>
       <key>alias</key>
       <value></value>
-    </param>
-    <param>
-      <key>bytes_per_packet</key>
-      <value>radioObj.getVitaHeaderSize()+radioObj.getVitaPayloadSize()+radioObj.getVitaTailSize()</value>
     </param>
     <param>
       <key>comment</key>
@@ -2423,98 +2650,19 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>1</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(184, 1100)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>header_byte_offset</key>
-      <value>radioObj.getVitaHeaderSize()</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>CyberRadio_vita_udp_rx_0_0</value>
-    </param>
-    <param>
-      <key>maxoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>minoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>port</key>
-      <value>udpBasePort</value>
-    </param>
-    <param>
-      <key>samples_per_packet</key>
-      <value>radioObj.getVitaPayloadSize()/4</value>
-    </param>
-    <param>
-      <key>src_ip</key>
-      <value>0.0.0.0</value>
-    </param>
-    <param>
-      <key>swap_bytes</key>
-      <value>radioObj.isByteswapped()</value>
-    </param>
-    <param>
-      <key>swap_iq</key>
       <value>True</value>
     </param>
     <param>
-      <key>tag_packets</key>
-      <value>False</value>
-    </param>
-    <param>
-      <key>vector_output</key>
-      <value>False</value>
-    </param>
-  </block>
-  <block>
-    <key>CyberRadio_vita_udp_rx</key>
-    <param>
-      <key>alias</key>
-      <value></value>
-    </param>
-    <param>
-      <key>bytes_per_packet</key>
-      <value>radioObj.getVitaHeaderSize()+radioObj.getVitaPayloadSize()+radioObj.getVitaTailSize()</value>
-    </param>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>affinity</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>1</value>
-    </param>
-    <param>
       <key>_coordinate</key>
-      <value>(432, 1596)</value>
+      <value>(456, 1492)</value>
     </param>
     <param>
       <key>_rotation</key>
       <value>180</value>
     </param>
     <param>
-      <key>header_byte_offset</key>
-      <value>radioObj.getVitaHeaderSize()</value>
-    </param>
-    <param>
       <key>id</key>
-      <value>CyberRadio_vita_udp_rx_0_0_0</value>
+      <value>CyberRadio_vita49_source_0</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -2529,20 +2677,12 @@
       <value>udpBasePort+1</value>
     </param>
     <param>
-      <key>samples_per_packet</key>
-      <value>radioObj.getVitaPayloadSize()/4</value>
+      <key>radioObj</key>
+      <value>radioObj</value>
     </param>
     <param>
       <key>src_ip</key>
       <value>0.0.0.0</value>
-    </param>
-    <param>
-      <key>swap_bytes</key>
-      <value>radioObj.isByteswapped()</value>
-    </param>
-    <param>
-      <key>swap_iq</key>
-      <value>True</value>
     </param>
     <param>
       <key>tag_packets</key>
@@ -2551,85 +2691,6 @@
     <param>
       <key>vector_output</key>
       <value>False</value>
-    </param>
-  </block>
-  <block>
-    <key>CyberRadio_zero_copy_source</key>
-    <param>
-      <key>alias</key>
-      <value></value>
-    </param>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>affinity</key>
-      <value></value>
-    </param>
-    <param>
-      <key>debug</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>filterString</key>
-      <value></value>
-    </param>
-    <param>
-      <key>vectorLen</key>
-      <value>framesPerFft</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(184, 1180)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>headerOffset</key>
-      <value>radioObj.getVitaHeaderSize()</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>CyberRadio_zero_copy_source_0</value>
-    </param>
-    <param>
-      <key>destIP</key>
-      <value></value>
-    </param>
-    <param>
-      <key>maxoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>minoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>port</key>
-      <value>udpBasePort</value>
-    </param>
-    <param>
-      <key>samplesPerFrame</key>
-      <value>samplesPerFrame</value>
-    </param>
-    <param>
-      <key>skipFrames</key>
-      <value>framesToSkip</value>
-    </param>
-    <param>
-      <key>byteSwap</key>
-      <value>radioObj.isByteswapped()</value>
-    </param>
-    <param>
-      <key>iqSwap</key>
-      <value>True</value>
     </param>
   </block>
   <block>
@@ -2652,7 +2713,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(600, 1832)</value>
+      <value>(600, 1728)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2695,7 +2756,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(360, 1712)</value>
+      <value>(360, 1608)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2719,6 +2780,49 @@
     </param>
   </block>
   <block>
+    <key>blocks_complex_to_float</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(616, 880)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>blocks_complex_to_float_1</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fftSize</value>
+    </param>
+  </block>
+  <block>
     <key>blocks_complex_to_mag</key>
     <param>
       <key>alias</key>
@@ -2738,7 +2842,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(352, 1776)</value>
+      <value>(352, 1672)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2777,11 +2881,11 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>1</value>
+      <value>0</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1088, 1156)</value>
+      <value>(1016, 1028)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2828,7 +2932,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(244, 1752)</value>
+      <value>(244, 1648)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2860,6 +2964,68 @@
     </param>
   </block>
   <block>
+    <key>blocks_message_debug</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1088, 864)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>180</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>blocks_message_debug_1</value>
+    </param>
+  </block>
+  <block>
+    <key>blocks_message_debug</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(32, 1504)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>270</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>blocks_message_debug_1_0</value>
+    </param>
+  </block>
+  <block>
     <key>blocks_multiply_conjugate_cc</key>
     <param>
       <key>alias</key>
@@ -2879,7 +3045,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(344, 1816)</value>
+      <value>(344, 1712)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2926,7 +3092,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(800, 1828)</value>
+      <value>(800, 1724)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2954,7 +3120,7 @@
     </param>
   </block>
   <block>
-    <key>blocks_stream_to_vector_decimator</key>
+    <key>blocks_probe_rate</key>
     <param>
       <key>alias</key>
       <value></value>
@@ -2969,11 +3135,11 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>1</value>
+      <value>0</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(520, 1084)</value>
+      <value>(1088, 940)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2981,7 +3147,7 @@
     </param>
     <param>
       <key>id</key>
-      <value>blocks_stream_to_vector_decimator_0</value>
+      <value>blocks_probe_rate_0</value>
     </param>
     <param>
       <key>type</key>
@@ -2996,16 +3162,16 @@
       <value>0</value>
     </param>
     <param>
-      <key>sample_rate</key>
-      <value>wbSampleRate</value>
+      <key>mintime</key>
+      <value>500.0</value>
+    </param>
+    <param>
+      <key>alpha</key>
+      <value>0.15</value>
     </param>
     <param>
       <key>vlen</key>
       <value>fftSize</value>
-    </param>
-    <param>
-      <key>vec_rate</key>
-      <value>fftRate</value>
     </param>
   </block>
   <block>
@@ -3024,11 +3190,11 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>0</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(992, 1744)</value>
+      <value>(992, 1640)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -3075,7 +3241,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(8, 612)</value>
+      <value>(8, 724)</value>
     </param>
     <param>
       <key>gui_hint</key>
@@ -3190,7 +3356,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(144, 292)</value>
+      <value>(144, 408)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -3214,7 +3380,7 @@
     </param>
     <param>
       <key>value</key>
-      <value>32</value>
+      <value>16</value>
     </param>
   </block>
   <block>
@@ -3233,7 +3399,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(8, 292)</value>
+      <value>(8, 408)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -3276,7 +3442,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(240, 292)</value>
+      <value>(240, 408)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -3319,7 +3485,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>1</value>
+      <value>0</value>
     </param>
     <param>
       <key>fft_size</key>
@@ -3331,7 +3497,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(800, 1124)</value>
+      <value>(624, 1000)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -3398,6 +3564,49 @@
     </param>
   </block>
   <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(176, 288)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>localDataInterface</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>Local Data Interface</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value>D</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>string</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value></value>
+    </param>
+  </block>
+  <block>
     <key>qtgui_tab_widget</key>
     <param>
       <key>alias</key>
@@ -3413,7 +3622,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(176, 572)</value>
+      <value>(176, 688)</value>
     </param>
     <param>
       <key>gui_hint</key>
@@ -3560,7 +3769,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1192, 1668)</value>
+      <value>(1192, 1564)</value>
     </param>
     <param>
       <key>gui_hint</key>
@@ -3847,7 +4056,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(584, 1712)</value>
+      <value>(584, 1608)</value>
     </param>
     <param>
       <key>gui_hint</key>
@@ -4210,7 +4419,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(752, 1716)</value>
+      <value>(752, 1612)</value>
     </param>
     <param>
       <key>gui_hint</key>
@@ -4565,7 +4774,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(504, 1276)</value>
+      <value>(504, 1172)</value>
     </param>
     <param>
       <key>gui_hint</key>
@@ -4809,6 +5018,277 @@
     </param>
   </block>
   <block>
+    <key>qtgui_vector_sink_f</key>
+    <param>
+      <key>autoscale</key>
+      <value>False</value>
+    </param>
+    <param>
+      <key>average</key>
+      <value>1.0</value>
+    </param>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(864, 844)</value>
+    </param>
+    <param>
+      <key>gui_hint</key>
+      <value>wbTabs@1</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>grid</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>qtgui_vector_sink_f_0_0</value>
+    </param>
+    <param>
+      <key>alpha1</key>
+      <value>1.0</value>
+    </param>
+    <param>
+      <key>color1</key>
+      <value>"black"</value>
+    </param>
+    <param>
+      <key>label1</key>
+      <value>I</value>
+    </param>
+    <param>
+      <key>width1</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>alpha10</key>
+      <value>1.0</value>
+    </param>
+    <param>
+      <key>color10</key>
+      <value>"dark blue"</value>
+    </param>
+    <param>
+      <key>label10</key>
+      <value></value>
+    </param>
+    <param>
+      <key>width10</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>alpha2</key>
+      <value>1.0</value>
+    </param>
+    <param>
+      <key>color2</key>
+      <value>"red"</value>
+    </param>
+    <param>
+      <key>label2</key>
+      <value>Q</value>
+    </param>
+    <param>
+      <key>width2</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>alpha3</key>
+      <value>1.0</value>
+    </param>
+    <param>
+      <key>color3</key>
+      <value>"green"</value>
+    </param>
+    <param>
+      <key>label3</key>
+      <value></value>
+    </param>
+    <param>
+      <key>width3</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>alpha4</key>
+      <value>1.0</value>
+    </param>
+    <param>
+      <key>color4</key>
+      <value>"black"</value>
+    </param>
+    <param>
+      <key>label4</key>
+      <value></value>
+    </param>
+    <param>
+      <key>width4</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>alpha5</key>
+      <value>1.0</value>
+    </param>
+    <param>
+      <key>color5</key>
+      <value>"cyan"</value>
+    </param>
+    <param>
+      <key>label5</key>
+      <value></value>
+    </param>
+    <param>
+      <key>width5</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>alpha6</key>
+      <value>1.0</value>
+    </param>
+    <param>
+      <key>color6</key>
+      <value>"magenta"</value>
+    </param>
+    <param>
+      <key>label6</key>
+      <value></value>
+    </param>
+    <param>
+      <key>width6</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>alpha7</key>
+      <value>1.0</value>
+    </param>
+    <param>
+      <key>color7</key>
+      <value>"yellow"</value>
+    </param>
+    <param>
+      <key>label7</key>
+      <value></value>
+    </param>
+    <param>
+      <key>width7</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>alpha8</key>
+      <value>1.0</value>
+    </param>
+    <param>
+      <key>color8</key>
+      <value>"dark red"</value>
+    </param>
+    <param>
+      <key>label8</key>
+      <value></value>
+    </param>
+    <param>
+      <key>width8</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>alpha9</key>
+      <value>1.0</value>
+    </param>
+    <param>
+      <key>color9</key>
+      <value>"dark green"</value>
+    </param>
+    <param>
+      <key>label9</key>
+      <value></value>
+    </param>
+    <param>
+      <key>width9</key>
+      <value>1</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>name</key>
+      <value></value>
+    </param>
+    <param>
+      <key>nconnections</key>
+      <value>2</value>
+    </param>
+    <param>
+      <key>ref_level</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>showports</key>
+      <value>False</value>
+    </param>
+    <param>
+      <key>update_time</key>
+      <value>0.10</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>dispSize</value>
+    </param>
+    <param>
+      <key>x_axis_label</key>
+      <value>Sample</value>
+    </param>
+    <param>
+      <key>x_start</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>x_step</key>
+      <value>1.0/1024</value>
+    </param>
+    <param>
+      <key>x_units</key>
+      <value>Frame</value>
+    </param>
+    <param>
+      <key>ymax</key>
+      <value>+1</value>
+    </param>
+    <param>
+      <key>ymin</key>
+      <value>-1</value>
+    </param>
+    <param>
+      <key>y_axis_label</key>
+      <value>Amplitude</value>
+    </param>
+    <param>
+      <key>y_units</key>
+      <value>V</value>
+    </param>
+  </block>
+  <block>
     <key>parameter</key>
     <param>
       <key>alias</key>
@@ -4824,7 +5304,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(264, 180)</value>
+      <value>(8, 288)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4957,11 +5437,11 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>1</value>
+      <value>0</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1088, 1284)</value>
+      <value>(1088, 1180)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -5008,11 +5488,11 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>2</value>
+      <value>0</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1088, 1364)</value>
+      <value>(1088, 1260)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -5063,7 +5543,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1200, 1828)</value>
+      <value>(1200, 1724)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -5137,7 +5617,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(8, 532)</value>
+      <value>(8, 644)</value>
     </param>
     <param>
       <key>gui_hint</key>
@@ -5157,7 +5637,7 @@
     </param>
     <param>
       <key>label1</key>
-      <value>WOLA FFT</value>
+      <value>Time Plot</value>
     </param>
     <param>
       <key>label10</key>
@@ -5233,7 +5713,66 @@
     </param>
     <param>
       <key>num_tabs</key>
+      <value>2</value>
+    </param>
+  </block>
+  <block>
+    <key>CyberRadio_snapshot_vector_source</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>block_rate</key>
+      <value>fftRate</value>
+    </param>
+    <param>
+      <key>block_size</key>
+      <value>fftSize</value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
       <value>1</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(168, 928)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>wb_rx_source_snap</value>
+    </param>
+    <param>
+      <key>ip</key>
+      <value>0.0.0.0</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>port</key>
+      <value>udpBasePort</value>
+    </param>
+    <param>
+      <key>radioObj</key>
+      <value>radioObj</value>
     </param>
   </block>
   <connection>
@@ -5256,15 +5795,9 @@
   </connection>
   <connection>
     <source_block_id>CyberRadio_generic_ddc_control_block_0</source_block_id>
-    <sink_block_id>CyberRadio_vita_udp_rx_0_0</sink_block_id>
-    <source_key>udp</source_key>
-    <sink_key>control</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>CyberRadio_generic_ddc_control_block_0</source_block_id>
-    <sink_block_id>CyberRadio_zero_copy_source_0</sink_block_id>
-    <source_key>udp</source_key>
-    <sink_key>control</sink_key>
+    <sink_block_id>blocks_message_debug_1_0</sink_block_id>
+    <source_key>status</source_key>
+    <sink_key>print</sink_key>
   </connection>
   <connection>
     <source_block_id>CyberRadio_generic_ddc_control_block_0_0</source_block_id>
@@ -5274,9 +5807,21 @@
   </connection>
   <connection>
     <source_block_id>CyberRadio_generic_ddc_control_block_0_0</source_block_id>
-    <sink_block_id>CyberRadio_vita_udp_rx_0_0_0</sink_block_id>
+    <sink_block_id>CyberRadio_vita49_source_0</sink_block_id>
     <source_key>udp</source_key>
     <sink_key>control</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>CyberRadio_log_mag_fft_0</source_block_id>
+    <sink_block_id>qtgui_vector_sink_f_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>1</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>CyberRadio_log_mag_fft_0</source_block_id>
+    <sink_block_id>qtgui_vector_sink_f_0</sink_block_id>
+    <source_key>1</source_key>
+    <sink_key>0</sink_key>
   </connection>
   <connection>
     <source_block_id>CyberRadio_vector_nlog10_ff_0</source_block_id>
@@ -5291,62 +5836,38 @@
     <sink_key>1</sink_key>
   </connection>
   <connection>
-    <source_block_id>CyberRadio_vita_udp_rx_0_0</source_block_id>
-    <sink_block_id>blocks_stream_to_vector_decimator_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>CyberRadio_vita_udp_rx_0_0</source_block_id>
-    <sink_block_id>CyberRadio_generic_ddc_control_block_0</sink_block_id>
-    <source_key>status</source_key>
-    <sink_key>udp</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>CyberRadio_vita_udp_rx_0_0_0</source_block_id>
+    <source_block_id>CyberRadio_vita49_source_0</source_block_id>
     <sink_block_id>blocks_complex_to_float_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>CyberRadio_vita_udp_rx_0_0_0</source_block_id>
+    <source_block_id>CyberRadio_vita49_source_0</source_block_id>
     <sink_block_id>blocks_complex_to_mag_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>CyberRadio_vita_udp_rx_0_0_0</source_block_id>
+    <source_block_id>CyberRadio_vita49_source_0</source_block_id>
     <sink_block_id>blocks_delay_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>CyberRadio_vita_udp_rx_0_0_0</source_block_id>
+    <source_block_id>CyberRadio_vita49_source_0</source_block_id>
     <sink_block_id>blocks_multiply_conjugate_cc_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>CyberRadio_vita_udp_rx_0_0_0</source_block_id>
+    <source_block_id>CyberRadio_vita49_source_0</source_block_id>
     <sink_block_id>qtgui_freq_sink_x_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>CyberRadio_vita_udp_rx_0_0_0</source_block_id>
+    <source_block_id>CyberRadio_vita49_source_0</source_block_id>
     <sink_block_id>CyberRadio_generic_ddc_control_block_0_0</sink_block_id>
-    <source_key>status</source_key>
-    <sink_key>udp</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>CyberRadio_zero_copy_source_0</source_block_id>
-    <sink_block_id>fft_vxx_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>CyberRadio_zero_copy_source_0</source_block_id>
-    <sink_block_id>CyberRadio_generic_ddc_control_block_0</sink_block_id>
     <source_key>status</source_key>
     <sink_key>udp</sink_key>
   </connection>
@@ -5365,6 +5886,18 @@
   <connection>
     <source_block_id>blocks_complex_to_float_0</source_block_id>
     <sink_block_id>qtgui_time_sink_x_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_complex_to_float_1</source_block_id>
+    <sink_block_id>qtgui_vector_sink_f_0_0</sink_block_id>
+    <source_key>1</source_key>
+    <sink_key>1</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_complex_to_float_1</source_block_id>
+    <sink_block_id>qtgui_vector_sink_f_0_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -5406,15 +5939,21 @@
   </connection>
   <connection>
     <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
+    <sink_block_id>qtgui_time_sink_x_0_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
     <sink_block_id>single_pole_iir_filter_xx_1</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>blocks_stream_to_vector_decimator_0</source_block_id>
-    <sink_block_id>fft_vxx_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
+    <source_block_id>blocks_probe_rate_0</source_block_id>
+    <sink_block_id>blocks_message_debug_1</sink_block_id>
+    <source_key>rate</source_key>
+    <sink_key>print</sink_key>
   </connection>
   <connection>
     <source_block_id>blocks_sub_xx_0</source_block_id>
@@ -5425,6 +5964,12 @@
   <connection>
     <source_block_id>fft_vxx_0</source_block_id>
     <sink_block_id>blocks_complex_to_mag_squared_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>fft_vxx_0</source_block_id>
+    <sink_block_id>blocks_probe_rate_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -5463,5 +6008,23 @@
     <sink_block_id>qtgui_time_sink_x_0_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>1</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>wb_rx_source_snap</source_block_id>
+    <sink_block_id>CyberRadio_log_mag_fft_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>wb_rx_source_snap</source_block_id>
+    <sink_block_id>blocks_complex_to_float_1</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>wb_rx_source_snap</source_block_id>
+    <sink_block_id>fft_vxx_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
   </connection>
 </flow_graph>

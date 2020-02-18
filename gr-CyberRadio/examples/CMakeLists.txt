@@ -30,10 +30,28 @@ endif()
 ########################################################################
 set(EXAMPLE_DESTINATION ${GR_DATA_DIR}/CyberRadio/examples)
 
+#GR_PYTHON_INSTALL(
+#    FILES
+#    ndr_qt_demo_gui.py
+#    ndrGuiLauncher
+#    testRadioConnection
+#    ndr804_display.py
+#    DESTINATION ${EXAMPLE_DESTINATION}
+#)
 install(
 	FILES
 	ndr_qt_demo_gui.grc
 	ndr651_txrx_gui.grc
+	ndr804_display.grc
+	continuous_fft_demo.grc
 	ndr_click2tune_test.grc
+	DESTINATION ${EXAMPLE_DESTINATION}
+)
+
+set(EXAMPLE_DESTINATION ${GR_DATA_DIR}/CyberRadio/)
+
+install(
+	FILES
+	cyberradio.qss
 	DESTINATION ${EXAMPLE_DESTINATION}
 )

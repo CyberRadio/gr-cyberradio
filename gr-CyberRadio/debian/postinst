@@ -21,3 +21,57 @@ chmod 777 /public /public/ndrDemoGui
 # delete previously compiled *.pyc files in order to force
 # a recompile.
 rm -f $(find /usr/lib/python2.7/dist-packages/CyberRadio -name '*.pyc')
+
+for TEMPLATE in `find /usr/{local/,}lib -name "flow_graph.tmpl"`
+do
+	IFS=''
+	grep -q "Qt App Signal Handlers" $TEMPLATE
+	if [ $? -ne 0 ]
+	then
+		echo "MODDING $TEMPLATE"
+		while read LINE
+		do
+			sed -i "s/    def quitting():/    $LINE\n    def quitting():/" $TEMPLATE
+			echo "-> $LINE"
+		done <<< "##  vvvv  gr-CyberRadio  vvvv
+\##Qt App Signal Handlers.
+from PyQt4.QtCore import QTimer
+import signal
+signal.signal(signal.SIGINT, lambda sig,_: qapp.quit())
+signal.signal(signal.SIGTERM, lambda sig,_: qapp.quit())
+timer = QTimer()
+timer.start(200)
+timer.timeout.connect(lambda: None)
+\##  ^^^^  gr-CyberRadio  ^^^^
+"
+	else
+		echo "SKIPPING $TEMPLATE"
+	fi
+done
+
+for TEMPLATE in `find /usr/{local/,}lib -name "flow_graph.tmpl"`
+do
+	IFS=''
+	grep -q "Wait for QT flowgraph to end" $TEMPLATE
+	if [ $? -ne 0 ]
+	then
+		echo "MODDING $TEMPLATE"
+		while read LINE
+		do
+			sed -i "s/    def quitting():/    $LINE\n    def quitting():/" $TEMPLATE
+			echo "-> $LINE"
+		done <<< "##  vvvv  gr-CyberRadio  vvvv
+\##Wait for QT flowgraph to end.
+import threading
+def doWait(tb,qapp):
+    tb.wait()
+    print('done waiting')
+    qapp.exit() 
+t = threading.Thread(name='doWait', target = doWait, args=(tb,qapp))
+t.start()
+\##  ^^^^  gr-CyberRadio  ^^^^
+"
+	else
+		echo "SKIPPING $TEMPLATE"
+	fi
+done

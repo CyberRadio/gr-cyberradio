@@ -166,9 +166,9 @@ class generic_radio_control_block(gr.basic_block):
 		if self._init or not hasattr(self, "radioParam"):
 			self.radioParam = radioParam
 			self.radioType = self.radioParam.get("type")
-			print("%s.set_radioParam: %s -> %s"%(self._name, repr(self.radioParam), repr(radioParam),))
+			self.log.debug("%s.set_radioParam: %s -> %s"%(self._name, repr(self.radioParam), repr(radioParam),))
 		elif radioParam!=self.radioParam:
-			print("%s.set_radioParam: %s -> %s"%(self._name, repr(self.radioParam), repr(radioParam),))
+			self.log.debug("%s.set_radioParam: %s -> %s"%(self._name, repr(self.radioParam), repr(radioParam),))
 			self.radioParam = radioParam
 			self.updateConfig("radioParam")
 
@@ -211,25 +211,35 @@ class generic_radio_control_block(gr.basic_block):
 		else:
 			content = {}
 		
-		setList = []
-		for k,v in content.get("config",{}).iteritems():
-			k = str(k)
-			try:
-				self.log.debug("Can I use parameter %r (%r)?"%(k,v,))
-				if self._configParams.has_key(k):
-					self.log.debug("Yes I can!")
-					self._configParams[k](v)
-					setList.append(k)
-			except:
-				self.log.debug("ERROR using config parameter %r"%(k,))
-				traceback.print_exc()
-		
-		if len(setList):
+		if content.get("init",False):
+			self._init = True
+			self.updateConfig()
+			self._init = False
 			info = {"block": self._name, 
-					"parameters": setList, 
+					"init": True, 
 					"controlMsg": pyMsg
 					 }
 			self._sendPmtPair(self.msgPort_status, msgId, json.dumps(info))
+		elif isinstance( content.get("config",None), dict ):
+			setList = []
+			for k,v in content.get("config",{}).iteritems():
+				k = str(k)
+				try:
+					self.log.debug("Can I use parameter %r (%r)?"%(k,v,))
+					if self._configParams.has_key(k):
+						self.log.debug("Yes I can!")
+						self._configParams[k](v)
+						setList.append(k)
+				except:
+					self.log.debug("ERROR using config parameter %r"%(k,))
+					traceback.print_exc()
+			
+			if len(setList):
+				info = {"block": self._name, 
+						"parameters": setList, 
+						"controlMsg": pyMsg
+						 }
+				self._sendPmtPair(self.msgPort_status, msgId, json.dumps(info))
 	
 	def txStatusMsg(self, label, content):
 		self.log.debug("txStatusMsg(%r, %r)"%(label,content))
@@ -294,9 +304,9 @@ class generic_radio_control_block(gr.basic_block):
 		if self._init or not hasattr(self, "radioParam"):
 			self.radioParam = radioParam
 			self.radioType = self.radioParam.get("type")
-			print("%s.set_radioParam: %s -> %s"%(self._name, repr(self.radioParam), repr(radioParam),))
+			self.log.debug("%s.set_radioParam: %s -> %s"%(self._name, repr(self.radioParam), repr(radioParam),))
 		elif radioParam!=self.radioParam:
-			print("%s.set_radioParam: %s -> %s"%(self._name, repr(self.radioParam), repr(radioParam),))
+			self.log.debug("%s.set_radioParam: %s -> %s"%(self._name, repr(self.radioParam), repr(radioParam),))
 			self.radioParam = radioParam
 			self.updateConfig("radioParam")
 	def set_rate(self, rate=0):

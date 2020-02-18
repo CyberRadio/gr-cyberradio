@@ -57,7 +57,9 @@ GR_PYTHON_INSTALL(
     generic_radio_control_block.py
     freq_msg_converter.py
     freq_msg_strobe.py
-    log_mag_fft.py DESTINATION ${GR_PYTHON_DIR}/CyberRadio
+    log_mag_fft.py
+    py_peak_hold.py
+    wola_log_mag_fft.py DESTINATION ${GR_PYTHON_DIR}/CyberRadio
 )
 
 ########################################################################
@@ -73,3 +75,6 @@ GR_ADD_TEST(qa_freq_msg_converter ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DI
 GR_ADD_TEST(qa_freq_msg_strobe ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_freq_msg_strobe.py)
 GR_ADD_TEST(qa_vector_mag_squared_log10_cf ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_vector_mag_squared_log10_cf.py)
 GR_ADD_TEST(qa_log_mag_fft ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_log_mag_fft.py)
+GR_ADD_TEST(qa_single_pole_iir_filter_ff ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_single_pole_iir_filter_ff.py)
+GR_ADD_TEST(qa_py_peak_hold ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_py_peak_hold.py)
+GR_ADD_TEST(qa_wola_log_mag_fft ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_wola_log_mag_fft.py)

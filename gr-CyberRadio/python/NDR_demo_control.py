@@ -222,22 +222,39 @@ class NDR_demo_control(gr.hier_block2):
     
     def _set_ddc_configuration(self, index, wideband, enable=False, rateIndex=0, freq=0.0, vitaLevel=0, rfSource=1, udpPort=0, dipIndex=0, dataPort=1):
         print((" _set_ddc_configuration ").center(80,'~'))
-        conf = { crd.configKeys.CONFIG_DDC: 
-                    { crd.configKeys.CONFIG_WBDDC if wideband else crd.configKeys.CONFIG_NBDDC: 
-                        { index: 
-                            { 
-                            crd.configKeys.ENABLE: enable, 
-                            crd.configKeys.DDC_RATE_INDEX: rateIndex, 
-                            crd.configKeys.DDC_FREQUENCY_OFFSET: freq, 
-                            crd.configKeys.DDC_VITA_ENABLE: vitaLevel, 
-                            crd.configKeys.DDC_UDP_DESTINATION: dipIndex if self.ten_gbe_radio else udpPort, 
-                            crd.configKeys.DDC_DATA_PORT: dataPort if self.ten_gbe_radio else None, 
-                            crd.configKeys.DDC_STREAM_ID: index|(0x8000 if wideband else 0x0000), 
-                            crd.configKeys.DDC_RF_INDEX: None if wideband else rfSource, 
-                             }, 
-                        }
-                     }, 
-                 }
+        if self.radio_type in ["ndr354", "ndr364"]:
+            conf = { crd.configKeys.CONFIG_DDC: 
+                        { crd.configKeys.CONFIG_WBDDC if wideband else crd.configKeys.CONFIG_NBDDC: 
+                            { index: 
+                                { 
+                                crd.configKeys.ENABLE: enable, 
+                                crd.configKeys.DDC_RATE_INDEX: rateIndex, 
+                                crd.configKeys.DDC_FREQUENCY_OFFSET: freq, 
+                                crd.configKeys.DDC_VITA_ENABLE: vitaLevel, 
+                                crd.configKeys.DDC_UDP_DESTINATION: dipIndex if self.ten_gbe_radio else udpPort, 
+                                crd.configKeys.DDC_DATA_PORT: dataPort if self.ten_gbe_radio else None, 
+                                crd.configKeys.DDC_STREAM_ID: index|(0x8000 if wideband else 0x0000), 
+                                 }, 
+                            }
+                         }, 
+                     }
+        else:
+            conf = { crd.configKeys.CONFIG_DDC: 
+                        { crd.configKeys.CONFIG_WBDDC if wideband else crd.configKeys.CONFIG_NBDDC: 
+                            { index: 
+                                { 
+                                crd.configKeys.ENABLE: enable, 
+                                crd.configKeys.DDC_RATE_INDEX: rateIndex, 
+                                crd.configKeys.DDC_FREQUENCY_OFFSET: freq, 
+                                crd.configKeys.DDC_VITA_ENABLE: vitaLevel, 
+                                crd.configKeys.DDC_UDP_DESTINATION: dipIndex if self.ten_gbe_radio else udpPort, 
+                                crd.configKeys.DDC_DATA_PORT: dataPort if self.ten_gbe_radio else None, 
+                                crd.configKeys.DDC_STREAM_ID: index|(0x8000 if wideband else 0x0000), 
+                                crd.configKeys.DDC_RF_INDEX: None if wideband else rfSource, 
+                                 }, 
+                            }
+                         }, 
+                     }
         self._set_configuration(conf)
     
     def _set_interface_configuration(self,):
@@ -267,20 +284,41 @@ class NDR_demo_control(gr.hier_block2):
                     temp = [int(i) for i in dip.split(".")]
                     temp[-1]+=10
                     sip = ".".join( str(i) for i in temp )
-                    conf = { crd.configKeys.CONFIG_IP: 
-                                { data_port: 
-                                    { crd.configKeys.IP_SOURCE: sip, 
-                                    crd.configKeys.IP_DEST: 
-                                        { dip_index: 
-                                            { crd.configKeys.GIGE_SOURCE_PORT: udp_port^0xffff,
-                                            crd.configKeys.GIGE_DEST_PORT: udp_port,
-                                            crd.configKeys.GIGE_MAC_ADDR: dmac, 
-                                            crd.configKeys.GIGE_IP_ADDR: dip,
-                                             },
+                    if self.radio_type in ["ndr354", "ndr364"]:
+                        conf = { crd.configKeys.CONFIG_IP: 
+                                    { data_port: 
+                                        { crd.configKeys.IP_SOURCE: 
+                                            {
+                                                crd.configKeys.GIGE_SOURCE_PORT: udp_port^0xffff,
+                                                crd.configKeys.GIGE_IP_ADDR: sip,
+                                                crd.configKeys.GIGE_NETMASK: "255.255.255.0",
+                                            }, 
+                                        crd.configKeys.IP_DEST: 
+                                            { dip_index: 
+                                                { 
+                                                crd.configKeys.GIGE_DEST_PORT: udp_port,
+                                                crd.configKeys.GIGE_MAC_ADDR: dmac, 
+                                                crd.configKeys.GIGE_IP_ADDR: dip,
+                                                 },
+                                            }, 
                                         }, 
                                     }, 
-                                }, 
-                            }
+                                }
+                    else:
+                        conf = { crd.configKeys.CONFIG_IP: 
+                                    { data_port: 
+                                        { crd.configKeys.IP_SOURCE: sip, 
+                                        crd.configKeys.IP_DEST: 
+                                            { dip_index: 
+                                                { crd.configKeys.GIGE_SOURCE_PORT: udp_port^0xffff,
+                                                crd.configKeys.GIGE_DEST_PORT: udp_port,
+                                                crd.configKeys.GIGE_MAC_ADDR: dmac, 
+                                                crd.configKeys.GIGE_IP_ADDR: dip,
+                                                 },
+                                            }, 
+                                        }, 
+                                    }, 
+                                }
                     self._set_configuration(conf)
 
 ##############################  radio Parameters  ##############################

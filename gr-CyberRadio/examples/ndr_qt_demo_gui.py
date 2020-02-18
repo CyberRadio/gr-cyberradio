@@ -83,7 +83,7 @@ class ndr_qt_demo_gui(gr.top_block, Qt.QWidget):
         # Variables
         ##################################################
         self.radioClass = radioClass = crd.getRadioClass(radioType,)
-        self.ch2_wb = ch2_wb = bool(wideband2) or radioType.strip().lower() in ("ndr304","ndr472")
+        self.ch2_wb = ch2_wb = bool(wideband2) or radioClass.getNumNbddc() == 0
         self.ch2_rateSet = ch2_rateSet = radioClass.getWbddcRateSet() if ch2_wb else radioClass.getNbddcRateSet()
         self.ch1_rateSet = ch1_rateSet = radioClass.getWbddcRateSet()
         self.ch2_rateIndex = ch2_rateIndex = sorted(ch2_rateSet.keys())[0]
@@ -469,16 +469,17 @@ class ndr_qt_demo_gui(gr.top_block, Qt.QWidget):
         self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, logfile, False)
         self.blocks_file_sink_0.set_unbuffered(False)
         self.blocks_file_descriptor_sink_0 = blocks.file_descriptor_sink(gr.sizeof_char*1, 1)
-        self.CyberRadio_vita_udp_rx_0_0 = CyberRadio.vita_udp_rx(macAndIpList[1], udpPortList[1], radioClass.getVitaHeaderSize(), radioClass.getVitaPayloadSize()/4, radioClass.getVitaHeaderSize()+radioClass.getVitaPayloadSize()+radioClass.getVitaTailSize(), radioClass.isByteswapped(), False, False, False)
-        self.CyberRadio_vita_udp_rx_0 = CyberRadio.vita_udp_rx(macAndIpList[1], udpPortList[0], radioClass.getVitaHeaderSize(), radioClass.getVitaPayloadSize()/4, radioClass.getVitaHeaderSize()+radioClass.getVitaPayloadSize()+radioClass.getVitaTailSize(), radioClass.isByteswapped(), False, False, False)
+        uses_v491 = radioType.strip().lower() not in ["ndr354", "ndr364"]
+        self.CyberRadio_vita_udp_rx_0 = CyberRadio.vita_udp_rx(macAndIpList[1], udpPortList[0], radioClass.getVitaHeaderSize(), radioClass.getVitaPayloadSize()/4, radioClass.getVitaHeaderSize()+radioClass.getVitaPayloadSize()+radioClass.getVitaTailSize(), radioClass.isByteswapped(), radioClass.isIqSwapped(), False, False, uses_v491)
+        self.CyberRadio_vita_udp_rx_1 = CyberRadio.vita_udp_rx(macAndIpList[1], udpPortList[1], radioClass.getVitaHeaderSize(), radioClass.getVitaPayloadSize()/4, radioClass.getVitaHeaderSize()+radioClass.getVitaPayloadSize()+radioClass.getVitaTailSize(), radioClass.isByteswapped(), radioClass.isIqSwapped(), False, False, uses_v491)
 
         ##################################################
         # Connections
         ##################################################
         self.connect((self.CyberRadio_vita_udp_rx_0, 0), (self.ch1_fftDisplay, 0))
         self.connect((self.CyberRadio_vita_udp_rx_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
-        self.connect((self.CyberRadio_vita_udp_rx_0_0, 0), (self.ch2_fftDisplay, 0))
-        self.connect((self.CyberRadio_vita_udp_rx_0_0, 0), (self.qtgui_time_sink_x_0, 0))
+        self.connect((self.CyberRadio_vita_udp_rx_1, 0), (self.ch2_fftDisplay, 0))
+        self.connect((self.CyberRadio_vita_udp_rx_1, 0), (self.qtgui_time_sink_x_0, 0))
         self.connect((self.ndrDemoControlBlock, 0), (self.blocks_file_descriptor_sink_0, 0))
         self.connect((self.ndrDemoControlBlock, 0), (self.blocks_file_sink_0, 0))
 

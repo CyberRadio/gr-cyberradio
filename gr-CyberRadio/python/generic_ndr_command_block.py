@@ -39,7 +39,10 @@ class generic_ndr_command_block(generic_radio_control_block):
         
         if cmd:
             self.send_command(cmd)
+        else:
+            self.rsp = ""
         self._init = False
+
 
     ## Setter & getter for radioParam
     def set_radioParam(self, radioParam={"type":"ndr308","host":"ndr308","port":8617,"obj":None}):
@@ -56,7 +59,13 @@ class generic_ndr_command_block(generic_radio_control_block):
         return self.radioParam
 
     def send_command(self,cmdString):
-        cmd = cmdString.strip()+"\n"
-        rsp = self.radioObj.sendCommand(cmd)
-        self.log.debug("CMD = %r & RSP = %r"%(repr(cmd), repr("; ".join(rsp)),))
-        return rsp
+        if cmdString is not None:
+            cmd = cmdString.strip()+"\n"
+            rsp = self.radioObj.sendCommand(cmd)
+            self.rsp = "; ".join(rsp)
+            for line in rsp:
+                self.log.debug("CMD = %r & RSP = %r"%(repr(cmd), repr(line),))
+            return self.rsp
+
+    def get_response(self,):
+        return self.rsp if self.rsp is not None else ""

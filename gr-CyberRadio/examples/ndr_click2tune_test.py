@@ -3,7 +3,7 @@
 ##################################################
 # GNU Radio Python Flow Graph
 # Title: NDRxxx Click2Tune Test
-# Generated: Wed Nov 29 09:42:41 2017
+# Generated: Thu Sep 20 14:20:58 2018
 ##################################################
 
 if __name__ == '__main__':
@@ -20,13 +20,11 @@ from PyQt4 import Qt
 from PyQt4.QtCore import QObject, pyqtSlot
 from gnuradio import blocks
 from gnuradio import eng_notation
-from gnuradio import fft
 from gnuradio import filter
 from gnuradio import gr
 from gnuradio import qtgui
 from gnuradio.eng_notation import *
 from gnuradio.eng_option import eng_option
-from gnuradio.fft import window
 from gnuradio.filter import firdes
 from gnuradio.qtgui import Range, RangeWidget
 from optparse import OptionParser
@@ -42,7 +40,7 @@ from gnuradio import qtgui
 
 class ndr_click2tune_test(gr.top_block, Qt.QWidget):
 
-    def __init__(self, fftRate=32, fftSizeExponent=15, fftWindowType='hann', radioDataPort=2, radioHostname='ndr301', radioType='ndr301'):
+    def __init__(self, fftRate=16, fftSizeExponent=15, fftWindowType='hann', localDataInterface='', radioDataPort=2, radioHostname='ndr301', radioType='ndr301'):
         gr.top_block.__init__(self, "NDRxxx Click2Tune Test")
         Qt.QWidget.__init__(self)
         self.setWindowTitle("NDRxxx Click2Tune Test")
@@ -72,6 +70,7 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
         self.fftRate = fftRate
         self.fftSizeExponent = fftSizeExponent
         self.fftWindowType = fftWindowType
+        self.localDataInterface = localDataInterface
         self.radioDataPort = radioDataPort
         self.radioHostname = radioHostname
         self.radioType = radioType
@@ -79,7 +78,13 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.radioObj = radioObj = crd.getRadioObject(radioType, verbose=bool(True), host=radioHostname)
+        self.radioObj = radioObj = crd.getRadioObject(
+                radioType,
+                verbose=True,
+                host=radioHostname if True else None,
+                 )
+        if True and radioObj.isConnected():
+            print("{0} is {1}connected to {2} as {3}. Using CyberRadioDriver version {4}.".format("radioObj", "" if radioObj.isConnected() else "not ", radioObj.host_or_dev, radioObj, crd.version))
         self.wbddcRateSet = wbddcRateSet = dict( [(k,v) for k,v in radioObj.getWbddcRateSet().iteritems() if radioObj.getDdcDataFormat(True).get(k,"iq")!="real"] )
         self.configFilePath = configFilePath = os.path.expanduser( os.path.join("~",".%s_demo.cfg"%(radioObj.name.lower(),)) )
         self._cfg_wbddcRateIndex_config = ConfigParser.ConfigParser()
@@ -137,6 +142,7 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
         try: cfg_dynRange = self._cfg_dynRange_config.getint('display', 'dyn_range')
         except: cfg_dynRange = 120
         self.cfg_dynRange = cfg_dynRange
+        self.wbddcEnable = wbddcEnable = True
         self.wbddcBwSet = wbddcBwSet = dict( [(k,v) for k,v in radioObj.getWbddcBwSet().iteritems() if radioObj.getDdcDataFormat(True).get(k,"iq")!="real"] )
         self.udpBasePort = udpBasePort = 44000
         self.tunerIndex = tunerIndex = cfg_tunerIndex
@@ -144,7 +150,8 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
         self.rfFreqMhz = rfFreqMhz = cfg_rfFreqMhz
         self.refLevel = refLevel = cfg_refLevel
         self.nbddcIndex = nbddcIndex = cfg_nbddcIndex
-        self.nbddcBwSet = nbddcBwSet = dict( [(k,v) for k,v in radioObj.getNbddcBwSet().iteritems() if radioObj.getDdcDataFormat(True).get(k,"iq")!="real"] )
+        self.nbddcEnable = nbddcEnable = True
+        self.nbddcBwSet = nbddcBwSet = dict( [(k,v) for k,v in radioObj.getNbddcBwSet().iteritems() if radioObj.getDdcDataFormat(False).get(k,"iq")!="real"] )
         self.nbSampleRate = nbSampleRate = nbddcRateSet[nbddcRateIndex]
         self.iirAlpha = iirAlpha = 2.0**(float(-iirAvgExp))
         self.framesToSkip = framesToSkip = int(numpy.round(framesPerBlock-framesPerFft))
@@ -161,6 +168,11 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
         self.wbTabs_grid_layout_0 = Qt.QGridLayout()
         self.wbTabs_layout_0.addLayout(self.wbTabs_grid_layout_0)
         self.wbTabs.addTab(self.wbTabs_widget_0, 'High-Res Wideband')
+        self.wbTabs_widget_1 = Qt.QWidget()
+        self.wbTabs_layout_1 = Qt.QBoxLayout(Qt.QBoxLayout.TopToBottom, self.wbTabs_widget_1)
+        self.wbTabs_grid_layout_1 = Qt.QGridLayout()
+        self.wbTabs_layout_1.addLayout(self.wbTabs_grid_layout_1)
+        self.wbTabs.addTab(self.wbTabs_widget_1, 'Time Plot')
         self.top_grid_layout.addWidget(self.wbTabs, 0,0,2,3)
         self.controlTabs = Qt.QTabWidget()
         self.controlTabs_widget_0 = Qt.QWidget()
@@ -246,8 +258,46 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
         self._dynRange_range = Range(5, 200, 5, cfg_dynRange, (195/5)+1)
         self._dynRange_win = RangeWidget(self._dynRange_range, self.set_dynRange, "Dyn.\nRange\n(dB)", "dial", int)
         self.wbTabs_grid_layout_0.addWidget(self._dynRange_win, 1,1,1,1)
+        self.wb_rx_source_snap = CyberRadio.snapshot_vector_source(radioObj.name.lower(), '0.0.0.0', udpBasePort, fftSize, fftRate)
+        print("%s = CyberRadio.snapshot_vector_source(%r, %r, %r, %r, %r)"%("wb_rx_source_snap", '0.0.0.0', udpBasePort, fftSize, fftRate, radioObj.name.lower()))
+
         self.single_pole_iir_filter_xx_1 = filter.single_pole_iir_filter_ff(2.0**-8, 1)
-        self.single_pole_iir_filter_xx_0 = filter.single_pole_iir_filter_ff(iirAlpha, dispSize)
+        self.qtgui_vector_sink_f_0_0 = qtgui.vector_sink_f(
+            dispSize,
+            0,
+            1.0/1024,
+            'Sample',
+            'Amplitude',
+            '',
+            2 # Number of inputs
+        )
+        self.qtgui_vector_sink_f_0_0.set_update_time(0.10)
+        self.qtgui_vector_sink_f_0_0.set_y_axis(-1, +1)
+        self.qtgui_vector_sink_f_0_0.enable_autoscale(False)
+        self.qtgui_vector_sink_f_0_0.enable_grid(True)
+        self.qtgui_vector_sink_f_0_0.set_x_axis_units('Frame')
+        self.qtgui_vector_sink_f_0_0.set_y_axis_units('V')
+        self.qtgui_vector_sink_f_0_0.set_ref_level(0)
+
+        labels = ['I', 'Q', '', '', '',
+                  '', '', '', '', '']
+        widths = [1, 1, 1, 1, 1,
+                  1, 1, 1, 1, 1]
+        colors = ["black", "red", "green", "black", "cyan",
+                  "magenta", "yellow", "dark red", "dark green", "dark blue"]
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+                  1.0, 1.0, 1.0, 1.0, 1.0]
+        for i in xrange(2):
+            if len(labels[i]) == 0:
+                self.qtgui_vector_sink_f_0_0.set_line_label(i, "Data {0}".format(i))
+            else:
+                self.qtgui_vector_sink_f_0_0.set_line_label(i, labels[i])
+            self.qtgui_vector_sink_f_0_0.set_line_width(i, widths[i])
+            self.qtgui_vector_sink_f_0_0.set_line_color(i, colors[i])
+            self.qtgui_vector_sink_f_0_0.set_line_alpha(i, alphas[i])
+
+        self._qtgui_vector_sink_f_0_0_win = sip.wrapinstance(self.qtgui_vector_sink_f_0_0.pyqwidget(), Qt.QWidget)
+        self.wbTabs_layout_1.addWidget(self._qtgui_vector_sink_f_0_0_win)
         self.qtgui_vector_sink_f_0 = qtgui.vector_sink_f(
             dispSize,
             rfFreqMhz-wbSampleRate/2e6,
@@ -424,27 +474,34 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
         self._iirAvgExp_range = Range(0, 8, 1, cfg_iirAvgExp, 200)
         self._iirAvgExp_win = RangeWidget(self._iirAvgExp_range, self.set_iirAvgExp, 'Avg.', "dial", int)
         self.wbTabs_grid_layout_0.addWidget(self._iirAvgExp_win, 2,1,1,1)
-        self.fft_vxx_0 = fft.fft_vcc(fftSize, True, (fftWindow/numpy.sum(fftWindow)), True, 1)
-        self.blocks_sub_xx_0 = blocks.sub_ff(1)
-        self.blocks_stream_to_vector_decimator_0 = blocks.stream_to_vector_decimator(
-        	item_size=gr.sizeof_gr_complex,
-        	sample_rate=wbSampleRate,
-        	vec_rate=fftRate,
-        	vec_len=fftSize,
-        )
         self.blocks_multiply_const_vxx_0 = blocks.multiply_const_vff((nbSampleRate/(2e3*numpy.pi), ))
         self.blocks_multiply_conjugate_cc_0 = blocks.multiply_conjugate_cc(1)
+        self.blocks_message_debug_1_0 = blocks.message_debug()
+        self.blocks_message_debug_1 = blocks.message_debug()
         self.blocks_delay_0 = blocks.delay(gr.sizeof_gr_complex*1, 1)
-        self.blocks_complex_to_mag_squared_0 = blocks.complex_to_mag_squared(dispSize)
         self.blocks_complex_to_mag_0 = blocks.complex_to_mag(1)
+        self.blocks_complex_to_float_1 = blocks.complex_to_float(fftSize)
         self.blocks_complex_to_float_0 = blocks.complex_to_float(1)
         self.blocks_complex_to_arg_0 = blocks.complex_to_arg(1)
-        self.CyberRadio_vita_udp_rx_0_0_0 = CyberRadio.vita_udp_rx('0.0.0.0', udpBasePort+1, radioObj.getVitaHeaderSize(), radioObj.getVitaPayloadSize()/4, radioObj.getVitaHeaderSize()+radioObj.getVitaPayloadSize()+radioObj.getVitaTailSize(), radioObj.isByteswapped(), True, False, False)
-        self.CyberRadio_vita_udp_rx_0_0 = CyberRadio.vita_udp_rx('0.0.0.0', udpBasePort, radioObj.getVitaHeaderSize(), radioObj.getVitaPayloadSize()/4, radioObj.getVitaHeaderSize()+radioObj.getVitaPayloadSize()+radioObj.getVitaTailSize(), radioObj.isByteswapped(), True, False, False)
-        self.CyberRadio_vector_nlog10_ff_0_0 = CyberRadio.vector_nlog10_ff(10, dispSize, 0)
-
-        self.CyberRadio_vector_nlog10_ff_0 = CyberRadio.vector_nlog10_ff(10, dispSize, 0)
-
+        self.CyberRadio_vita49_source_0 = CyberRadio.vita_udp_rx(
+              '0.0.0.0',
+              udpBasePort+1,
+              radioObj.getVitaHeaderSize(),
+              radioObj.getVitaPayloadSize()//4,
+              radioObj.getVitaHeaderSize()+radioObj.getVitaPayloadSize()+radioObj.getVitaTailSize(),
+              radioObj.isByteswapped(),
+              radioObj.isIqSwapped(),
+              False,
+              False,
+               )
+        self.CyberRadio_log_mag_fft_0 = CyberRadio.log_mag_fft(
+            numInputs=1,
+            fftSize=fftSize,
+            windowType="blackmanharris",
+            iirAlpha=iirAlpha,
+            secondaryOutput="log_mag_unfiltered",
+            resetOnAlphaChange=True,
+             )
         self.CyberRadio_generic_tuner_control_block_0 = CyberRadio.generic_tuner_control_block(
                     radioObj,
                     tunerIndex,
@@ -459,7 +516,7 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
         self.CyberRadio_generic_ddc_control_block_0_0 = CyberRadio.generic_ddc_control_block(
                     radioObj,
                     nbddcIndex,
-                    True,
+                    nbddcEnable,
                     False,
                     nbddcRateIndex,
                     0,
@@ -468,15 +525,17 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
                     0,
                     radioDataPort,
                     -1,
-                    '',
+                    localDataInterface,
                     udpBasePort+1,
                     {},
-                    True
+                    True,
+                    1,
+                    1,
                      )
         self.CyberRadio_generic_ddc_control_block_0 = CyberRadio.generic_ddc_control_block(
                     radioObj,
                     tunerIndex,
-                    True,
+                    wbddcEnable,
                     True,
                     wbddcRateIndex,
                     0,
@@ -485,10 +544,12 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
                     0,
                     radioDataPort,
                     -1,
-                    '',
+                    localDataInterface,
                     udpBasePort,
                     {},
-                    True
+                    True,
+                    1,
+                    1,
                      )
         self.CyberRadio_freq_msg_converter_0_1 = CyberRadio.freq_msg_converter(
               msgKey = 'freq',
@@ -524,37 +585,32 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
         self.msg_connect((self.CyberRadio_freq_msg_converter_0, 'freq'), (self.CyberRadio_generic_ddc_control_block_0_0, 'freq'))
         self.msg_connect((self.CyberRadio_freq_msg_converter_0_0, 'freq'), (self.qtgui_freq_sink_x_0, 'freq'))
         self.msg_connect((self.CyberRadio_freq_msg_converter_0_1, 'freq'), (self.CyberRadio_generic_ddc_control_block_0_0, 'freq'))
-        self.msg_connect((self.CyberRadio_generic_ddc_control_block_0, 'udp'), (self.CyberRadio_vita_udp_rx_0_0, 'control'))
+        self.msg_connect((self.CyberRadio_generic_ddc_control_block_0, 'status'), (self.blocks_message_debug_1_0, 'print'))
         self.msg_connect((self.CyberRadio_generic_ddc_control_block_0_0, 'freq'), (self.CyberRadio_freq_msg_converter_0_0, 'freq'))
-        self.msg_connect((self.CyberRadio_generic_ddc_control_block_0_0, 'udp'), (self.CyberRadio_vita_udp_rx_0_0_0, 'control'))
-        self.msg_connect((self.CyberRadio_vita_udp_rx_0_0, 'status'), (self.CyberRadio_generic_ddc_control_block_0, 'udp'))
-        self.msg_connect((self.CyberRadio_vita_udp_rx_0_0_0, 'status'), (self.CyberRadio_generic_ddc_control_block_0_0, 'udp'))
+        self.msg_connect((self.CyberRadio_generic_ddc_control_block_0_0, 'udp'), (self.CyberRadio_vita49_source_0, 'control'))
+        self.msg_connect((self.CyberRadio_vita49_source_0, 'status'), (self.CyberRadio_generic_ddc_control_block_0_0, 'udp'))
         self.msg_connect((self.qtgui_freq_sink_x_0, 'freq'), (self.CyberRadio_freq_msg_converter_0, 'freq'))
         self.msg_connect((self.qtgui_vector_sink_f_0, 'xval'), (self.CyberRadio_freq_msg_converter_0_1, 'freq'))
-        self.connect((self.CyberRadio_vector_nlog10_ff_0, 0), (self.qtgui_vector_sink_f_0, 0))
-        self.connect((self.CyberRadio_vector_nlog10_ff_0_0, 0), (self.qtgui_vector_sink_f_0, 1))
-        self.connect((self.CyberRadio_vita_udp_rx_0_0, 0), (self.blocks_stream_to_vector_decimator_0, 0))
-        self.connect((self.CyberRadio_vita_udp_rx_0_0_0, 0), (self.blocks_complex_to_float_0, 0))
-        self.connect((self.CyberRadio_vita_udp_rx_0_0_0, 0), (self.blocks_complex_to_mag_0, 0))
-        self.connect((self.CyberRadio_vita_udp_rx_0_0_0, 0), (self.blocks_delay_0, 0))
-        self.connect((self.CyberRadio_vita_udp_rx_0_0_0, 0), (self.blocks_multiply_conjugate_cc_0, 0))
-        self.connect((self.CyberRadio_vita_udp_rx_0_0_0, 0), (self.qtgui_freq_sink_x_0, 0))
+        self.connect((self.CyberRadio_log_mag_fft_0, 0), (self.qtgui_vector_sink_f_0, 1))
+        self.connect((self.CyberRadio_log_mag_fft_0, 1), (self.qtgui_vector_sink_f_0, 0))
+        self.connect((self.CyberRadio_vita49_source_0, 0), (self.blocks_complex_to_float_0, 0))
+        self.connect((self.CyberRadio_vita49_source_0, 0), (self.blocks_complex_to_mag_0, 0))
+        self.connect((self.CyberRadio_vita49_source_0, 0), (self.blocks_delay_0, 0))
+        self.connect((self.CyberRadio_vita49_source_0, 0), (self.blocks_multiply_conjugate_cc_0, 0))
+        self.connect((self.CyberRadio_vita49_source_0, 0), (self.qtgui_freq_sink_x_0, 0))
         self.connect((self.blocks_complex_to_arg_0, 0), (self.blocks_multiply_const_vxx_0, 0))
         self.connect((self.blocks_complex_to_float_0, 1), (self.qtgui_time_sink_x_0, 1))
         self.connect((self.blocks_complex_to_float_0, 0), (self.qtgui_time_sink_x_0, 0))
+        self.connect((self.blocks_complex_to_float_1, 1), (self.qtgui_vector_sink_f_0_0, 1))
+        self.connect((self.blocks_complex_to_float_1, 0), (self.qtgui_vector_sink_f_0_0, 0))
         self.connect((self.blocks_complex_to_mag_0, 0), (self.qtgui_time_sink_x_0, 2))
-        self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.CyberRadio_vector_nlog10_ff_0, 0))
-        self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.single_pole_iir_filter_xx_0, 0))
         self.connect((self.blocks_delay_0, 0), (self.blocks_multiply_conjugate_cc_0, 1))
         self.connect((self.blocks_multiply_conjugate_cc_0, 0), (self.blocks_complex_to_arg_0, 0))
-        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.blocks_sub_xx_0, 0))
+        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.qtgui_time_sink_x_0_0, 0))
         self.connect((self.blocks_multiply_const_vxx_0, 0), (self.single_pole_iir_filter_xx_1, 0))
-        self.connect((self.blocks_stream_to_vector_decimator_0, 0), (self.fft_vxx_0, 0))
-        self.connect((self.blocks_sub_xx_0, 0), (self.qtgui_time_sink_x_0_0, 0))
-        self.connect((self.fft_vxx_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
-        self.connect((self.single_pole_iir_filter_xx_0, 0), (self.CyberRadio_vector_nlog10_ff_0_0, 0))
-        self.connect((self.single_pole_iir_filter_xx_1, 0), (self.blocks_sub_xx_0, 1))
         self.connect((self.single_pole_iir_filter_xx_1, 0), (self.qtgui_time_sink_x_0_0, 1))
+        self.connect((self.wb_rx_source_snap, 0), (self.CyberRadio_log_mag_fft_0, 0))
+        self.connect((self.wb_rx_source_snap, 0), (self.blocks_complex_to_float_1, 0))
 
     def closeEvent(self, event):
         self.settings = Qt.QSettings("GNU Radio", "ndr_click2tune_test")
@@ -567,7 +623,6 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
     def set_fftRate(self, fftRate):
         self.fftRate = fftRate
         self.set_framesPerBlock(float(self.framesPerSecond)/self.fftRate)
-        self.blocks_stream_to_vector_decimator_0.set_vec_rate(self.fftRate)
 
     def get_fftSizeExponent(self):
         return self.fftSizeExponent
@@ -582,6 +637,12 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
     def set_fftWindowType(self, fftWindowType):
         self.fftWindowType = fftWindowType
         self.set_fftWindow(scipy.signal.get_window(self.fftWindowType,self.fftSize))
+
+    def get_localDataInterface(self):
+        return self.localDataInterface
+
+    def set_localDataInterface(self, localDataInterface):
+        self.localDataInterface = localDataInterface
 
     def get_radioDataPort(self):
         return self.radioDataPort
@@ -703,7 +764,6 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
         self.wbSampleRate = wbSampleRate
         self.qtgui_vector_sink_f_0.set_x_axis(self.rfFreqMhz-self.wbSampleRate/2e6, self.wbSampleRate/1e6/self.fftSize)
         self.set_framesPerSecond(float(self.wbSampleRate)/float(self.samplesPerFrame))
-        self.blocks_stream_to_vector_decimator_0.set_sample_rate(self.wbSampleRate)
 
     def get_samplesPerFrame(self):
         return self.samplesPerFrame
@@ -732,10 +792,10 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
 
     def set_fftSize(self, fftSize):
         self.fftSize = fftSize
-        self.set_fftWindow(scipy.signal.get_window(self.fftWindowType,self.fftSize))
         self.set_dispSize(self.fftSize)
         self.qtgui_vector_sink_f_0.set_x_axis(self.rfFreqMhz-self.wbSampleRate/2e6, self.wbSampleRate/1e6/self.fftSize)
         self.set_framesPerFft(int( numpy.round( float(self.fftSize)/self.samplesPerFrame ) ))
+        self.set_fftWindow(scipy.signal.get_window(self.fftWindowType,self.fftSize))
 
     def get_cfg_nbddcRateIndex(self):
         return self.cfg_nbddcRateIndex
@@ -835,6 +895,13 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
         self.cfg_dynRange = cfg_dynRange
         self.set_dynRange(self.cfg_dynRange)
 
+    def get_wbddcEnable(self):
+        return self.wbddcEnable
+
+    def set_wbddcEnable(self, wbddcEnable):
+        self.wbddcEnable = wbddcEnable
+        self.CyberRadio_generic_ddc_control_block_0.set_enable(self.wbddcEnable)
+
     def get_wbddcBwSet(self):
         return self.wbddcBwSet
 
@@ -924,6 +991,13 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
         self._cfg_nbddcIndex_config.write(open(self.configFilePath, 'w'))
         self.CyberRadio_generic_ddc_control_block_0_0.set_index(self.nbddcIndex)
 
+    def get_nbddcEnable(self):
+        return self.nbddcEnable
+
+    def set_nbddcEnable(self, nbddcEnable):
+        self.nbddcEnable = nbddcEnable
+        self.CyberRadio_generic_ddc_control_block_0_0.set_enable(self.nbddcEnable)
+
     def get_nbddcBwSet(self):
         return self.nbddcBwSet
 
@@ -946,7 +1020,7 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
 
     def set_iirAlpha(self, iirAlpha):
         self.iirAlpha = iirAlpha
-        self.single_pole_iir_filter_xx_0.set_taps(self.iirAlpha)
+        self.CyberRadio_log_mag_fft_0.set_iirAlpha(self.iirAlpha)
 
     def get_framesToSkip(self):
         return self.framesToSkip
@@ -983,7 +1057,7 @@ class ndr_click2tune_test(gr.top_block, Qt.QWidget):
 def argument_parser():
     parser = OptionParser(usage="%prog: [options]", option_class=eng_option)
     parser.add_option(
-        "-R", "--fftRate", dest="fftRate", type="intx", default=32,
+        "-R", "--fftRate", dest="fftRate", type="intx", default=16,
         help="Set fftRate [default=%default]")
     parser.add_option(
         "-F", "--fftSizeExponent", dest="fftSizeExponent", type="intx", default=15,
@@ -991,6 +1065,9 @@ def argument_parser():
     parser.add_option(
         "-w", "--fftWindowType", dest="fftWindowType", type="string", default='hann',
         help="Set FFT Window Type [default=%default]")
+    parser.add_option(
+        "-D", "--localDataInterface", dest="localDataInterface", type="string", default='',
+        help="Set Local Data Interface [default=%default]")
     parser.add_option(
         "-d", "--radioDataPort", dest="radioDataPort", type="intx", default=2,
         help="Set Radio Data Port (-1 for auto select) [default=%default]")
@@ -1015,7 +1092,7 @@ def main(top_block_cls=ndr_click2tune_test, options=None):
         Qt.QApplication.setGraphicsSystem(style)
     qapp = Qt.QApplication(sys.argv)
 
-    tb = top_block_cls(fftRate=options.fftRate, fftSizeExponent=options.fftSizeExponent, fftWindowType=options.fftWindowType, radioDataPort=options.radioDataPort, radioHostname=options.radioHostname, radioType=options.radioType)
+    tb = top_block_cls(fftRate=options.fftRate, fftSizeExponent=options.fftSizeExponent, fftWindowType=options.fftWindowType, localDataInterface=options.localDataInterface, radioDataPort=options.radioDataPort, radioHostname=options.radioHostname, radioType=options.radioType)
     tb.start()
     tb.show()
 

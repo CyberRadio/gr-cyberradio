@@ -1,1 +1,5 @@
 *.pyc
+*.tar.gz
+cyberradiodriver/build
+cyberradiodriver/docs
+gr-CyberRadio/build/

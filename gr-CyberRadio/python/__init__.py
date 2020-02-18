@@ -61,6 +61,8 @@ from freq_msg_converter import freq_msg_converter
 
 from freq_msg_strobe import freq_msg_strobe
 from log_mag_fft import log_mag_fft
+from py_peak_hold import py_peak_hold
+from wola_log_mag_fft import wola_log_mag_fft
 
 
 

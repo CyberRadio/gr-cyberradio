@@ -82,7 +82,8 @@ class generic_group_control_block(generic_radio_control_block, gr.basic_block):
 		if len(groupConf)>0:
 			confDict = {crd.configKeys.CONFIG_DDC_GROUP:{ groupType: { self.index: groupConf } } }
 			self.log.debug( json.dumps(confDict, sort_keys=True) )
-			self.radioObj.setConfiguration(confDict)
+			if self.radioObj.isConnected():
+				self.radioObj.setConfiguration(confDict)
 
 	## Setter & getter for index
 	def set_index(self, index=1):

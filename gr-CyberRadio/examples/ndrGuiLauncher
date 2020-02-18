@@ -113,7 +113,11 @@ for radioName in CyberRadioDriver.getSupportedRadios():
 	RADIO_INFO_DICT[radioName]["name"] = radioClass.getName()
 	RADIO_INFO_DICT[radioName]["vita"] = radioClass.getVitaEnableOptionSet()
 	RADIO_INFO_DICT[radioName]["usesTcp"] = radioClass.isConnectionModeSupported("tcp")
+	RADIO_INFO_DICT[radioName]["usesUdp"] = radioClass.isConnectionModeSupported("udp")
+	RADIO_INFO_DICT[radioName]["usesHttps"] = radioClass.isConnectionModeSupported("https")
+	RADIO_INFO_DICT[radioName]["defPort"] = radioClass.getDefaultControlPort()
 	RADIO_INFO_DICT[radioName]["isTx"] = (radioClass.getNumTransmitters() > 0)
+	RADIO_INFO_DICT[radioName]["isTenGig"] = (radioClass.getNumGigE() > 0)
 	RADIO_INFO_DICT[radioName]["demoGuiScript"] = "ndr_qt_demo_gui.py"
 	RADIO_INFO_DICT[radioName]["hasPortOption"] = True
 # OVERRIDE the demo GUI script in the radio info dictionary for specific radio types
@@ -464,12 +468,20 @@ class mainFrame(wx.Frame):
 					args += ["-c","tcp"]
 					args += ["-n",str(self.hostname.GetValue()).lower()]
 					args += ["-p","%d"%int(self.tcpport.GetValue())]
+				elif self.useUdp():
+					args += ["-c","udp"]
+					args += ["-n",str(self.hostname.GetValue()).lower()]
+					args += ["-p","%d"%int(self.tcpport.GetValue())]
+				elif self.useHttps():
+					args += ["-c","https"]
+					args += ["-n",str(self.hostname.GetValue()).lower()]
+					args += ["-p","%d"%int(self.tcpport.GetValue())]
 				else:
 					args += ["-c","tty"]
 					args += ["-d",str(self.devicename.GetValue())]
 					args += ["-b","%d"%int(self.baudrate.GetValue())]
 				
-				tenGigRadio = any( str(i) in radioType for i in (308,651) )
+				tenGigRadio = RADIO_INFO_DICT[radioType]["isTenGig"]
 				if tenGigRadio:
 					for i in (self.tenGigIf1Box.GetValue(),self.tenGigIf2Box.GetValue()):
 						args.append(i)
@@ -494,6 +506,22 @@ class mainFrame(wx.Frame):
 		else:
 			return RADIO_INFO_DICT[self.getRadioType()]["usesTcp"]
 	
+	def useUdp(self):
+		#return self.getRadioType() in ("ndr308",)
+		#return "ndr308" in self.getRadioType()
+		if self.getRadioType() == "":
+			return False
+		else:
+			return RADIO_INFO_DICT[self.getRadioType()]["usesUdp"]
+	
+	def useHttps(self):
+		#return self.getRadioType() in ("ndr308",)
+		#return "ndr308" in self.getRadioType()
+		if self.getRadioType() == "":
+			return False
+		else:
+			return RADIO_INFO_DICT[self.getRadioType()]["usesHttps"]
+	
 	def launchNdrGui(self, event):  # wxGlade: mainFrame.<event_handler>
 		self.enableAllButtons(False)
 		try:
@@ -501,6 +529,7 @@ class mainFrame(wx.Frame):
 				self.guiProc = twistedSubprocess(self.guiStarted,self.guiEnded)
 				radioType = self.getRadioType("launchNdrGui")
 				print "radioType",radioType
+				radioCls = CyberRadioDriver.getRadioClass(radioType)
 				args = [os.path.join(self.getScriptDirectory(), 
 									RADIO_INFO_DICT[radioType]["demoGuiScript"]),]
 				args += ["-r", radioType]
@@ -509,18 +538,32 @@ class mainFrame(wx.Frame):
 					args += ["-n", str(self.hostname.GetValue()).lower()]
 					if RADIO_INFO_DICT[radioType]["hasPortOption"]:
 						args += ["-p", "%d" % int(self.tcpport.GetValue())]
+				elif self.useUdp():
+					args += ["-n", str(self.hostname.GetValue()).lower()]
+					if RADIO_INFO_DICT[radioType]["hasPortOption"]:
+						args += ["-p", "%d" % int(self.tcpport.GetValue())]
+				elif self.useHttps():
+					args += ["-n", str(self.hostname.GetValue()).lower()]
+					if RADIO_INFO_DICT[radioType]["hasPortOption"]:
+						args += ["-p", "%d" % int(self.tcpport.GetValue())]
 				else:
 					args += ["-n", str(self.devicename.GetValue()).lower()]
 					args += ["-p", "%d" % int(self.baudrate.GetValue())]
 				v49sel,v49lev = self.getVitaLevel()
-				args += ["-v", str(v49lev)]
-				tenGigRadio = any( str(i) in radioType for i in (308,651,328,804) )
+				if v49lev is not None:
+					args += ["-v", str(v49lev)]
+				tenGigRadio = RADIO_INFO_DICT[radioType]["isTenGig"]
 				if tenGigRadio:
 					args += ["--ifname", self.tenGigIf1Box.GetValue()]
-					args += ["--dataPort", str(1)]
+					dport = radioCls.getGigEIndexRange()[0]
+					args += ["--dataPort", str(dport)]
 					#args += ["--if_10gbe2",self.tenGigIf2Box.GetValue()]
 				else:
 					args += ["--ifname", self.gigabitIfBox.GetValue()]
+				# Go ahead and set the second channel to WB if the radio
+				# has no NBDDCs
+				if radioCls.getNumNbddc() == 0:
+					args += ["--wideband2", "1"]
 				print "Launching GUI...", repr(" ".join(args))
 				self.guiProc.start(args)
 				self.saveSettings()
@@ -593,6 +636,26 @@ class mainFrame(wx.Frame):
 			self.baudrate.Hide()
 			self.label_hostDevice.SetLabel("Hostname/IP")
 			self.label_portBaud.SetLabel("TCP Port")
+			if event is not None:
+				self.tcpport.SetValue(RADIO_INFO_DICT[self.getRadioType()]["defPort"])
+		elif self.useUdp():
+			self.hostname.Show()
+			self.tcpport.Show()
+			self.devicename.Hide()
+			self.baudrate.Hide()
+			self.label_hostDevice.SetLabel("Hostname/IP")
+			self.label_portBaud.SetLabel("UDP Port")
+			if event is not None:
+				self.tcpport.SetValue(RADIO_INFO_DICT[self.getRadioType()]["defPort"])
+		elif self.useHttps():
+			self.hostname.Show()
+			self.tcpport.Show()
+			self.devicename.Hide()
+			self.baudrate.Hide()
+			self.label_hostDevice.SetLabel("Hostname/IP")
+			self.label_portBaud.SetLabel("HTTPS Port")
+			if event is not None:
+				self.tcpport.SetValue(RADIO_INFO_DICT[self.getRadioType()]["defPort"])
 		else:
 			self.hostname.Hide()
 			self.tcpport.Hide()
@@ -613,10 +676,14 @@ class mainFrame(wx.Frame):
 		for vitaCode, vitaDesc in sorted(RADIO_INFO_DICT[self.getRadioType()]["vita"].items()):
 			self.vita49LevelSelectionBox.Append("%d: %s" % (vitaCode, vitaDesc), \
 											    vitaCode)
-		if lastSelection != wx.NOT_FOUND:
-			self.vita49LevelSelectionBox.SetSelection(min(lastSelection, self.vita49LevelSelectionBox.GetCount()-1))
+		if self.vita49LevelSelectionBox.GetCount() > 0:
+			if lastSelection != wx.NOT_FOUND:
+				self.vita49LevelSelectionBox.SetSelection(min(lastSelection, self.vita49LevelSelectionBox.GetCount()-1))
+			else:
+				self.vita49LevelSelectionBox.SetSelection(0)
+			self.vita49LevelSelectionBox.Enable()
 		else:
-			self.vita49LevelSelectionBox.SetSelection(0)
+			self.vita49LevelSelectionBox.Disable()
 		
 # 		isTx = RADIO_INFO_DICT[self.getRadioType()]["isTx"]
 # 		self.launchTxGuiButton.Enable(isTx)
@@ -624,20 +691,29 @@ class mainFrame(wx.Frame):
 # 			self.launchTxGuiButton.Hide()
 # 		else:
 # 			self.launchTxGuiButton.Show()
-		allowPlayback = any( i in self.getRadioType() for i in ("308","651",
-															    "328","804",) )
+# 		allowPlayback = any( i in self.getRadioType() for i in ("308","651",
+# 															    "328","804",
+# 															    "354", "364",
+# 															    "810") )
 # 		self.launchRecordAndPlaybackGuiButton.Enable( allowPlayback )
-		if not allowPlayback:
+# 		if not allowPlayback:
 # 			self.launchRecordAndPlaybackGuiButton.Hide()
-			self.gigabitIfBox.Show()
-			self.tenGigIf1Box.Hide()
-			self.tenGigIf2Box.Hide()
-		else:
+# 			self.gigabitIfBox.Show()
+# 			self.tenGigIf1Box.Hide()
+# 			self.tenGigIf2Box.Hide()
+# 		else:
 # 			self.launchRecordAndPlaybackGuiButton.Show()
+# 			self.gigabitIfBox.Hide()
+# 			self.tenGigIf1Box.Show()
+# 			self.tenGigIf2Box.Show()
+		if RADIO_INFO_DICT[self.getRadioType()]["isTenGig"]:
 			self.gigabitIfBox.Hide()
 			self.tenGigIf1Box.Show()
 			self.tenGigIf2Box.Show()
-		
+		else:
+			self.gigabitIfBox.Show()
+			self.tenGigIf1Box.Hide()
+			self.tenGigIf2Box.Hide()
 		self.sizer_hostDevice.Layout()
 		self.sizer_portBaud.Layout()
 		self.sizer_interfaces.Layout()

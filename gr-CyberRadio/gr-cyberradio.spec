@@ -1,4 +1,4 @@
-# Spec file template for package: libcyberradio
+# Spec file template for package: gr-cyberradio
 #
 # If using the makerpm script, use the following placeholders:
 # * RPM_PKG_NAME: Name of the RPM package
@@ -19,8 +19,13 @@ Source: RPM_PKG_NAME-RPM_PKG_VERSION.tar.gz
 URL: http://www.cyberradiosolutions.com
 Vendor: CyberRadio Solutions, Inc.
 Packager: CyberRadio Solutions, Inc. <sales@cyberradiosolutions.com>
-BuildRequires: gnuradio, libcyberradio, libpcap-devel, cppunit-devel, fftw-devel
-Requires: gnuradio, python-cyberradiodriver, python-netifaces, libcyberradio, libpcap, wxPython, python2-psutil, python-twisted-core, scipy
+BuildRequires: gnuradio-devel
+BuildRequires: libcyberradio-devel
+BuildRequires: cppunit-devel
+BuildRequires: fftw-devel
+
+# Don't build a "debuginfo" package
+%define debug_package %{nil}
 
 %description
 This package provides blocks for controlling CyberRadio Solutions, Inc. 
@@ -47,7 +52,7 @@ fi
 # -- CMake project: Both the "%cmake" and "%{__make}" steps
 # -- Autotools project: TBD
 # -- Python project: None (the install step takes care of this)
-%cmake .
+%cmake . -DPACKAGE_VERSION=RPM_PKG_VERSION
 %{__make} %{?_smp_mflags}
 
 %install
@@ -86,12 +91,61 @@ make install DESTDIR=%{buildroot}
 
 # Post-install script section
 %post
-# Make directories /public and /public/ndrDemoGui if needed
+# -- Make directories /public and /public/ndrDemoGui if needed
 mkdir -p /public/ndrDemoGui
-# Change directory permissions on /public and /public/ndrDemoGui
+# -- Change directory permissions on /public and /public/ndrDemoGui
 chmod 777 /public /public/ndrDemoGui
-# After installing replacement Python code modules, 
-# delete previously compiled *.pyc files in order to force
-# a recompile.
-rm -f $(find %{python2_sitearch}/CyberRadio -name '*.pyc')
+# -- Fix GNU Radio flowgraph template for Qt
+for TEMPLATE in `find /usr/{local/,}lib64/python* -name "flow_graph.tmpl"`
+do
+	IFS=''
+	grep -q "Qt App Signal Handlers" $TEMPLATE
+	if [ $? -ne 0 ]
+	then
+		echo "MODDING $TEMPLATE"
+		while read LINE
+		do
+			sed -i "s/    def quitting():/    $LINE\n    def quitting():/" $TEMPLATE
+			echo "-> $LINE"
+		done <<< "##  vvvv  gr-CyberRadio  vvvv
+\##Qt App Signal Handlers.
+from PyQt4.QtCore import QTimer
+import signal
+signal.signal(signal.SIGINT, lambda sig,_: qapp.quit())
+signal.signal(signal.SIGTERM, lambda sig,_: qapp.quit())
+timer = QTimer()
+timer.start(200)
+timer.timeout.connect(lambda: None)
+\##  ^^^^  gr-CyberRadio  ^^^^
+"
+	else
+		echo "SKIPPING $TEMPLATE"
+	fi
+done
+for TEMPLATE in `find /usr/{local/,}lib64/python* -name "flow_graph.tmpl"`
+do
+	IFS=''
+	grep -q "Wait for QT flowgraph to end" $TEMPLATE
+	if [ $? -ne 0 ]
+	then
+		echo "MODDING $TEMPLATE"
+		while read LINE
+		do
+			sed -i "s/    def quitting():/    $LINE\n    def quitting():/" $TEMPLATE
+			echo "-> $LINE"
+		done <<< "##  vvvv  gr-CyberRadio  vvvv
+\##Wait for QT flowgraph to end.
+import threading
+def doWait(tb,qapp):
+    tb.wait()
+    print('done waiting')
+    qapp.exit() 
+t = threading.Thread(name='doWait', target = doWait, args=(tb,qapp))
+t.start()
+\##  ^^^^  gr-CyberRadio  ^^^^
+"
+	else
+		echo "SKIPPING $TEMPLATE"
+	fi
+done
 

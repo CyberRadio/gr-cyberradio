@@ -21,16 +21,24 @@ export DH_UBUNTU_REL=$(shell lsb_release -cs)
 
 %:
 	dh $@ --with python2
-	
-# Override configure step to pass package version to CMake
-override_dh_auto_configure:
-	dh_auto_configure -- -DPACKAGE_VERSION=DEB_PKG_VERSION
 
-# Override shared library dependency step to turn it off.  Instead, we will rely on 
-# the control file and the user installing the needed libraries (admittedly a dangerous
-# proposition).
+# Override configure step to pass package version to CMake
+# -- And pass a prefix path to CMake that points to the temporary directory that
+#    the Jenkins build process extracts the libcyberradio Debian package into.
+#    This allows CMake to use info from the temp directory to construct libcyberradio
+#    dependencies.
+override_dh_auto_configure:
+	dh_auto_configure -- -DPACKAGE_VERSION=DEB_PKG_VERSION -DCMAKE_PREFIX_PATH=../tmp-libcyberradio/usr
+
+# Override shared library dependency step to pull shared library information for
+# libcyberradio from a temporary extraction folder if it exists.  This is used to
+# support automated builds through Jenkins.
 override_dh_shlibdeps:
-	:
+	if [ -d ../tmp-libcyberradio ]; then \
+	    LD_LIBRARY_PATH=../tmp-libcyberradio/usr/lib dh_shlibdeps -- -L../tmp-libcyberradio/shlibs; \
+	else \
+	    dh_shlibdeps; \
+	fi
 
 # Override dh_auto_test so that it does nothing
 # (This is because automatic testing will probably fail on Jenkins)
@@ -44,3 +52,11 @@ override_dh_python2:
 	dh_python2 --no-ext-rename
 endif
 
+# Override dh_makeshlibs to add restrictive version information
+# to this package.  With this information, packages that use
+# this one as a dependency will need this version or better.
+# This is vitally important for packages that provide shared
+# libraries, so that we can make sure that the proper version
+# of the shared libraries is installed to satisfy dependencies.
+override_dh_makeshlibs:
+	dh_makeshlibs -V

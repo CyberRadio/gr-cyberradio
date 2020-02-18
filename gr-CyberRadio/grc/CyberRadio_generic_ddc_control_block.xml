@@ -20,9 +20,17 @@
             $udpPort, 
             $otherArgs, 
             $debug,
+<!-- 
             $totalRepeatPackets,
             $activeRepeatPackets,
-             )</make>
+ -->
+             )
+if $phaseOffset is not None:
+    self.$(id).set_phaseOffset($phaseOffset)
+if $totalRepeatPackets is not None:
+    self.$(id).set_totalRepeatPackets($totalRepeatPackets)
+if $activeRepeatPackets is not None:
+    self.$(id).set_activeRepeatPackets($activeRepeatPackets)</make>
   <callback>set_index($index)</callback>
   <callback>set_enable($enable)</callback>
   <callback>set_wideband($wideband)</callback>
@@ -34,8 +42,6 @@
   <callback>set_phaseOffset($phaseOffset)</callback>
   <callback>set_totalRepeatPackets($totalRepeatPackets)</callback>
   <callback>set_activeRepeatPackets($activeRepeatPackets)</callback>
-  
-  
 <!--
   <callback>set_radioInterface($radioInterface)</callback>
   <callback>set_dipIndex($dipIndex)</callback>
@@ -104,12 +110,6 @@
     <hide>part</hide>
   </param>
   <param>
-    <name>Phase Offset (degrees)</name>
-    <key>phaseOffset</key>
-    <value>0.0</value>
-    <type>float</type>
-  </param>
-  <param>
     <name>Radio Ethernet Interface (-1 = auto)</name>
     <key>radioInterface</key>
     <value>-1</value>
@@ -140,19 +140,29 @@
     <type>int</type>
     <tab>Networking</tab>
   </param>
+  <param>
+    <name>Phase Offset (degrees)</name>
+    <key>phaseOffset</key>
+    <value>None</value>
+    <type>raw</type>
+    <hide>part</hide>
+    <tab>Misc.</tab>
+  </param>
 <param>
 	<name>Active Repeat (M)</name>
 	<key>activeRepeatPackets</key>
-	<value>1</value>
-	<type>int</type>
-	<tab>Misc.</tab>
+	<value>None</value>
+	<type>raw</type>
+  <hide>part</hide>
+  <tab>Misc.</tab>
 </param>
 <param>
 	<name>Repeat Period (N)</name>
 	<key>totalRepeatPackets</key>
-	<value>1</value>
-	<type>int</type>
-	<tab>Misc.</tab>
+	<value>None</value>
+	<type>raw</type>
+  <hide>part</hide>
+  <tab>Misc.</tab>
 </param>
   <param>
     <name>Other Args (dict)</name>

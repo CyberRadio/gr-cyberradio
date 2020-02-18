@@ -17,10 +17,14 @@
 #include "CyberRadio/vector_keep_m_in_n.h"
 #include "CyberRadio/vector_nlog10_ff.h"
 #include "CyberRadio/vita_udp_rx.h"
+#include "CyberRadio/zero_copy_source.h"
 #include "CyberRadio/ndr651_sink.h"
 #include "CyberRadio/snapshot_vector_source.h"
 #include "CyberRadio/NDR651_sync_sink.h"
 #include "CyberRadio/vector_mag_squared_log10_cf.h"
+#include "CyberRadio/single_pole_iir_filter_ff.h"
+#include "CyberRadio/snapshot_vector_source_mk2.h"
+#include "CyberRadio/snapshot_fft_vector_source.h"
 %}
 
 %include "CyberRadio/NDR651_duc_sink_mk2.h"
@@ -42,7 +46,8 @@ GR_SWIG_BLOCK_MAGIC2(CyberRadio, vector_nlog10_ff);
 
 %include "CyberRadio/vita_udp_rx.h"
 GR_SWIG_BLOCK_MAGIC2(CyberRadio, vita_udp_rx);
-
+%include "CyberRadio/zero_copy_source.h"
+GR_SWIG_BLOCK_MAGIC2(CyberRadio, zero_copy_source);
 
 %include "CyberRadio/ndr651_sink.h"
 GR_SWIG_BLOCK_MAGIC2(CyberRadio, ndr651_sink);
@@ -52,3 +57,9 @@ GR_SWIG_BLOCK_MAGIC2(CyberRadio, snapshot_vector_source);
 GR_SWIG_BLOCK_MAGIC2(CyberRadio, NDR651_sync_sink);
 %include "CyberRadio/vector_mag_squared_log10_cf.h"
 GR_SWIG_BLOCK_MAGIC2(CyberRadio, vector_mag_squared_log10_cf);
+%include "CyberRadio/single_pole_iir_filter_ff.h"
+GR_SWIG_BLOCK_MAGIC2(CyberRadio, single_pole_iir_filter_ff);
+%include "CyberRadio/snapshot_vector_source_mk2.h"
+GR_SWIG_BLOCK_MAGIC2(CyberRadio, snapshot_vector_source_mk2);
+%include "CyberRadio/snapshot_fft_vector_source.h"
+GR_SWIG_BLOCK_MAGIC2(CyberRadio, snapshot_fft_vector_source);

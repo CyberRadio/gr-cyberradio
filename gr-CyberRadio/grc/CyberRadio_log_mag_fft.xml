@@ -2,14 +2,23 @@
 <block>
   <name>[CyberRadio] Log Mag FFT</name>
   <key>CyberRadio_log_mag_fft</key>
-  <category>[CyberRadio]/DSP</category>
+  <category>[CyberRadio]/DSP Functions</category>
   <import>import CyberRadio</import>
   <make>CyberRadio.log_mag_fft( 
+    numInputs=$numInputs, 
     fftSize=$fftSize, 
     windowType=$windowType, 
     iirAlpha=$iirAlpha, 
+    secondaryOutput=$secondaryOutput.string, 
+    resetOnAlphaChange=$resetOnAlphaChange, 
      )</make>
   <callback>set_iirAlpha($iirAlpha)</callback>
+  <param>
+    <name># Inputs</name>
+    <key>numInputs</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
   <param>
     <name>FFT Size</name>
     <key>fftSize</key>
@@ -21,6 +30,26 @@
     <key>windowType</key>
     <value>"blackmanharris"</value>
     <type>raw</type>
+    <option>
+      <name>Rectangular</name>
+      <key>"boxcar"</key>
+    </option>
+    <option>
+      <name>Flat Top</name>
+      <key>"flattop"</key>
+    </option>
+    <option>
+      <name>Hann</name>
+      <key>"hann"</key>
+    </option>
+    <option>
+      <name>Blackman-Harris</name>
+      <key>"blackmanharris"</key>
+    </option>
+    <option>
+      <name>Hamming</name>
+      <key>"hamming"</key>
+    </option>
   </param>
   <param>
     <name>Averaging Alpha</name>
@@ -28,21 +57,77 @@
     <value>2.0**-3</value>
     <type>float</type>
   </param>
+  <param>
+    <name>Secondary Output</name>
+    <key>secondaryOutput</key>
+    <type>enum</type>
+    <option>
+      <name>FFT</name>
+      <key>fft</key>
+      <opt>string:"fft"</opt>
+      <opt>type:complex</opt>
+      <opt>num:1</opt>
+    </option>
+    <option>
+      <name>Mag^2 (filtered)</name>
+      <key>mag</key>
+      <opt>string:"mag_filtered"</opt>
+      <opt>type:float</opt>
+      <opt>num:1</opt>
+    </option>
+    <option>
+      <name>Mag^2 (unfiltered)</name>
+      <key>mag_unfiltered</key>
+      <opt>string:"mag_unfiltered"</opt>
+      <opt>type:float</opt>
+      <opt>num:1</opt>
+    </option>
+    <option>
+      <name>Log. Mag. (unfiltered)</name>
+      <key>log_mag_unfiltered</key>
+      <opt>string:"log_mag_unfiltered"</opt>
+      <opt>type:float</opt>
+      <opt>num:1</opt>
+    </option>
+  </param>
+  <param>
+    <name>Reset Filter on Alpha Change?</name>
+    <key>resetOnAlphaChange</key>
+    <value>False</value>
+    <type>bool</type>
+    <hide>part</hide>
+    <option>
+      <name>No</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Yes</name>
+      <key>True</key>
+    </option>
+  </param>
+  
   <sink>
     <name>IQ</name>
     <type>complex</type>
     <vlen>$fftSize</vlen>
+    <nports>$numInputs</nports>
+  </sink>
+  <sink>
+    <name>reset</name>
+    <type>message</type>
+    <optional>1</optional>
   </sink>
   <source>
     <name>Log Mag</name>
     <type>float</type>
     <vlen>$fftSize</vlen>
+    <nports>$numInputs</nports>
   </source>
   <source>
-    <name>FFT</name>
-    <type>complex</type>
+    <name>Secondary</name>
+    <type>$secondaryOutput.type</type>
     <vlen>$fftSize</vlen>
+    <nports>$numInputs</nports>
     <optional>1</optional>
   </source>
-
 </block>

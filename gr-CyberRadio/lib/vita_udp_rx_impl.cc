@@ -24,44 +24,40 @@
 
 #include <gnuradio/io_signature.h>
 #include "vita_udp_rx_impl.h"
+#include <iostream>
+#include <iomanip>
 
 namespace gr {
   namespace CyberRadio {
 
     vita_udp_rx::sptr
-    vita_udp_rx::make(const std::string &src_ip, unsigned short port, unsigned int header_byte_offset, int samples_per_packet, int bytes_per_packet, bool swap_bytes, bool swap_iq, bool tag_packets, bool vector_output)
+    vita_udp_rx::make(const std::string &src_ip, unsigned short port, unsigned int header_byte_offset, int samples_per_packet, int bytes_per_packet, bool swap_bytes, bool swap_iq, bool tag_packets, bool vector_output, bool uses_v491, bool narrowband, bool debug)
     {
       return gnuradio::get_initial_sptr
-        (new vita_udp_rx_impl(src_ip, port, header_byte_offset, samples_per_packet, bytes_per_packet, swap_bytes, swap_iq, tag_packets, vector_output));
+        (new vita_udp_rx_impl(src_ip, port, header_byte_offset, samples_per_packet, bytes_per_packet, swap_bytes, swap_iq, tag_packets, vector_output, uses_v491, narrowband, debug));
     }
 
     /*
      * The private constructor
      */
-    vita_udp_rx_impl::vita_udp_rx_impl(const std::string &src_ip, unsigned short port, unsigned int header_byte_offset, int samples_per_packet, int bytes_per_packet, bool swap_bytes, bool swap_iq, bool tag_packets, bool vector_output)
+    vita_udp_rx_impl::vita_udp_rx_impl(const std::string &src_ip, unsigned short port, unsigned int header_byte_offset, int samples_per_packet, int bytes_per_packet, bool swap_bytes, bool swap_iq, bool tag_packets, bool vector_output, bool uses_v491, bool narrowband, bool debug)
       : gr::sync_interpolator("vita_udp_rx",
               gr::io_signature::make(0, 0, 0),
 //              gr::io_signature::make(1, 1, sizeof(gr_complex)), samples_per_packet),
 			  gr::io_signature::make(0, 0, 0), 1),
 		samples_per_packet(samples_per_packet),
 		bytes_per_packet(bytes_per_packet),
+		uses_v491(uses_v491),
+    is_narrowband(narrowband),
 		src_ip(src_ip),
 		port(port),
 		header_byte_offset(header_byte_offset),
 		swap_bytes(swap_bytes),
 		swap_iq(swap_iq),
 		tag_packets(tag_packets),
+		debug(debug),
 		vector_output(vector_output)
     {
-      // Save GRC Parameters
-//      this->samples_per_packet = samples_per_packet;
-//      this->bytes_per_packet = bytes_per_packet;
-//      this->src_ip = std::string(src_ip);
-//      this->port = port;
-//      this->header_byte_offset = header_byte_offset;
-//      this->swap_bytes = swap_bytes;
-//      this->swap_iq = swap_iq;
-//      this->tag_packets = tag_packets;
     	if (this->vector_output) {
     		this->set_output_signature(gr::io_signature::make(1, 1, this->samples_per_packet*sizeof(gr_complex)));
     		this->set_interpolation(1);
@@ -110,12 +106,27 @@ namespace gr {
     {
       // Load stream offset and current packet header
       uint64_t tag_offset = nitems_written(0);
-      V49_308_Header *hdr = (V49_308_Header *)(this->buffer);
-
-      // Create polymorphic type for timestamp
-      pmt::pmt_t timestamp = pmt::cons(pmt::from_long(hdr->int_timestamp),pmt::from_long(hdr->frac_timestamp_lsw));
-      // Create polymorphic type for stream id
-      pmt::pmt_t stream_id = pmt::from_long(hdr->stream_id);
+      pmt::pmt_t timestamp;
+      pmt::pmt_t stream_id;
+      if (this->uses_v491)
+      {
+          V49_308_Header *hdr = (V49_308_Header *)(this->buffer);
+          // Create polymorphic type for timestamp
+          timestamp = pmt::cons(pmt::from_long(hdr->int_timestamp),pmt::from_long(hdr->frac_timestamp_lsw));
+          // Create polymorphic type for stream id
+          stream_id = pmt::from_long(hdr->stream_id);
+      }
+      else
+      {
+          V49_No491_Header *hdr = (V49_No491_Header *)(this->buffer);
+//          std::cout << "****    vita_udp_rx_impl::tag_packet packet_info = "
+//                    << std::hex << std::setw(8) << std::setfill('0')
+//                    << hdr->packet_info << "    ****" << std::endl;
+          // Create polymorphic type for timestamp
+          timestamp = pmt::cons(pmt::from_long(hdr->int_timestamp),pmt::from_long(hdr->frac_timestamp_lsw));
+          // Create polymorphic type for stream id
+          stream_id = pmt::from_long(hdr->stream_id);
+      }
 
       // Hook the tag into the stream
       add_item_tag(0, tag_offset, pmt::intern("timestamp"), timestamp);
@@ -150,19 +161,20 @@ namespace gr {
             return -1;
         }
 
-        /* Set recv buffer size */
-        if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &recv_buffer_size, sizeof(unsigned long long)) == -1) {
-            perror("couldn't set recv buf size.");
-            return -1;
-        }
-
-        /* Verify this sock opt took */
-        unsigned long long check_size = 0;
-        unsigned int arg_len = sizeof(check_size);
-        getsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &check_size, &arg_len);
-        if (check_size != 2*recv_buffer_size) {
-            fprintf(stderr, "ERROR: set recv buf size, but it is incorrect in kernel. check max limit in /proc/sys/net/core/rmem_max\n");
-            return -1;
+        if (!is_narrowband) {
+          /* Set recv buffer size */
+          if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &recv_buffer_size, sizeof(unsigned long long)) == -1) {
+              perror("couldn't set recv buf size.");
+              return -1;
+          }
+          /* Verify this sock opt took */
+          unsigned long long check_size = 0;
+          unsigned int arg_len = sizeof(check_size);
+          getsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &check_size, &arg_len);
+          if (check_size != 2*recv_buffer_size) {
+              fprintf(stderr, "ERROR: set recv buf size, but it is incorrect in kernel. check max limit in /proc/sys/net/core/rmem_max\n");
+              return -1;
+          }
         }
 
         /* Bind the socket */
@@ -217,6 +229,30 @@ namespace gr {
 				// We've got some data
 				nbytesRx = recv(this->sock_fd, this->buffer, this->bytes_per_packet, 0);
 				if (nbytesRx==this->bytes_per_packet) {
+                    // Byte-swap the header if needed so we can read it
+                    if (this->swap_bytes)
+                    {
+                        volk_32u_byteswap((uint32_t*)(this->buffer), this->header_byte_offset / 4);
+                    }
+                    if (this->uses_v491)
+                    {
+                        V49_308_Header *hdr = (V49_308_Header *)(this->buffer);
+//                        std::cout << "****    vita_udp_rx_impl::work() "
+//                                  << "PACKET/491 p_i = "
+//                                  << std::hex << std::setw(8) << std::setfill('0')
+//                                  << hdr->packet_info << "    ****" << std::endl;
+                    }
+                    else
+                    {
+                        V49_No491_Header *hdr = (V49_No491_Header *)(this->buffer);
+                        if (this->debug)
+                            std::cout << "**** vita_udp_rx_impl("
+                                      << this->src_ip << ","
+                                      << this->port << ")::work() "
+                                      << "PACKET/N491 p_i = "
+                                      << std::hex << std::setw(8) << std::setfill('0')
+                                      << hdr->packet_info << "    ****" << std::endl;
+                    }
 					// Copy IQ data to output
 					short * IQ = (short *)((uint8_t *)buffer + this->header_byte_offset);
 					// Swap bytes if requested
