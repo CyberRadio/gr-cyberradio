@@ -26,3 +26,12 @@ override_dh_auto_configure:
 override_dh_auto_test:
 	:
 
+# Override dh_makeshlibs to add restrictive version information
+# to this package.  With this information, packages that use
+# this one as a dependency will need this version or better.
+# This is vitally important for packages that provide shared
+# libraries, so that we can make sure that the proper version 
+# of the shared libraries is installed to satisfy dependencies.
+override_dh_makeshlibs:
+	dh_makeshlibs -V
+

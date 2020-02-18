@@ -1,7 +1,7 @@
 /*
-*	SyncTXClient.cpp
-*	Author: Joseph Martin
-*/
+ *    SyncTXClient.cpp
+ *    Author: Joseph Martin
+ */
 #ifndef INCLUDED_LIBCYBERRADIO_NDR651_SYNCTXCLIENT_H_
 #define INCLUDED_LIBCYBERRADIO_NDR651_SYNCTXCLIENT_H_
 
@@ -18,28 +18,34 @@
 
 namespace LibCyberRadio
 {
-	namespace NDR651
-	{
-		class SyncTXClient : public Debuggable
-		{
+    namespace NDR651
+    {
+        class SyncTXClient : public Debuggable
+        {
 
-			public:
-				SyncTXClient(std::vector<TXClient *> txClients, bool debug = false);
-				~SyncTXClient();
+            public:
+                SyncTXClient(std::vector<TXClient *> txClients, std::string hostname="ndr651", bool debug = false);
+                ~SyncTXClient();
 
-				void start();
-				void stop();
-				void sendFrames(short **frames, unsigned int samplesPerFrame);
-				void setDucGroup(int ducGroup);
-				int getDucGroup();
+                void start();
+                void stop();
+                void sendFrames(short **frames, unsigned int samplesPerFrame);
+                void setDucGroup(int ducGroup);
+                int getDucGroup();
 
-			private:
-				std::vector<TXClient *> txClients;
-				RadioController *rc;
-				bool isRunning;
-				int ducGroup;
-		};		
-	}
+                bool sendFrameToClient(short *frame, unsigned int samplesPerFrame, int client);
+                bool checkClientStatus(void);
+                bool areAllDucsPaused(void);
+
+            private:
+                std::vector<TXClient *> txClients;
+                std::string hostname;
+                RadioController *rc;
+                bool isRunning;
+                int ducGroup;
+                bool waitingToEnableDUCGE;
+        };
+    }
 }
 
 

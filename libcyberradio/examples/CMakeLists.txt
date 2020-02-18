@@ -2,55 +2,74 @@
 # Example Applications
 ########################################################################
 # To add a new example application:
-# (1) Use list(APPEND ...) to create a list of source files
-# (2) Use set() to define the name of the example application
-# (3) Use add_executable() to add the example app to the project
-# (4) If necessary, use target_link_libraries() and link_directories()
+# (1) Use LIST(APPEND ...) to create a list of source files
+# (2) Use SET() to define the name of the example application
+# (3) Use ADD_EXECUTABLE() to add the example app to the project
+# (4) If necessary, use TARGET_LINK_LIBRARIES() and LINK_DIRECTORIES()
 #     to link in external libraries
-# (5) Use install(TARGETS ...) to install the example app
-# (6) Use install(FILES ...) to install the source files for the example 
+# (5) Use INSTALL(TARGETS ...) to install the example app
+# (6) Use INSTALL(FILES ...) to install the source files for the example 
+
+# -- C++11 compiler support
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ########################################################################
 # testvitaiq
 ########################################################################
-list(APPEND testvitaiq_sources
+LIST(APPEND testvitaiq_sources
      testvitaiq.cpp)
-set(testvitaiq_executable testvitaiq)
-add_executable(${testvitaiq_executable} ${testvitaiq_sources})
-target_link_libraries(${testvitaiq_executable}
+SET(testvitaiq_executable testvitaiq)
+ADD_EXECUTABLE(${testvitaiq_executable} ${testvitaiq_sources})
+TARGET_LINK_LIBRARIES(${testvitaiq_executable}
                       cyberradio 
-                      ${Boost_LIBRARIES} 
                       )
-link_directories(
+LINK_DIRECTORIES(
     ${CMAKE_BINARY_DIR}/libcyberradio}
-    ${Boost_LIBRARY_DIRS}
 )
-install(TARGETS ${testvitaiq_executable}
+INSTALL(TARGETS ${testvitaiq_executable}
         RUNTIME DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
         )
-install(FILES ${testvitaiq_sources}
+INSTALL(FILES ${testvitaiq_sources}
+        DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
+        )
+
+########################################################################
+# ndr651_driver
+########################################################################
+LIST(APPEND ndr651_driver_sources
+     ndr651_driver.cpp)
+SET(ndr651_driver_executable ndr651_driver)
+ADD_EXECUTABLE(${ndr651_driver_executable} ${ndr651_driver_sources})
+TARGET_LINK_LIBRARIES(${ndr651_driver_executable}
+                      cyberradio 
+                      )
+LINK_DIRECTORIES(
+    ${CMAKE_BINARY_DIR}/libcyberradio}
+)
+INSTALL(TARGETS ${ndr651_driver_executable}
+        RUNTIME DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
+        )
+INSTALL(FILES ${ndr651_driver_sources}
         DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
         )
 
 ########################################################################
 # NDR651 TX Example
 ########################################################################
-list(APPEND ndr651_tx_test_sources
+LIST(APPEND ndr651_tx_test_sources
      ndr651_tx_test.cpp)
-set(ndr651_tx_test_executable ndr651_tx_test)
-add_executable(${ndr651_tx_test_executable} ${ndr651_tx_test_sources})
-target_link_libraries(${ndr651_tx_test_executable}
+SET(ndr651_tx_test_executable ndr651_tx_test)
+ADD_EXECUTABLE(${ndr651_tx_test_executable} ${ndr651_tx_test_sources})
+TARGET_LINK_LIBRARIES(${ndr651_tx_test_executable}
                       cyberradio 
-                      ${Boost_LIBRARIES} 
                       )
-link_directories(
+LINK_DIRECTORIES(
     ${CMAKE_BINARY_DIR}/libcyberradio}
-    ${Boost_LIBRARY_DIRS}
 )
-install(TARGETS ${ndr651_tx_test_executable}
+INSTALL(TARGETS ${ndr651_tx_test_executable}
         RUNTIME DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
         )
-install(FILES ${ndr651_tx_test_sources}
+INSTALL(FILES ${ndr651_tx_test_sources}
         DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
         )
 
@@ -58,45 +77,46 @@ install(FILES ${ndr651_tx_test_sources}
 ########################################################################
 # NDR651 TXClient Example
 ########################################################################
-list(APPEND TXClientDriver_sources
+LIST(APPEND TXClientDriver_sources
      TXClientDriver.cpp)
-set(TXClientDriver_executable TXClientDriver)
-add_executable(${TXClientDriver_executable} ${TXClientDriver_sources})
-target_link_libraries(${TXClientDriver_executable}
+SET(TXClientDriver_executable TXClientDriver)
+ADD_EXECUTABLE(${TXClientDriver_executable} ${TXClientDriver_sources})
+TARGET_LINK_LIBRARIES(${TXClientDriver_executable}
                       cyberradio 
-                      ${Boost_LIBRARIES} 
                       )
-link_directories(
+LINK_DIRECTORIES(
     ${CMAKE_BINARY_DIR}/libcyberradio}
-    ${Boost_LIBRARY_DIRS}
 )
-install(TARGETS ${TXClientDriver_executable}
+INSTALL(TARGETS ${TXClientDriver_executable}
         RUNTIME DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
         )
-install(FILES ${TXClientDriver_sources}
+INSTALL(FILES ${TXClientDriver_sources}
         DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
         )
 
 ########################################################################
 # NDR651 SyncTXClient Example
+#
+# NOTE: Only the source code is installed for this example. Building
+#    the example introduces a dependency on GNU Radio that we do not
+#    want, as nothing else in the library relies on it.
+#
 ########################################################################
-list(APPEND SyncTXClientDriver_sources
+LIST(APPEND SyncTXClientDriver_sources
      SyncTXClientDriver.cpp)
-#set(SyncTXClientDriver_executable SyncTXClientDriver)
-#add_executable(${SyncTXClientDriver_executable} ${SyncTXClientDriver_sources})
-#target_link_libraries(${SyncTXClientDriver_executable}
+#SET(SyncTXClientDriver_executable SyncTXClientDriver)
+#ADD_EXECUTABLE(${SyncTXClientDriver_executable} ${SyncTXClientDriver_sources})
+#TARGET_LINK_LIBRARIES(${SyncTXClientDriver_executable}
 #                      cyberradio 
-#                      ${Boost_LIBRARIES}
 #                      gnuradio-digital
 #                      )
-link_directories(
+LINK_DIRECTORIES(
     ${CMAKE_BINARY_DIR}/libcyberradio}
-    ${Boost_LIBRARY_DIRS}
 )
-#install(TARGETS ${SyncTXClientDriver_executable}
+#INSTALL(TARGETS ${SyncTXClientDriver_executable}
 #        RUNTIME DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
 #        )
-install(FILES ${SyncTXClientDriver_sources}
+INSTALL(FILES ${SyncTXClientDriver_sources}
         DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
         )
 

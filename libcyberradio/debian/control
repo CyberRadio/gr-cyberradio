@@ -8,7 +8,9 @@ Source: DEB_PKG_NAME
 Section: devel
 Priority: extra
 Maintainer: CyberRadio Solutions, Inc. <sales@cyberradiosolutions.com>
-Build-Depends: debhelper (>= 8.0.0), cmake, doxygen, libpcap-dev
+Build-Depends: debhelper (>= 8.0.0), cmake, doxygen, libpcap-dev, libjsoncpp-dev, 
+   libboost-all-dev | libboost1.60-all-dev,
+   libcurl3 | libcurl3-gnutls | libcurl3-nss | libcurl4-gnutls-dev | libcurl4-nss-dev | libcurl4-openssl-dev
 Standards-Version: 3.9.2
 Homepage: http://www.cyberradiosolutions.com
 X-Python-Version: >= 2.6

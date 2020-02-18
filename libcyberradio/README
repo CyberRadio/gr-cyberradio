@@ -12,6 +12,7 @@ REQUIRED SOFTWARE
 -----------------
 The Shared Library requires the following software to build
 successfully:
+* A C++ compiler with C++11 support (for example, g++ 4.8 or later)
 * CMake 2.6 or later
 * Boost headers and libraries, version 1.47 or later
 * Doxygen for automatic documentation generation

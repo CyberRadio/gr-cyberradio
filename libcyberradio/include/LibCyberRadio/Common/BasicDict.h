@@ -33,6 +33,8 @@ namespace LibCyberRadio
     typedef BASIC_DICT_CONTAINER<int, int> BasicIntIntDict;
     /*! \brief Type representing a dictionary of unsigned integers, keyed by integer values. */
     typedef BASIC_DICT_CONTAINER<int, unsigned int> BasicIntUIntDict;
+    /*! \brief Type representing a dictionary of Boolean values, keyed by integers. */
+    typedef BASIC_DICT_CONTAINER<int, bool> BasicIntBoolDict;
 }
 
 #endif /* INCLUDED_LIBCYBERRADIO_BASIC_DICT_H */

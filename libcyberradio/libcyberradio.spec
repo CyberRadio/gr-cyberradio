@@ -19,12 +19,19 @@ Source: RPM_PKG_NAME-RPM_PKG_VERSION.tar.gz
 URL: http://www.cyberradiosolutions.com
 Vendor: CyberRadio Solutions, Inc.
 Packager: CyberRadio Solutions, Inc. <sales@cyberradiosolutions.com>
-BuildRequires: libpcap-devel, doxygen
-#Requires: libpcap
+BuildRequires: boost160-devel
+BuildRequires: jsoncpp-devel
+BuildRequires: libpcap-devel
+BuildRequires: doxygen
 
 %description
 Provides a common set of software components for interacting with 
 CyberRadio Solutions radios.
+
+# Macro to extract the major version number from the overall package version
+%define major_version %(echo RPM_PKG_VERSION | cut -d. -f1)
+# Don't build a "debuginfo" package
+%define debug_package %{nil}
 
 %prep
 # Use setup macro without arguments if using the makerpm script.
@@ -36,7 +43,7 @@ CyberRadio Solutions radios.
 # -- CMake project: Both the "%cmake" and "%{__make}" steps
 # -- Autotools project: TBD
 # -- Python project: None (the install step takes care of this)
-%cmake .
+%cmake . -DPACKAGE_VERSION=RPM_PKG_VERSION
 %{__make} %{?_smp_mflags}
 
 %install
@@ -56,18 +63,62 @@ make install DESTDIR=%{buildroot}
 # -- Projects that generate system configuration files under /etc
 #%{_sysconfdir}/*
 # -- Projects that generate header files under /usr/include
+#%{_includedir}/*
+# -- Projects that generate executables under /usr/bin
+#%{_bindir}/*
+# -- Projects that generate libraries under /usr/lib (/usr/lib64 on RedHat)
+%{_libdir}/libcyberradio.so.RPM_PKG_VERSION
+# -- Projects that generate docs under /usr/share/docs
+#%{_docdir}/*
+# -- Projects that generate Python libraries under /usr/lib/python[ver]
+#%{python_sitelib}/*
+# -- Projects that generate auxiliary files under /usr/share/<name>
+#%{_datadir}/%{name}/*
+# -- Projects that generate app shortcuts under /usr/share/applications
+#%{_datadir}/applications/*
+
+%package devel
+
+Summary: CyberRadio Solutions Common Library: Development Files
+Requires: libcyberradio = RPM_PKG_VERSION
+
+%description devel
+Provides a common set of software components for interacting with 
+CyberRadio Solutions radios.
+
+%files devel
+
+# Uncomment the entries necessary for the project you are building.
+# -- Projects that generate system configuration files under /etc
+#%{_sysconfdir}/*
+# -- Projects that generate header files under /usr/include
 %{_includedir}/*
 # -- Projects that generate executables under /usr/bin
 #%{_bindir}/*
 # -- Projects that generate libraries under /usr/lib (/usr/lib64 on RedHat)
-%{_libdir}/*
+%{_libdir}/cmake/*
+%{_libdir}/cmake/*
+%{_libdir}/libcyberradio.so
+%{_libdir}/libcyberradio.so.%{major_version}
 # -- Projects that generate docs under /usr/share/docs
-%{_docdir}/*
+#%{_docdir}/*
 # -- Projects that generate Python libraries under /usr/lib/python[ver]
 #%{python_sitelib}/*
 # -- Projects that generate auxiliary files under /usr/share/<name>
 %{_datadir}/%{name}/*
 # -- Projects that generate app shortcuts under /usr/share/applications
 #%{_datadir}/applications/*
+
+%package doc
+
+Summary: CyberRadio Solutions Common Library: Development Documentation
+
+%description doc
+Provides documentation for using the CyberRadio Solutions Common Library.
+
+%files doc
+
+# -- Projects that generate docs under /usr/share/docs
+%{_docdir}/*
 
 

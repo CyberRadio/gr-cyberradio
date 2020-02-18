@@ -1,9 +1,9 @@
 /*
-* TXClient - Refactored Implementation of TransmitPacketizer 
-*	Author: Nathan Harter
-*	Author: Joseph Martin
-*	Date: 5/23/2017
-*/
+ * TXClient - Refactored Implementation of TransmitPacketizer
+ *    Author: Nathan Harter
+ *    Author: Joseph Martin
+ *    Date: 5/23/2017
+ */
 
 #ifndef INCLUDED_LIBCYBERRADIO_NDR651_TXCLIENT_H
 #define INCLUDED_LIBCYBERRADIO_NDR651_TXCLIENT_H
@@ -24,86 +24,89 @@
 
 namespace LibCyberRadio
 {
-	namespace NDR651
-	{
-		class TXClient : public Debuggable
-		{
+    namespace NDR651
+    {
+        class TXClient : public Debuggable
+        {
 
-			private:
-				/* Instance variables */
-				// Constructor Args
-				std::string  txInterfaceName;
-				unsigned int ducChannel;
-				unsigned int tenGbeIndex;
-				double ducAttenuation;
-				unsigned int ducRateIndex;
-				unsigned int rfChannel;
-				unsigned short txUdpPort;
-				double ducFreq;
-				double ducFullThreshPercent;
-				double ducEmptyThreshPercent;
-				unsigned int updatesPerSecond;
-				double txFreq;	
-				double txAttenuation;
-				bool txInversion;
-				std::string radioHostName;
-				bool debugOn;
+            private:
+                /* Instance variables */
+                // Constructor Args
+                std::string  txInterfaceName;
+                unsigned int ducChannel;
+                unsigned int tenGbeIndex;
+                double ducAttenuation;
+                unsigned int ducRateIndex;
+                unsigned int rfChannel;
+                unsigned short txUdpPort;
+                double ducFreq;
+                double ducFullThreshPercent;
+                double ducEmptyThreshPercent;
+                unsigned int updatesPerSecond;
+                double txFreq;
+                double txAttenuation;
+                bool txInversion;
+                std::string radioHostName;
+                bool debugOn;
 
-				// Other Inits
-				int txSock;
-				Packetizer *packetizer;
-				//UdpStatusReceiver *statusRX;
-				StatusReceiver *statusRX;
-				RadioController *rc;
-				bool isGrouped; // Is this Client part of a sync transmit?
-				bool isRunning;  // Has the user called start()
-				bool DUCPaused; // Should the DUC currently paused?
-				long prefillSampleCount;
+                // Other Inits
+                int txSock;
+                Packetizer *packetizer;
+                //UdpStatusReceiver *statusRX;
+                StatusReceiver *statusRX;
+                RadioController *rc;
+                bool isGrouped; // Is this Client part of a sync transmit?
+                bool isRunning;  // Has the user called start()
+                bool DUCPaused; // Should the DUC currently paused?
+                bool DUCReady; // Is the DUC ready to be unpaused?
+                long prefillSampleCount;
 
-				// To synchronize calls from other threads
-				boost::mutex objectAccessMutex;
-				
-				/* Instance methods */
-				std::string getSourceMac();
-				std::string getSourceIP();
-				bool validInputs(std::string &errors);
+                // To synchronize calls from other threads
+                boost::mutex objectAccessMutex;
 
-			public:
-				/* Constructors */
-				TXClient(std::string radioHostName, bool debug);
-				~TXClient();
+                /* Instance methods */
+                std::string getSourceMac();
+                std::string getSourceIP();
+                bool validInputs(std::string &errors);
 
-				/* Instance methods */
-				void start();
-				void stop(bool disableRF = false);
-				void setGrouped(bool isGrouped);
-				void sendFrame(short * samples, unsigned int samplesPerFrame);
-				unsigned int getDucChannel();
-				bool isDUCPaused();
+            public:
+                /* Constructors */
+                TXClient(std::string radioHostName, bool debug);
+                ~TXClient();
 
-				// Config Setters
-				bool setDUCChannel(unsigned int ducChannel);                    // Required (fulfillled by setDucParameters)
-				bool setTxChannel(unsigned int txChannel);                      // Required (fulfillled by setDucParameters)
-				bool setDUCRateIndex(unsigned int ducRateIndex);                // Required (fulfillled by setDucParameters)
-				bool setDUCFreq(double ducFreq);                                // Optional
-				bool setDUCAtten(double ducAtten);                              // Optional
-				bool setTxFreq(double txFreq);                                  // Optional
-				bool setTxAtten(double txAttenuation);                          // Optional
-				bool setDUCParameters(
-					unsigned int ducChannel,
-					unsigned int ducRateIndex,
-					unsigned int txChannel
-				);
-				bool setEthernetInterface(unsigned int tenGbeIndex, const std::string &txInterfaceName, unsigned short port);  // Required
-				void disableRF();
-				bool setTxInversion(bool txInversion);
-				bool pauseDUC(bool paused = true);
+                /* Instance methods */
+                void start();
+                void stop(bool disableRF = false);
+                void setGrouped(bool isGrouped);
+                void sendFrame(short * samples, unsigned int samplesPerFrame);
+                unsigned int getDucChannel();
+                bool isDUCPaused();
+                bool isDUCReady();
+                bool setDUCPaused(bool paused);
 
-			protected:
-				bool setDUCRateIndexUnlocked(unsigned int ducRateIndex);
+                // Config Setters
+                bool setDUCChannel(unsigned int ducChannel);                    // Required (fulfillled by setDucParameters)
+                bool setTxChannel(unsigned int txChannel);                      // Required (fulfillled by setDucParameters)
+                bool setDUCRateIndex(unsigned int ducRateIndex);                // Required (fulfillled by setDucParameters)
+                bool setDUCFreq(double ducFreq);                                // Optional
+                bool setDUCAtten(double ducAtten);                              // Optional
+                bool setTxFreq(double txFreq);                                  // Optional
+                bool setTxAtten(double txAttenuation);                          // Optional
+                bool setDUCParameters(
+                        unsigned int ducChannel,
+                        unsigned int ducRateIndex,
+                        unsigned int txChannel
+                );
+                bool setEthernetInterface(unsigned int tenGbeIndex, const std::string &txInterfaceName, unsigned short port);  // Required
+                void disableRF();
+                bool setTxInversion(bool txInversion);
+                bool pauseDUC(bool paused = true);
 
-		};
-	}
+            protected:
+                bool setDUCRateIndexUnlocked(unsigned int ducRateIndex);
+
+        };
+    }
 }
 
 #endif /* INCLUDED_LIBCYBERRADIO_NDR651_TXCLIENT_H */

@@ -1,11 +1,14 @@
 ########################################################################
 # Install Public Header Files
 ########################################################################
-install(FILES
+INSTALL(FILES
+    App.h
     BasicDict.h
     BasicList.h
     Debuggable.h
+    HttpsSession.h
     Pythonesque.h
+    SerialPort.h
     Thread.h
     Throttle.hpp
     VitaIqSource.h

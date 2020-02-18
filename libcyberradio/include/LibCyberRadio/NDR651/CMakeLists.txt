@@ -1,7 +1,7 @@
 ########################################################################
 # Install Public Header Files
 ########################################################################
-install(FILES
+INSTALL(FILES
     DUCSink.h
     ClientSocket.h
     FlowControlClient.h

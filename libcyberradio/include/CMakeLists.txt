@@ -1,5 +1,6 @@
 ########################################################################
 # Add Subdirectories
 ########################################################################
-add_subdirectory(${LIBCYBERRADIO_INC_SUBDIR}/Common)
-add_subdirectory(${LIBCYBERRADIO_INC_SUBDIR}/NDR651)
+ADD_SUBDIRECTORY(${LIBCYBERRADIO_INC_SUBDIR}/Common)
+ADD_SUBDIRECTORY(${LIBCYBERRADIO_INC_SUBDIR}/Driver)
+ADD_SUBDIRECTORY(${LIBCYBERRADIO_INC_SUBDIR}/NDR651)
