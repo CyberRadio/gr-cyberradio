@@ -31,7 +31,6 @@ install(FILES
     vector_keep_m_in_n.h
     vector_nlog10_ff.h
     vita_udp_rx.h
-    zero_copy_source.h
     ndr651_sink.h
     snapshot_vector_source.h
     NDR651_sync_sink.h

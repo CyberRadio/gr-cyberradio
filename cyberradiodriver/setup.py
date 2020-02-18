@@ -49,7 +49,6 @@ MODULE_LIST=[ ]
 PACKAGE_LIST=[ \
                'CyberRadioDriver', \
                'CyberRadioDriver.radios', \
-               'CyberRadioDriver.radios.internal', \
               ]
 # SCRIPT_LIST: List of script files to install
 SCRIPT_LIST=['apps/ndr_dataport_config']
