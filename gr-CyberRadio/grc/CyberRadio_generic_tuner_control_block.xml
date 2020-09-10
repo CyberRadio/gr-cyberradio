@@ -11,6 +11,7 @@
             $freq, 
             $attenuation, 
             $filter, 
+            $ifout,
             $group, 
             $otherArgs, 
             $debug
@@ -24,6 +25,7 @@
   <callback>set_attenuation($attenuation)</callback>
   <callback>set_filter($filter)</callback>
   <callback>set_otherArgs($otherArgs)</callback>
+  <callback>set_ifout($ifout)</callback>
   <param>
     <name>Radio Object</name>
     <key>radioObj</key>
@@ -62,6 +64,13 @@
     <key>filter</key>
     <value>1</value>
     <type>int</type>
+    <hide>part</hide>
+  </param>
+    <param>
+    <name>IF Output</name>
+    <key>ifout</key>
+    <value>False</value>
+    <type>bool</type>
     <hide>part</hide>
   </param>
   <param>

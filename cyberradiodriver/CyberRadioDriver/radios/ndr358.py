@@ -10,14 +10,14 @@
 ##################################################################
 
 # Imports from other modules in this package
-from CyberRadioDriver.radios.ndr551 import ndr551, \
-                                           ndr551_tuner, \
-                                           ndr551_wbddc, \
-                                           ndr551_nbddc, \
-                                           ndr551_ddc_group, \
-                                           ndr551_ddc_ifSpec, \
-                                           ndr551_adc_ifSpec, \
-                                           ndr551_demod_ifSpec
+from CyberRadioDriver.radios.ndr551 import  ndr551, \
+                                            ndr551_tuner, \
+                                            ndr551_wbddc, \
+                                            ndr551_nbddc, \
+                                            ndr551_ddc_group, \
+                                            ndr551_ddc_ifSpec, \
+                                            ndr551_adc_ifSpec, \
+                                            ndr551_demod_ifSpec
 from CyberRadioDriver.command import _jsonCommandBase, jsonConfig
 from CyberRadioDriver import configKeys
 # Imports from external modules
@@ -484,6 +484,18 @@ class ndr358_recorder_wbddc(ndr358_wbddc):
             43: 5e6,
             42: 4e6,
         }
+    # sample size in 4 byte words
+    ssSet = {
+            50: 1024,
+            49: 1024,
+            48: 1024,
+            47: 1024,
+            46: 1024,
+            45: 1024,
+            44: 1024,
+            43: 1024,
+            42: 1024,
+        }
     cfgCmd = wbddc358_recorder
     validConfigurationKeywords = [
             configKeys.DDC_RF_INDEX,
@@ -553,6 +565,26 @@ class ndr358_recorder_nbddc(ndr358_nbddc):
              2: 0.8e3,
              1: 0.4e3,
              0: 0.2e3,
+        }
+    # sample size in 4 byte words
+    ssSet = {
+            16: 1280,
+            15: 1280,
+            14: 1280,
+            13: 1280,
+            12: 1280,
+            11: 1280,
+            10: 1280,
+             9: 1280,
+             8: 1280,
+             7: 1280,
+             6: 1280,
+             5: 1280,
+             4: 1280,
+             3: 1280,
+             2: 1280,
+             1: 1280,
+             0: 1280,
         }
     cfgCmd = nbddc358_recorder
     validConfigurationKeywords = [
@@ -972,6 +1004,395 @@ class ndr358_recorder(ndr358):
     numFftStream = 8
     fftStreamType = ndr358_recorder_fftStream
     fftStreamIndexBase = 0
+    
+    
+##
+# \brief WBDDC configuration command specific to the NDR358 
+#     ALT_RX1 variant.
+#
+class wbddc358_altrx1(_jsonCommandBase):
+    mnemonic = "wbddc"
+    queryParamMap = {
+            configKeys.INDEX: "id",
+            configKeys.DDC_RF_INDEX: "rfch",
+            configKeys.DDC_OUTPUT_TYPE: "type",
+            configKeys.DDC_FREQUENCY_OFFSET: "offset",
+            configKeys.DDC_RATE_INDEX: "filter",
+            configKeys.ENABLE: "enable",
+            configKeys.DDC_GROUP_ID: "gddcid",
+            configKeys.DDC_STREAM_ID: "vita",
+            configKeys.DDC_LINK: "link",
+            configKeys.DDC_UDP_DESTINATION: "dest",
+            configKeys.DDC_DGC_MODE: "mode",
+            configKeys.DDC_DGC_GAIN: "dgv",
+            configKeys.DDC_DGC_UPPER_LIMIT: "dul",
+            configKeys.DDC_DGC_LOWER_LIMIT: "dll",
+            configKeys.DDC_DGC_TARGET_RANGE: "dtl",
+            configKeys.DDC_DGC_ATTACK_LIMIT: "dal",
+            configKeys.DDC_DGC_DECAY_LIMIT: "ddl",
+            configKeys.DDC_DGC_ATTACK_OFFSET: "dao",
+            configKeys.DDC_DGC_DECAY_OFFSET: "ddo",
+            configKeys.DDC_DGC_ATTACK_TIME: "datc",
+            configKeys.DDC_DGC_DECAY_TIME: "ddtc",
+            configKeys.DDC_DGC_ATTACK_TRIGGER: "dat",
+            configKeys.DDC_DGC_DECAY_TRIGGER: "ddt",
+        }
+    setParamMap = {
+            configKeys.INDEX: "id",
+            configKeys.DDC_RF_INDEX: "rfch",
+            configKeys.DDC_OUTPUT_TYPE: "type",
+            configKeys.DDC_FREQUENCY_OFFSET: "offset",
+            configKeys.DDC_RATE_INDEX: "filter",
+            configKeys.ENABLE: "enable",
+            configKeys.DDC_GROUP_ID: "gddcid",
+            configKeys.DDC_STREAM_ID: "vita",
+            configKeys.DDC_LINK: "link",
+            configKeys.DDC_UDP_DESTINATION: "dest",
+            configKeys.DDC_DGC_MODE: "mode",
+            configKeys.DDC_DGC_GAIN: "dgv",
+            configKeys.DDC_DGC_UPPER_LIMIT: "dul",
+            configKeys.DDC_DGC_LOWER_LIMIT: "dll",
+            configKeys.DDC_DGC_TARGET_RANGE: "dtl",
+            configKeys.DDC_DGC_ATTACK_LIMIT: "dal",
+            configKeys.DDC_DGC_DECAY_LIMIT: "ddl",
+            configKeys.DDC_DGC_ATTACK_OFFSET: "dao",
+            configKeys.DDC_DGC_DECAY_OFFSET: "ddo",
+            configKeys.DDC_DGC_ATTACK_TIME: "datc",
+            configKeys.DDC_DGC_DECAY_TIME: "ddtc",
+            configKeys.DDC_DGC_ATTACK_TRIGGER: "dat",
+            configKeys.DDC_DGC_DECAY_TRIGGER: "ddt",
+        }
+
+
+##
+# \brief NBDDC configuration command specific to the NDR358 
+#     ALT_RX1 variant.
+#
+class nbddc358_altrx1(_jsonCommandBase):
+    mnemonic = "nbddc"
+    queryParamMap = {
+            configKeys.INDEX: "id",
+            configKeys.DDC_RF_INDEX: "rfch",
+            configKeys.DDC_OUTPUT_TYPE: "type",
+            configKeys.DDC_FREQUENCY_OFFSET: "offset",
+            configKeys.DDC_DECIMATION: "decimation",
+            configKeys.DDC_RATE_INDEX: "filter",
+            configKeys.ENABLE: "enable",
+            configKeys.DDC_GROUP_ID: "gddcid",
+            configKeys.DDC_STREAM_ID: "vita",
+            configKeys.DDC_UDP_DESTINATION: "dest",
+            configKeys.DDC_DGC_MODE: "mode",
+            configKeys.DDC_DGC_GAIN: "dgv",
+            configKeys.DDC_DGC_UPPER_LIMIT: "dul",
+            configKeys.DDC_DGC_LOWER_LIMIT: "dll",
+            configKeys.DDC_DGC_TARGET_RANGE: "dtl",
+            configKeys.DDC_DGC_ATTACK_LIMIT: "dal",
+            configKeys.DDC_DGC_DECAY_LIMIT: "ddl",
+            configKeys.DDC_DGC_ATTACK_OFFSET: "dao",
+            configKeys.DDC_DGC_DECAY_OFFSET: "ddo",
+            configKeys.DDC_DGC_ATTACK_TIME: "datc",
+            configKeys.DDC_DGC_DECAY_TIME: "ddtc",
+            configKeys.DDC_DGC_ATTACK_TRIGGER: "dat",
+            configKeys.DDC_DGC_DECAY_TRIGGER: "ddt",
+        }
+    setParamMap = {
+            configKeys.INDEX: "id",
+            configKeys.DDC_RF_INDEX: "rfch",
+            configKeys.DDC_OUTPUT_TYPE: "type",
+            configKeys.DDC_FREQUENCY_OFFSET: "offset",
+            configKeys.DDC_DECIMATION: "decimation",
+            configKeys.DDC_RATE_INDEX: "filter",
+            configKeys.ENABLE: "enable",
+            configKeys.DDC_GROUP_ID: "gddcid",
+            configKeys.DDC_STREAM_ID: "vita",
+            configKeys.DDC_UDP_DESTINATION: "dest",
+            configKeys.DDC_DGC_MODE: "mode",
+            configKeys.DDC_DGC_GAIN: "dgv",
+            configKeys.DDC_DGC_UPPER_LIMIT: "dul",
+            configKeys.DDC_DGC_LOWER_LIMIT: "dll",
+            configKeys.DDC_DGC_TARGET_RANGE: "dtl",
+            configKeys.DDC_DGC_ATTACK_LIMIT: "dal",
+            configKeys.DDC_DGC_DECAY_LIMIT: "ddl",
+            configKeys.DDC_DGC_ATTACK_OFFSET: "dao",
+            configKeys.DDC_DGC_DECAY_OFFSET: "ddo",
+            configKeys.DDC_DGC_ATTACK_TIME: "datc",
+            configKeys.DDC_DGC_DECAY_TIME: "ddtc",
+            configKeys.DDC_DGC_ATTACK_TRIGGER: "dat",
+            configKeys.DDC_DGC_DECAY_TRIGGER: "ddt",
+        }
+
+
+##
+# \brief WBDDC component class for the NDR358 ALT_RX1 variant.
+class ndr358_altrx1_wbddc(ndr358_wbddc):
+    _name = "WBDDC(NDR358-Altrx1)"
+    # OVERRIDES
+    rateSet = {
+            58: 22.0e6,
+            57: 20.0e6,
+            56: 30.72e6,
+            55: 23.04e6,
+            54: 15.36e6,
+            53: 7.68e6,
+            52: 1.92e6,
+            51: 1.2288e6,
+            40: 128.0e6,
+            39: 64.0e6,
+            38: 32.0e6,
+            37: 32.0e6,
+            36: 16.0e6,
+            35: 16.0e6,
+            34: 16.0e6,
+            33: 8.0e6,
+            32: 8.0e6,
+        }
+    bwSet = {
+            58: 22.0e6,
+            57: 16.6e6,
+            56: 20.0e6,
+            55: 15.0e6,
+            54: 10.0e6,
+            53: 5.0e6,
+            52: 1.4e6,
+            51: 1.25e6,
+            40: 80.0e6,
+            39: 40.0e6,
+            38: 25.0e6,
+            37: 20.0e6,
+            36: 12.5e6,
+            35: 10.0e6,
+            34: 8.0e6,
+            33: 5.0e6,
+            32: 4.0e6,
+        }
+    #sample size in 4-byte words
+    ssSet = {
+            58: 1375,
+            57: 1250,
+            56: 960,
+            55: 1080,
+            54: 960,
+            53: 960,
+            52: 960,
+            51: 960,
+            40: 1000,
+            39: 1000,
+            38: 1000,
+            37: 1000,
+            36: 1000,
+            35: 1000,
+            34: 1000,
+            33: 1000,
+            32: 1000,
+        }
+    cfgCmd = wbddc358_altrx1
+    validConfigurationKeywords = [
+            configKeys.DDC_RF_INDEX,
+            configKeys.DDC_OUTPUT_TYPE,
+            configKeys.DDC_FREQUENCY_OFFSET,
+            configKeys.DDC_RATE_INDEX,
+            configKeys.ENABLE,
+            configKeys.DDC_GROUP_ID,
+            configKeys.DDC_STREAM_ID,
+            configKeys.DDC_LINK,
+            configKeys.DDC_UDP_DESTINATION,
+            configKeys.DDC_DGC_MODE,
+            configKeys.DDC_DGC_GAIN,
+            configKeys.DDC_DGC_UPPER_LIMIT,
+            configKeys.DDC_DGC_LOWER_LIMIT,
+            configKeys.DDC_DGC_TARGET_RANGE,
+            configKeys.DDC_DGC_ATTACK_LIMIT,
+            configKeys.DDC_DGC_DECAY_LIMIT,
+            configKeys.DDC_DGC_ATTACK_OFFSET,
+            configKeys.DDC_DGC_DECAY_OFFSET,
+            configKeys.DDC_DGC_ATTACK_TIME,
+            configKeys.DDC_DGC_DECAY_TIME,
+            configKeys.DDC_DGC_ATTACK_TRIGGER,
+            configKeys.DDC_DGC_DECAY_TRIGGER,
+        ]
+
+
+##
+# \brief NBDDC component class for the NDR358 ALT_RX1 variant.
+class ndr358_altrx1_nbddc(ndr358_nbddc):
+    _name = "NBDDC(NDR358-Altrx1)"
+    # OVERRIDES
+    rateSet = {
+            20: 250e3,
+            16: 2000e3,
+            15: 4000e3,
+            14: 3200e3,
+            13: 1280e3,
+            12: 400e3,
+            11: 256e3,
+            10: 200e3,
+             9: 128e3,
+             8: 64e3,
+             7: 32e3,
+             6: 16e3,
+             5: 8e3,
+             4: 4e3,
+             3: 2e3,
+             2: 1e3,
+             1: 0.5e3,
+             0: 0.25e3,
+        }
+    bwSet = {
+            20: 200e3,
+            16: 1500e3,
+            15: 3200e3,
+            14: 2500e3,
+            13: 1000e3,
+            12: 300e3,
+            11: 200e3,
+            10: 150e3,
+             9: 100e3,
+             8: 50e3,
+             7: 25e3,
+             6: 12.5e3,
+             5: 6.4e3,
+             4: 3.2e3,
+             3: 1.6e3,
+             2: 0.8e3,
+             1: 0.4e3,
+             0: 0.2e3,
+        }
+    #sample size in 4-byte words
+    ssSet = {
+            20: 1000,
+            16: 1000,
+            15: 1000,
+            14: 1000,
+            13: 1000,
+            12: 1000,
+            11: 1000,
+            10: 1000,
+             9: 1000,
+             8: 1000,
+             7: 1000,
+             6: 1000,
+             5: 1000,
+             4: 1000,
+             3: 1000,
+             2: 1000,
+             1: 1000,
+             0: 1000,
+        }
+    cfgCmd = nbddc358_altrx1
+    validConfigurationKeywords = [
+            configKeys.DDC_RF_INDEX,
+            configKeys.DDC_OUTPUT_TYPE,
+            configKeys.DDC_FREQUENCY_OFFSET,
+            configKeys.DDC_DECIMATION,
+            configKeys.DDC_RATE_INDEX,
+            configKeys.ENABLE,
+            configKeys.DDC_GROUP_ID,
+            configKeys.DDC_STREAM_ID,
+            configKeys.DDC_UDP_DESTINATION,
+            configKeys.DDC_DGC_MODE,
+            configKeys.DDC_DGC_GAIN,
+            configKeys.DDC_DGC_UPPER_LIMIT,
+            configKeys.DDC_DGC_LOWER_LIMIT,
+            configKeys.DDC_DGC_TARGET_RANGE,
+            configKeys.DDC_DGC_ATTACK_LIMIT,
+            configKeys.DDC_DGC_DECAY_LIMIT,
+            configKeys.DDC_DGC_ATTACK_OFFSET,
+            configKeys.DDC_DGC_DECAY_OFFSET,
+            configKeys.DDC_DGC_ATTACK_TIME,
+            configKeys.DDC_DGC_DECAY_TIME,
+            configKeys.DDC_DGC_ATTACK_TRIGGER,
+            configKeys.DDC_DGC_DECAY_TRIGGER,
+        ]
+
+
+##
+# \internal
+# \brief VITA 49 interface specification class for the NDR358 ALT_RX1 
+#    variant's WBDDC format.
+# \note Some explanation for these values is probably in order.
+# * The "header" includes not only the 7 words of the standard VITA
+#   packet header, but also the 5 words of the metadata included in
+#   each WBDDC payload.
+# * The "tail" includes not only the standard VITA packet trailer, 
+#   but also the trailer word within the WBDDC payload.
+# * The definition of "payload" deviates from the ICD here, as we
+#   want the "payload" to be only the part of the packet that 
+#   contains data samples.  
+# ** For WBDDC format, each 32-bit word contains one 16-bit I/16-bit Q 
+#    sample, so the number of samples is getVitaPayloadSize("wbddc") / 4.
+# *** The payload size varies based on the filter. Five different 
+#     payload sizes are present - 960*4, 1000*4, 1080*4, 1250*4, 1375*4. 
+class ndr358_altrx1_wbddc_ifSpec(ndr358_ddc_ifSpec):
+    headerSizeWords = 12 
+    payloadSizeWords = 960
+    tailSizeWords = 2
+    byteOrder = "big"
+
+
+##
+# \internal
+# \brief VITA 49 interface specification class for the NDR358 Recorder 
+#    variant's NBDDC format.
+# \note Some explanation for these values is probably in order.
+# * The "header" includes not only the 7 words of the standard VITA
+#   packet header, but also the 5 words of the metadata included in
+#   each NBDDC payload.
+# * The "tail" includes not only the standard VITA packet trailer, 
+#   but also the trailer word within the NBDDC payload.
+# * The definition of "payload" deviates from the ICD here, as we
+#   want the "payload" to be only the part of the packet that 
+#   contains data samples.  
+# ** For NBDDC format, each 32-bit word contains one 16-bit I/16-bit Q 
+#    sample, so the number of samples is getVitaPayloadSize("nbddc") / 4.
+class ndr358_altrx1_nbddc_ifSpec(ndr358_ddc_ifSpec):
+    headerSizeWords = 12 
+    payloadSizeWords = 1000
+    tailSizeWords = 2
+    byteOrder = "big"
+
+
+##
+#
+# \section VITA_Notes_NDR358Rec VITA 49 Notes
+#
+# When dealing with VITA 49 payloads, we have historically relied on the 
+# following convention:
+# * getVitaHeaderSize() provides how many bytes contain metadata information 
+#   at the beginning of the packet
+# * getVitaPayloadSize() provides how many bytes contain data samples
+# * getVitaTailSize() provides how many bytes contain metadata information 
+#   at the end of the packet
+#
+# For NDR551-class radios, this convention requires us to deviate, not only
+# from the VITA 49 standard, but also from the NDR551 ICD itself.
+# * The getVitaHeaderSize(), getVitaPayloadSize(), and getVitaTailSize() 
+#   methods use the payloadType argument to differentiate between the 
+#   three supported payload formats.
+#   * WBDDC format: "wbddc"
+#   * NBDDC format: "nbddc"
+# * The "header" includes not only the 7 words of the standard VITA
+#   packet header, but also the 5 words of the metadata included in
+#   each payload.
+# * The "tail" includes not only the standard VITA packet trailer, 
+#   but also the trailer word within the payload.
+# * The definition of "payload" deviates from the ICD here, as we
+#   want the "payload" to be only the part of the packet that 
+#   contains data samples.  
+# ** For WBDDC format, each 32-bit word contains one 16-bit I/16-bit Q 
+#    sample, so the number of samples is getVitaPayloadSize("wbddc") / 4.
+# ** For NBDDC format, each 32-bit word contains one 16-bit I/16-bit Q 
+#    sample, so the number of samples is getVitaPayloadSize("nbddc") / 4.
+#
+# \implements CyberRadioDriver.IRadio    
+class ndr358_altrx1(ndr358):
+    _name = "NDR358-ALTRX1"
+    wbddcType = ndr358_altrx1_wbddc
+    nbddcType = ndr358_altrx1_nbddc
+    ifSpec = ndr358_altrx1_wbddc_ifSpec
+    ifSpecMap = {
+            "wbddc": ndr358_altrx1_wbddc_ifSpec,
+            "nbddc": ndr358_altrx1_nbddc_ifSpec,
+        }
     
     
 if __name__ == '__main__':

@@ -5,8 +5,8 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.
-#     All rights reserved.
+# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+#    All rights reserved.
 ##################################################################
 
 # Imports from other modules in this package
@@ -780,6 +780,8 @@ class ndr354(_radio):
     connectionModes = ["https"]
     defaultPort = 443
     udpDestInfo = "Destination index"
+    tunerBandwithSettable = False
+    tunerBandwidthConstant = 125e6
     ##
     # \brief The list of valid configuration keywords supported by this
     # object.  Override in derived classes as needed.

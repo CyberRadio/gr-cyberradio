@@ -75,3 +75,10 @@ t.start()
 		echo "SKIPPING $TEMPLATE"
 	fi
 done
+
+if [ -f /etc/sysctl.d/uhd-usrp2.conf ]
+then
+	mv -v /etc/sysctl.d/uhd-usrp2.conf /etc/sysctl.d/90-uhd-usrp2.conf
+fi
+sysctl -p /etc/sysctl.d/98-gr-cyberradio.conf
+

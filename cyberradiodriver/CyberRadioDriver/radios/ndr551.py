@@ -5,8 +5,8 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
-#     All rights reserved.
+# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+#    All rights reserved.
 ##################################################################
 
 # Imports from other modules in this package
@@ -19,6 +19,8 @@ from CyberRadioDriver.radio import _ifSpec, _radio, funJSON
 # Imports from external modules
 # Python standard library imports
 import json
+import math
+import time, datetime
 import traceback
 
 
@@ -264,7 +266,8 @@ class status551(_jsonCommandBase):
                 configKeys.STATUS_10MHZ_REF: "cfg10m",
                 configKeys.STATUS_10MHZ_REF_STATUS: "status10m",
                 configKeys.STATUS_PPS_SOURCE: "cfg1pps",
-                configKeys.STATUS_PPS: "status1pps",
+                #configKeys.STATUS_PPS: "status1pps",
+                configKeys.STATUS_PPS: "statuspps",
                 configKeys.STATUS_ONTIME: "ontime",
                 configKeys.STATUS_MEM: "mem",
                 configKeys.STATUS_LINK0: "link0up",
@@ -308,6 +311,15 @@ class reset551(_jsonCommandBase):
                 configKeys.RESET_TYPE: "reboot",
                 }
 
+class ifOut551(_jsonCommandBase):
+    mnemonic = "cntrl"
+    queryable = False
+    # queryParamMap = {
+    #             configKeys.CNTRL_IF_OUT: "ifout",
+    #             }
+    setParamMap = {
+                configKeys.CNTRL_IF_OUT: "ifout",
+                }
 
 ##
 # Reference mode command specific to the NDR551.
@@ -315,11 +327,20 @@ class reset551(_jsonCommandBase):
 class ref551(_jsonCommandBase):
     mnemonic = "ref"
     queryParamMap = {
-                configKeys.REFERENCE_MODE: "cfg10m",
-                }
+            configKeys.REFERENCE_MODE: "cfg10m",
+            configKeys.STATUS_PPS_SOURCE: "cfg1pps",
+            configKeys.TIME_UTC: "timeset",
+            # Interesting that qref doesn't get the noise generator -- DA
+            #configKeys.NOISE_GENERATOR: "noise",
+            configKeys.NOISE_STATE: "nstate"
+        }
     setParamMap = {
-                configKeys.REFERENCE_MODE: "cfg10m",
-                }
+            configKeys.REFERENCE_MODE: "cfg10m",
+            configKeys.STATUS_PPS_SOURCE: "cfg1pps",
+            configKeys.TIME_UTC: "timeset",
+            configKeys.NOISE_GENERATOR: "noise",
+            configKeys.NOISE_STATE: "nstate"
+        }
     
 
 ##
@@ -438,7 +459,7 @@ class ndr551_tuner(_tuner):
     frqUnits = 1
     attRange = (0.0,40.0)
     attRes = 1.0
-    ifFilter = [3, 10, 40, 80]
+    ifFilters = [3, 10, 40, 80]
     agc = False
     # The NDR551 has one tuner command that sets all tuner parameters.
     frqCmd = tuner551
@@ -468,6 +489,7 @@ class ndr551_tuner(_tuner):
                                   configKeys.TUNER_AGC_DECAY_STEP,
                                   configKeys.TUNER_AGC_ATTACK_LIMIT,
                                   configKeys.TUNER_AGC_DECAY_LIMIT,
+                                  configKeys.TUNER_PRESELECT_BYPASS,
                                   ]
     
     def __init__(self,*args,**kwargs):
@@ -523,6 +545,7 @@ class ndr551_tuner(_tuner):
                         configKeys.TUNER_AGC_DECAY_STEP,
                         configKeys.TUNER_AGC_ATTACK_LIMIT,
                         configKeys.TUNER_AGC_DECAY_LIMIT,
+                        configKeys.TUNER_PRESELECT_BYPASS,
                         ]:
                 if key in confDict:
                     cDict[key] = confDict[key]
@@ -562,6 +585,7 @@ class ndr551_tuner(_tuner):
                             configKeys.TUNER_AGC_DECAY_STEP,
                             configKeys.TUNER_AGC_ATTACK_LIMIT,
                             configKeys.TUNER_AGC_DECAY_LIMIT,
+                            configKeys.TUNER_PRESELECT_BYPASS,
                             ]:
                     if key in confDict:
                         self.configuration[key] = confDict[key]
@@ -1023,6 +1047,7 @@ class ndr551_demod_ifSpec(_ifSpec):
 # \code
 # configDict = {
 #      "referenceMode": [0, 1],
+#      "ppsSource": [0, 1],
 #      "function": [integer (meaning is radio-dependent],
 #      "tunerConfiguration": {
 #            0: {
@@ -1221,13 +1246,33 @@ class ndr551(_radio):
     dmacCmd = None
     calfCmd = None
     resetCmd = reset551
+    cntrlCmd = ifOut551
     funCmd = funJSON
     refModes = {0:"Internal 10MHz",1:"External 10MHz"}
     ppsModes = {0:"Internal 1PPS", 1:"External 1PPS"}
+    noiseGens = {0: "RF Tuner", 1: "Microwave"}
     rbypModes = {}
     connectionModes = ["udp"]
     defaultPort = 19091
     udpDestInfo = "Destination index"
+    tunerBandwithSettable = True
+    tunerBandwidthConstant = 80e6
+    
+    # OVERRIDE
+    ##
+    # \brief The list of valid configuration keywords supported by this
+    # object.  Override in derived classes as needed.
+    validConfigurationKeywords = [configKeys.CONFIG_MODE,
+                                  configKeys.REFERENCE_MODE,
+                                  configKeys.BYPASS_MODE,
+                                  configKeys.CALIB_FREQUENCY,
+                                  configKeys.FNR_MODE,
+                                  configKeys.GPS_ENABLE,
+                                  configKeys.REF_TUNING_VOLT,
+                                  configKeys.GIGE_FLOW_CONTROL,
+                                  configKeys.RADIO_FUNCTION,
+                                  configKeys.STATUS_PPS_SOURCE,
+                                 ]
 
     # OVERRIDE
     ##
@@ -1254,6 +1299,61 @@ class ndr551(_radio):
                 self.versionInfo[key] = "N/A"
         return self.versionInfo
 
+    # OVERRIDE
+    ##
+    # \brief Sets the time for the next PPS rising edge on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::setTimeNextPps()
+    def setTimeNextPps(self,checkTime=False,useGpsTime=False,newPpsTime=None):
+        if self.refCmd is not None:
+            # 551-class radios don't have an internal GPS that they can
+            # use to set time, so the useGpsTime parameter has no effect
+            if newPpsTime is not None:
+                nextSecond = int( _radio.timeFromString(newPpsTime, utc=True) )
+            #if useGpsTime:
+            #    cmd = self.utcCmd( parent=self, utcTime="g" )
+            #else:
+            #    nextSecond = int( math.floor( time.time() ) )+1
+            #    cmd = self.utcCmd( parent=self, utcTime=str(nextSecond),
+            #                       verbose=self.verbose, logFile=self.logFile )
+            else:
+                nextSecond = int( math.floor( time.time() ) )+1
+            # The new UTC time needs to be in ISO 8601 format for these radios
+            newUtcTime = datetime.datetime.utcfromtimestamp(nextSecond).isoformat()
+            cmd = self.refCmd( parent=self, utcTime=newUtcTime,
+                               verbose=self.verbose, logFile=self.logFile )
+            cmd.send( self.sendCommand, timeout=cmd.timeout )
+            if checkTime:
+                radioUtc = self.getTimeNextPps()
+                self.logIfVerbose("Set time = %d & Query time = %d" % (nextSecond,radioUtc))
+                return radioUtc==nextSecond
+            else:
+                return cmd.success
+        else:
+            return False
+            
+    # OVERRIDE
+    ##
+    # \brief Gets the current radio time.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getTimeNow()
+    def getTimeNow(self):
+        if self.refCmd is not None:
+            cmd = self.refCmd( parent=self, query=True,
+                               verbose=self.verbose, logFile=self.logFile  )
+            cmd.send( self.sendCommand, timeout=cmd.timeout )
+            return cmd.getResponseInfo().get(configKeys.TIME_UTC, None)
+        else:
+            return None
+    
+    # OVERRIDE
+    ##
+    # \brief Gets the time for the next PPS rising edge on the radio.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getTimeNextPps()
+    def getTimeNextPps(self):
+        return self.getTimeNow()
+    
     # OVERRIDE
     ##
     # \brief Sets DDC configuration (old-style).

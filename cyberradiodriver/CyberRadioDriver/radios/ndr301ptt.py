@@ -5,8 +5,8 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2018 CyberRadio Solutions, Inc.  
-#     All rights reserved.
+# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+#    All rights reserved.
 ##################################################################
 
 # Imports from other modules in this package
@@ -232,7 +232,8 @@ class ndr301ptt_wbddc(ndr301_wbddc):
                             configKeys.ENABLE,
                             configKeys.DDC_STREAM_ID,
                             configKeys.DDC_OUTPUT_FORMAT,
-                            configKeys.DDC_SPECTRAL_FRAME_RATE]:
+                            configKeys.DDC_SPECTRAL_FRAME_RATE,
+                            configKeys.DDC_RF_INDEX]:
                     self.configuration[key] = rspInfo.get(key, None)
         # if self.nbssCmd is not None:
         #     cmd = self.nbssCmd(**{ "parent": self, 
@@ -316,6 +317,7 @@ class ndr301ptt_wbddc(ndr301_wbddc):
                                 configKeys.INDEX: self.index,
                                  "verbose": self.verbose, 
                                  "logFile": self.logFile })
+                print "[DBG][WBSC set] cDict =", cDict
                 cmd = self.cfgCmd(**cDict)
                 ret &= cmd.send( self.callback, )
                 ret &= cmd.success
@@ -478,11 +480,6 @@ class ndr301ptt_wbddc(ndr301_wbddc):
 # \implements CyberRadioDriver.IRadio
 class ndr301_ptt(ndr301):
     _name = "NDR301-PTT"
-    # ADCSR command doesn't exist for the PTT variant.  The ADC rate 
-    # for this variant is locked to 122.88 MHz.
-    adcsrCmd = None
-    adcRate = 122.88e6
-    adcRateModes = { 1: 122.88e6 }
     validConfigurationKeywords = [configKeys.CONFIG_MODE,
                                   configKeys.REFERENCE_MODE,
                                   configKeys.FNR_MODE,
@@ -496,10 +493,11 @@ class ndr301_ptt(ndr301):
     numNbddc = 50
     nbddcType = ndr301ptt_nbddc
     nbddcIndexBase = 1
-    # For now, only enable port 2 (the 19-Gig output) on the PTT variant, as
-    # port 1 (the 1-Gig output) is malfunctioning on the prototype.
-    numGigE = 1
-    gigEIndexBase = 2
+    # 2020/07/14 -- port 1 seems OK now -- DA
+    ## For now, only enable port 2 (the 10-Gig output) on the PTT variant, as
+    ## port 1 (the 1-Gig output) is malfunctioning on the prototype.
+    #numGigE = 1
+    #gigEIndexBase = 2
     numGigEDipEntries = 64
     
     ##

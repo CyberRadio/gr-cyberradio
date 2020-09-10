@@ -5,8 +5,8 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
-#     All rights reserved.
+# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+#    All rights reserved.
 ##################################################################
 
 # Imports from other modules in this package
@@ -186,7 +186,8 @@ class status562(_jsonCommandBase):
                 configKeys.STATUS_10MHZ_REF: "cfg10m",
                 configKeys.STATUS_10MHZ_REF_STATUS: "status10m",
                 configKeys.STATUS_PPS_SOURCE: "cfg1pps",
-                configKeys.STATUS_PPS: "status1pps",
+                #configKeys.STATUS_PPS: "status1pps",
+                configKeys.STATUS_PPS: "statuspps",
                 configKeys.STATUS_ONTIME: "ontime",
                 configKeys.STATUS_MEM: "mem",
                 configKeys.STATUS_LINK0: "link0up",
@@ -230,6 +231,16 @@ class pps562(_jsonCommandBase):
                 configKeys.TIME_UTC: "timeset",
                 configKeys.NOISE_STATE: "nstate"
                 }
+
+class ifout562(_jsonCommandBase):
+    mnemonic = "cntrl"
+    queryParamMap = {
+                configKeys.CNTRL_IF_OUT: "ifout",
+                }
+    setParamMap = {
+                configKeys.CNTRL_IF_OUT: "ifout",
+                }
+
 ##
 # \brief Radio handler class for the NDR562.
 #
@@ -244,6 +255,7 @@ class pps562(_jsonCommandBase):
 # \code
 # configDict = {
 #      "referenceMode": [0, 1],
+#      "ppsSource": [0, 1],
 #      "function": [integer (meaning is radio-dependent],
 #      "tunerConfiguration": {
 #            0: {
@@ -359,6 +371,8 @@ class ndr562(ndr551):
     refCmd = ref562
     sipCmd = cfge40g562
     dipCmd = e40g562
+    cntrlCmd = ifout562
+    funCmd = None
     #ppsCmd = pps562
     numGigE = 1
     numTuner = 2
@@ -370,7 +384,8 @@ class ndr562(ndr551):
     # object.  Override in derived classes as needed.
     validConfigurationKeywords = [configKeys.REFERENCE_MODE, \
                                   configKeys.TIME_UTC, \
-                                  configKeys.STATUS_PPS_SOURCE
+                                  configKeys.STATUS_PPS_SOURCE, \
+                                  configKeys.CNTRL_IF_OUT
                                  ]
     
 

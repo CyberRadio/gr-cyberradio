@@ -34,8 +34,9 @@ if $activeRepeatPackets is not None:
   <callback>set_index($index)</callback>
   <callback>set_enable($enable)</callback>
   <callback>set_wideband($wideband)</callback>
-  <callback>set_rate($rate)</callback>
-  <callback>set_mode($mode)</callback>
+  <callback>set_rate_and_mode($rate, $mode)</callback>
+  <!-- <callback>set_rate($rate)</callback> -->
+  <!-- <callback>set_mode($mode)</callback> -->
   <callback>set_freq($freq)</callback>
   <callback>set_rfSource($rfSource)</callback>
   <callback>set_rfFreq($rfFreq)</callback>

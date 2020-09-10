@@ -43,6 +43,7 @@ class generic_tuner_control_block(generic_radio_control_block, gr.basic_block):
 					freq=0,
 					attenuation=0,
 					filter=1,
+					ifout=False,
 					group=None,
 					otherArgs={},
 					debug=False, 
@@ -67,6 +68,7 @@ class generic_tuner_control_block(generic_radio_control_block, gr.basic_block):
 		self.set_filter(filter)
 		self.set_group(group)
 		self.set_otherArgs(otherArgs)
+		self.set_ifout(ifout)
 		
 		self.updateConfig()
 		self._init = False
@@ -78,7 +80,7 @@ class generic_tuner_control_block(generic_radio_control_block, gr.basic_block):
 		if (self._init and param is None) or ((not self._init) and (param=="index")):
 			confDict = { crd.configKeys.CONFIG_TUNER: { self.index: {crd.configKeys.TUNER_FREQUENCY:int(self.rfFreq*1e6), 
 																			crd.configKeys.TUNER_ATTENUATION:self.attenuation, 
-																			crd.configKeys.TUNER_IF_FILTER: self.filter, 
+																			crd.configKeys.TUNER_IF_FILTER: self.filter,
 # 																			crd.configKeys.ENABLE: self.enable, 
 																			 } } }
 			if ( isinstance(self.group,int) and (self.group>=0) ):
@@ -96,6 +98,8 @@ class generic_tuner_control_block(generic_radio_control_block, gr.basic_block):
 				confDict = { crd.configKeys.CONFIG_TUNER: { self.index: { crd.configKeys.TUNER_COHERENT_GROUP: self.group, } } }
 			elif param=="enable":
 				confDict = { crd.configKeys.CONFIG_TUNER: { self.index: { crd.configKeys.ENABLE: self.enable, } } }
+			elif param=="ifout":
+				confDict = { crd.configKeys.CNTRL_IF_OUT: self.ifOut }
 		if confDict is not None:
 			self.log.debug( json.dumps(confDict, sort_keys=True) )
 			if self.radioObj.isConnected():
@@ -192,6 +196,15 @@ class generic_tuner_control_block(generic_radio_control_block, gr.basic_block):
 	def set_otherArgs(self, otherArgs={}):
 		self.freqUnits = otherArgs.get("freqUnits", self.freqUnits)
 		self.tunerGroup = otherArgs.get("group", None)
+
+	def set_ifout(self, ifout):
+		if self._init or not hasattr(self, "ifOut"):
+			self.ifOut = ifout
+			self.log.debug("%s.set_ifout: %s -> %s at init"%(self._name, repr(self.ifOut), repr(ifout),))
+		elif ifout != self.ifOut:
+			self.log.debug("%s.set_ifout: %s -> %s"%(self._name, repr(self.ifOut), repr(ifout),))
+			self.ifOut = ifout
+			self.updateConfig("ifout")
 
 	def get_otherArgs(self,):
 		return self.otherArgs

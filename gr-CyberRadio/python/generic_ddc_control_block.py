@@ -74,6 +74,7 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 		generic_radio_control_block.__init__(self, radioObj=radioObj, debug=debug)
 		self.log.debug("hello")
 		self.freqUnits = 1
+		self.arp = False
 		
 		self.log.debug("%s.__init__(radioObj=%r, index=%r, rate=%s)"%(self._name,radioObj,index,rate))
 
@@ -122,14 +123,17 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 										crd.configKeys.GIGE_SOURCE_PORT:self.index+(10000 if self.wideband else 20000),
 										crd.configKeys.GIGE_DEST_PORT:self.udpPort,
 										 }, 
-									 }, 
+									 },
+								crd.configKeys.IP_SOURCE : {
+										crd.configKeys.GIGE_SOURCE_PORT : self.udpPort,
+									}
 								 }
 		if self.localInterface is not None and len(self.localInterface)>0:
 			dmac, dip = crd.getInterfaceAddresses(self.localInterface)
 			self.log.debug( "interface = {0}, dmac = {1}, dip = {2}".format(self.localInterface, dmac, dip,) )
 			temp = [int(i) for i in dip.split(".")]
 			temp[-1] = (~temp[-1])&0xff
-			#~ sip = ".".join(str(i) for i in temp)
+			sip = ".".join(str(i) for i in temp)
 			for radioInterface in interfaceList:
 				#~ dipConfDict = { 
 								#~ radioInterface: {
@@ -146,6 +150,14 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 								 #~ }
 				dipConfDict[radioInterface][crd.configKeys.IP_DEST][dipIndex][crd.configKeys.GIGE_MAC_ADDR] = dmac
 				dipConfDict[radioInterface][crd.configKeys.IP_DEST][dipIndex][crd.configKeys.GIGE_IP_ADDR] = dip
+				dipConfDict[radioInterface][crd.configKeys.IP_SOURCE][crd.configKeys.GIGE_IP_ADDR] = sip	
+				dipConfDict[radioInterface][crd.configKeys.IP_SOURCE][crd.configKeys.GIGE_SOURCE_PORT] = self.udpPort
+		else:
+			if any(i in self.radioObj.name.lower() for i in ("562","358","551","357")):
+				self.log.debug("self.arp: {0}".format(self.arp))
+				if self.arp == True:
+					# since an interface was not provided, try to ARP it for the destination.
+					dipConfDict[radioInterface][crd.configKeys.IP_DEST][dipIndex][crd.configKeys.GIGE_ARP] = True
 		
 		return dipConfDict
 	
@@ -223,14 +235,17 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 						ddcConfDict[ crd.configKeys.DDC_VITA_ENABLE ] = vitaVal
 				elif param=="rate":
 					ddcConfDict[ rateKey ] = self.rate
+				elif param=="mode":
+					ddcConfDict[ crd.configKeys.DDC_OUTPUT_FORMAT ] = self.mode
+				elif param=="rate&mode":
+					ddcConfDict[ rateKey ] = self.rate
+					ddcConfDict[ crd.configKeys.DDC_OUTPUT_FORMAT ] = self.mode
 				elif param=="freq":
 					ddcConfDict[ crd.configKeys.DDC_FREQUENCY_OFFSET ] = self.ddcFreq
 					sendFreqMsgFlag = True
 				elif param=="rfSource":
 					if self.radioObj.isDdcSelectableSource(self.wideband):
 						ddcConfDict[ crd.configKeys.DDC_RF_INDEX ] = self.rfSource
-				elif param=="mode":
-					ddcConfDict[ crd.configKeys.DDC_OUTPUT_FORMAT ] = self.mode
 				elif param=="phaseOffset" and ("364" in self.radioObj.name.lower()) and (self.phaseOffset is not None):
 					ddcConfDict[ crd.configKeys.DDC_PHASE_OFFSET ] = self.phaseOffset
 				elif param=="totalRepeatPackets" and ("364" in self.radioObj.name.lower()) and (self.totalRepeatPackets is not None):
@@ -245,10 +260,7 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 			if ddcConfDict is not None:
 				confDict[crd.configKeys.CONFIG_DDC] = { ddcType: { self.index: ddcConfDict } }
 			if dipConfDict is not None:
-				if "562" in self.radioObj.name.lower():
-					pass
-				else:
-					confDict[crd.configKeys.CONFIG_IP] = dipConfDict
+				confDict[crd.configKeys.CONFIG_IP] = dipConfDict
 			self.log.debug( json.dumps(confDict, sort_keys=True) )
 			if self.radioObj.isConnected():
 				self.radioObj.setConfiguration(confDict)
@@ -349,6 +361,33 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 
 	def get_mode(self,):
 		return self.mode
+	
+	def set_rate_and_mode(self, rate=0, mode=None):
+		update = False
+		
+		if self._init or not hasattr(self, "mode"):
+			self.mode = mode
+			self.log.debug("%s.set_rate_and_mode: %s -> %s"%(self._name, repr(self.mode), repr(mode),))
+		elif mode!=self.mode:
+			self.log.debug("%s.set_rate_and_mode: %s -> %s"%(self._name, repr(self.mode), repr(mode),))
+			self.mode = mode
+			update = True
+		else:
+			self.log.debug("%s.set_rate_and_mode: %s == %s"%(self._name, repr(self.mode), repr(mode),))
+
+		if self._init or not hasattr(self, "rate"):
+			self.rate = rate
+			self.log.debug("%s.set_rate_and_mode: %s -> %s"%(self._name, "n/a", repr(rate),))
+		elif rate!=self.rate:
+			self.log.debug("%s.set_rate_and_mode: %s -> %s"%(self._name, repr(self.rate), repr(rate),))
+			self.rate = rate
+			update = True
+		else:
+			self.log.debug("%s.set_rate_and_mode: %s == %s"%(self._name, repr(self.rate), repr(rate),))
+		
+		if update:
+			self.updateConfig("rate&mode")
+
 
 	## Setter & getter for mode
 	def set_phaseOffset(self, phaseOffset=None):
@@ -502,6 +541,7 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 	## Setter & getter for otherArgs
 	def set_otherArgs(self, otherArgs={}):
 		self.freqUnits = otherArgs.get("freqUnits", self.freqUnits)
+		self.arp = otherArgs.get("arp", self.arp)
 
 	def get_otherArgs(self,):
 		return self.otherArgs

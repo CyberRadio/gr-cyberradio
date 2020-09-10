@@ -7,28 +7,29 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
-#     All rights reserved.
+# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+#    All rights reserved.
 #
 ###############################################################
 
 # Imports from other modules in this package
 import command
 import log
+import ndrcert
 # Imports from external modules
+import requests
+import requests.packages
 import serial
 # Python standard library imports
 import datetime
 import errno
+import json
 import select
 import socket
 import sys
 import time
 import traceback
 #from time import gmtime, strftime
-import requests
-import ndrcert
-import json
 
 ##
 # Radio transport class.
@@ -39,7 +40,7 @@ import json
 class radio_transport(log._logger):
     _name = "transportXXX"
     ## Default timeout value for transactions managed over this transport.
-    defaultTimeout = 1.0
+    defaultTimeout = 10.0
     ## Default port used for TCP and UDP connections
     defaultPort = 8617
     ## Default baud rate used for TTY connections
@@ -51,8 +52,9 @@ class radio_transport(log._logger):
     # \param parent The parent object that manages this transport.
     # \param verbose Verbose mode (Boolean)
     # \param logCtrl A GUI control that receives log output (GUI-dependent)
-    # \param json Whether the transport should expect JSON-formatted commands
-    #    and responses (Boolean).
+    # \param json Whether or not the transport uses JSON by default.  Callers
+    #    can override this setting in sendCommand() as needed (for example, in
+    #    sending commands to crdd).
     # \param logFile An open file or file-like object to be used for log output.  
     #    If not provided, this defaults to standard output. 
     # \param timeout Timeout for the transport (seconds).  If this is None,
@@ -78,10 +80,6 @@ class radio_transport(log._logger):
         self.lastTx = 0
         self.lastRx = 0
         self.isJson = json
-        if json:
-            self.rxFunction = self.receiveJson
-        else:
-            self.rxFunction = self.receiveCli
         self.connectError = ""
         self.httpStr = ""
         self.timeout = timeout
@@ -100,6 +98,20 @@ class radio_transport(log._logger):
     def __str__(self):
         return self._name
     
+    ##
+    # \internal
+    # \brief Gets the appropriate receive function, depending on whether or not
+    #     JSON is in use.
+    # \param useJson Whether or not to use JSON.  If this is None, use the 
+    #     transport's default JSON setting.
+    # \returns A Callable referencing the receive function to use.
+    def getRxFunction(self, useJson=None):
+        usingJson = self.isJson if useJson is None else useJson
+        if usingJson:
+            return self.receiveJson
+        else:
+            return self.receiveCli
+       
     ##
     # Connects the transport and tests the connection.
     #
@@ -322,9 +334,11 @@ class radio_transport(log._logger):
     # \param clearRx Whether to make sure that the receive buffer is clear before
     #    sending the command.
     # \param timeout Timeout, in seconds.  If this is None, never time out.
+    # \param useJson Whether or not to use JSON for transport.  If this is None,
+    #    use the transport's default setting.
     # \return Whether the transport is still connected.
     #def sendCommand(self,cmd,clearRx=True):
-    def sendCommand(self,cmd,clearRx=False, timeout=None):
+    def sendCommand(self,cmd,clearRx=False, timeout=None, useJson=None):
         try:
             delta = datetime.timedelta(seconds=0,microseconds=0)
             if self.lastTx == 0:
@@ -333,7 +347,7 @@ class radio_transport(log._logger):
                 delta = datetime.datetime.now() - self.lastTx
                 self.lastTx = datetime.datetime.now()
             if clearRx:
-                rx = self.receive(timeout=0.0)
+                rx = self.receive(timeout=0.0, useJson=useJson)
                 if len(rx)>0:
                     self.logIfVerbose("**  Rx(%s)%s: %s" % ( self.transportIdent(), \
                                                     datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), \
@@ -542,10 +556,15 @@ class radio_transport(log._logger):
     #     use the default timeout value for the transport.
     # \return The list of received data strings.
     def receiveCli(self,timeout=None):
+        #self.log("[DBG] receiveCli called")
         rx = []
         inString = ""
+        myTimeout = float(timeout) if timeout is not None else self.timeout
+        #self.log("[DBG] receiveCli -- myTimeout:", myTimeout)
+        #self.log("[DBG] receiveCli -- selectInput:", self.selectInput)
         try:
             while True:
+                #self.log("[DBG] receiveCli -- pass")
                 delta = datetime.timedelta(seconds=0)
                 if self.lastRx == 0:
                     self.lastRx = datetime.datetime.now()
@@ -556,13 +575,14 @@ class radio_transport(log._logger):
                 # exception. We need to trap that case and keep selecting if that happens.
                 ins = self.selectInput
                 try:
-                    ins,outs,excepts = self.select(self.selectInput,[],[],float(timeout) if timeout is not None else self.defaultTimeout)
+                    ins,outs,excepts = self.select(self.selectInput,[],[],myTimeout)
                 except select.error as ex:
                     if ex[0] == errno.EINTR:
                         pass
                     else:
                         raise
                 if ins:
+                    #self.log("[DBG] receiveCli -- data found")
                     if self.tcp is not None:
                         inString = self.tcp.recv(8192)
                     elif self.tty is not None:
@@ -585,10 +605,11 @@ class radio_transport(log._logger):
                         rx.append( "\nDISCONNECTED\n" )
                         break
                 else:
-                    if timeout is not None and timeout>0:
+                    #self.log("[DBG] receiveCli -- nothing")
+                    if myTimeout is not None and myTimeout>0:
                         self.logIfVerbose("**  Rx(%s)%s: %s" % (self.transportIdent(),datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),"!! TIMEOUT  !!"))
                         rx.append( "\nTIMEOUT\n" )
-                    break
+                        break
         except:
             self.logIfVerbose(traceback.format_exc())
             #traceback.print_exc()
@@ -603,34 +624,37 @@ class radio_transport(log._logger):
                                              )
         return [" ".join(i.strip().split()) for i in "".join(rx).replace(">","").split("\n") if i.strip()]
     
-    # Basic function for receiving - requires self.rxFunction to point to the appropriate method for the radio!
     ##
     # Receives data over the transport.
     #
-    # The format of the received data depends on whether the "json" flag
-    # was set at construction time.
+    # The format of the received data depends on whether JSON is in use.
     #
     # \param timeout The timeout value to use for receiving data.  If None,
     #     use the default timeout value for the transport.
-    # \return If json=True, a JSON-formatted string; if json=False, a list of 
+    # \param useJson Whether or not to use JSON for transport.  If this is 
+    #     None, use the transport's default setting (set at construction
+    #     time).
+    # \return If using JSON, a JSON-formatted string; if not, a list of 
     #     received data strings.
-    def receive(self,timeout=None):
-        return self.rxFunction(timeout=timeout)
+    def receive(self, timeout=None, useJson=None):
+        return self.getRxFunction(useJson)(timeout=timeout)
     
     ##
     # Sends a command and receives the response over the transport.
     #
-    # The format of the received data depends on whether the "json" flag
-    # was set at construction time.
+    # The format of the received data depends on whether JSON is in use.
     #
     # \param cmd The command string to send out over the transport.
     # \param timeout The timeout value to use for receiving data.  If None,
     #     use the default timeout value for the transport.
-    # \return If json=True, a JSON-formatted string; if json=False, a list of 
+    # \param useJson Whether or not to use JSON for transport.  If this is 
+    #     None, use the transport's default setting (set at construction
+    #     time).
+    # \return If using JSON, a JSON-formatted string; if not, a list of 
     #     received data strings.
-    def sendCommandAndReceive(self,cmd,timeout=None):
-        if self.sendCommand(str(cmd), timeout=timeout):
-            return self.receive(timeout)
+    def sendCommandAndReceive(self, cmd, timeout=None, useJson=None):
+        if self.sendCommand(str(cmd), timeout=timeout, useJson=useJson):
+            return self.receive(timeout, useJson=useJson)
 
     ##
     # \internal

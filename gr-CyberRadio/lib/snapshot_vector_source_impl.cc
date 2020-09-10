@@ -62,7 +62,13 @@ namespace gr {
 				(d_radio_type.compare("ndr308-ts")==0) ||
 				(d_radio_type.compare("ndr318-ts")==0) ||
 				(d_radio_type.compare("ndr318")==0) ||
+				(d_radio_type.compare("ndr318a")==0) ||
 				(d_radio_type.compare("ndr308a")==0) ||
+				(d_radio_type.compare("ndr308-1")==0) ||
+				(d_radio_type.compare("ndr308-4")==0) ||
+				(d_radio_type.compare("ndr308-6")==0) ||
+				(d_radio_type.compare("ndr814")==0) ||
+				(d_radio_type.compare("ndr818")==0) ||
 						(d_radio_type.compare("ndr651")==0) ||
 						(d_radio_type.compare("ndr804")==0) ||
 						(d_radio_type.compare("ndr804-ptt")==0) ||
@@ -80,7 +86,7 @@ namespace gr {
 			this->rxVec[2].iov_base = new char[ sizeof(struct Vita49Trailer) ];
 			this->rxVec[2].iov_len = sizeof(struct Vita49Trailer);
 		} else if ( (d_radio_type.compare("ndr301")==0) ||
-				(d_radio_type.compare("ndr301-ptt")==0) ) {
+				    (d_radio_type.compare("ndr301-ptt")==0) ) {
 			this->set_iqSwap(true);
 			this->set_byteSwap(false);
 			this->d_samples_per_frame = 2048;
@@ -105,7 +111,8 @@ namespace gr {
 						this->rxVec[2].iov_base = new char[ sizeof(struct Vita49Trailer) ];
 						this->rxVec[2].iov_len = sizeof(struct Vita49Trailer);
 
-		} else if ((d_radio_type.compare("ndr364")==0)||(d_radio_type.compare("ndr354")==0)) {
+		} else if ( (d_radio_type.compare("ndr364")==0) ||
+		            (d_radio_type.compare("ndr354")==0)) {
 			this->set_iqSwap(false);
 			this->set_byteSwap(true);
 
@@ -116,7 +123,22 @@ namespace gr {
 
 			this->rxVec[2].iov_base = new char[ 1 ];
 			this->rxVec[2].iov_len = 1;
-		} else if ((d_radio_type.compare("ndr551")==0)||(d_radio_type.compare("ndr358")==0)||(d_radio_type.compare("ndr357")==0)) {
+		}
+		else if ( d_radio_type.compare("ndr364-ccf")==0 ) {
+			this->set_iqSwap(false);
+			this->set_byteSwap(true);
+
+			this->d_samples_per_frame = 2048;
+
+			this->rxVec[0].iov_base = new char[ 20 ];
+			this->rxVec[0].iov_len = 20;
+
+			this->rxVec[2].iov_base = new char[ 1 ];
+			this->rxVec[2].iov_len = 1;
+		} else if ( (d_radio_type.compare("ndr551")==0) ||
+		            (d_radio_type.compare("ndr358")==0) ||
+					(d_radio_type.compare("ndr357")==0) ||
+					(d_radio_type.compare("ndr378")==0) ) {
 			this->set_iqSwap(false);
 			this->set_byteSwap(true);
 			this->d_samples_per_frame = 1024;
@@ -141,6 +163,30 @@ namespace gr {
 			this->rxVec[2].iov_base = new char[ sizeof(struct Vita49Trailer) ];
 			this->rxVec[2].iov_len = sizeof(struct Vita49Trailer);
         } else if ( d_radio_type.compare("ndr358-recorder") == 0 ) {
+			this->set_iqSwap(false);
+			this->set_byteSwap(true);
+			this->d_samples_per_frame = 1280;
+
+			//~ this->_parseHeader = this->_parseHeaderNdr551;
+
+			this->rxVec[0].iov_base = new char[ 48 ];
+			this->rxVec[0].iov_len = 48;
+
+			this->rxVec[2].iov_base = new char[ sizeof(struct Vita49Trailer) ];
+			this->rxVec[2].iov_len = sizeof(struct Vita49Trailer);
+		} else if ( d_radio_type.compare("ndr358-recorder-wb") == 0 ) {
+			this->set_iqSwap(false);
+			this->set_byteSwap(true);
+			this->d_samples_per_frame = 1024;
+			
+			//~ this->_parseHeader = this->_parseHeaderNdr551;
+			
+			this->rxVec[0].iov_base = new char[ 48 ];
+			this->rxVec[0].iov_len = 48;
+			
+			this->rxVec[2].iov_base = new char[ sizeof(struct Vita49Trailer) ];
+			this->rxVec[2].iov_len = sizeof(struct Vita49Trailer);
+		} else if ( d_radio_type.compare("ndr358-recorder-nb") == 0 ) {
 			this->set_iqSwap(false);
 			this->set_byteSwap(true);
 			this->d_samples_per_frame = 1280;
@@ -279,7 +325,7 @@ namespace gr {
             //~ perror("couldn't set recv buf size.");
             //~ return -1;
         //~ }
-        
+
         while (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &recv_buffer_size, sizeof(unsigned long long)) == -1) {
             std::cerr << "Couldn't set recv buf size = " << recv_buffer_size << "." << std::endl;
             recv_buffer_size <<= 1;
@@ -349,12 +395,12 @@ namespace gr {
             data_pointer_print += 3;
             data_to_print = *data_pointer_print;
             // check if the Over-Range Indicator is set
-            if (data_to_print == 0x2000){ 
-                //printf ("%2x\n", data_to_print); 
+            if (data_to_print == 0x2000){
+                //printf ("%2x\n", data_to_print);
                 // if status message was already sent, do not send it again
                 if (this->program_starting == true) {
                     this->program_starting = false;
-                    printf ("%2x\n", data_to_print); 
+                    printf ("%2x\n", data_to_print);
     	            txStatusMsg();
                 }
             }
@@ -362,7 +408,7 @@ namespace gr {
                 // if Over-Range Condition does not exist anymore, setup flags appropriately
 		        this->program_starting = true;
             }
-                 
+
             // Copy IQ data to output
             if (this->d_bswap32) {
                 volk_32u_byteswap((uint32_t*)(this->rxVec[1].iov_base), this->d_samples_per_frame);

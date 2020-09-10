@@ -23,6 +23,9 @@
 %define __os_install_post %{python27_os_install_post}
 %define _datadir /usr/share
 %endif
+%if "RPM_PKG_OSRPM_PKG_OS_VER" == "centos8"
+%define __python /usr/bin/python2
+%endif
 
 Summary: CyberRadio Solutions, Inc., NDR-series Radio Control Driver
 Name: RPM_PKG_NAME

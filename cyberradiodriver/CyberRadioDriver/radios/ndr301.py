@@ -5,8 +5,8 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
-#     All rights reserved.
+# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+#    All rights reserved.
 ##################################################################
 
 # Imports from other modules in this package
@@ -776,6 +776,9 @@ class ndr301(_radio):
                          2: "VITA-49 header disabled",
                          3: "VITA-49 header enabled, fractional timestamp in sample counts",
                          }
+    ## \brief Does this radio support setting the tuner bandwidth?
+    tunerBandwithSettable = False
+    tunerBandwidthConstant = 75e6
     validConfigurationKeywords = [configKeys.CONFIG_MODE, \
                                   configKeys.REFERENCE_MODE, \
                                   configKeys.FNR_MODE, \

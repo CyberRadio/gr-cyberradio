@@ -8,8 +8,8 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
-#     All rights reserved.
+# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+#    All rights reserved.
 #
 ###############################################################
 
@@ -51,6 +51,8 @@ CONFIG_MODE = "configMode"
 REFERENCE_MODE = "referenceMode"
 ## Noise State
 NOISE_STATE = "noiseState"
+## Noise generator selection
+NOISE_GENERATOR = "noiseGenerator"
 ## Reference bypass mode.
 BYPASS_MODE = "bypassMode"
 ## Frequency normalization mode.
@@ -157,6 +159,8 @@ TUNER_PRESELECT_BYPASS = "preselectorBypass"
 TUNER_IF = "if"
 ## LO sync indicator
 TUNER_LO_SYNC = "loSync"
+## Tuner Band for NDR511
+TUNER_BAND = "band"
 
 #------ Transmitter Configuration Keys --------------------------------#
 TX_INDEX = "txIndex"
@@ -601,6 +605,10 @@ STATUS_MICRO_LO2_LOCK = "micro2ndlo"
 STATUS_FINAL_IF_LOCK = "finaliflo"
 ## Low RF LO
 STATUS_LOW_RF_LOCK = "lowrflo"
+
+#--  Cntrl  Keys  ------------------------------------------------------#
+## ifOut 
+CNTRL_IF_OUT = "ifout"
 
 
 #--  Reset Type Keys  --------------------------------------------------#

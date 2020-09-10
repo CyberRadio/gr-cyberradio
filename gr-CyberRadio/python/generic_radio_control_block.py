@@ -101,7 +101,7 @@ class generic_radio_control_block(gr.basic_block):
 			self.message_port_register_in(self.msgPort_enable)
 			self.set_msg_handler(self.msgPort_enable, self.rxEnableMsg)
 		if self._portEnable_enableTx:
-			self.log.debug("Enabling enable message reception")
+			self.log.debug("Enabling enable message transmission")
 			self.message_port_register_out(self.msgPort_enable)
 		
 		## Setup ports for frequency messaging
@@ -111,7 +111,7 @@ class generic_radio_control_block(gr.basic_block):
 			self.message_port_register_in(self.msgPort_freq)
 			self.set_msg_handler(self.msgPort_freq, self.rxFreqMsg)
 		if self._portEnable_freqTx:
-			self.log.debug("Enabling freq message reception")
+			self.log.debug("Enabling freq message transmission")
 			self.message_port_register_out(self.msgPort_freq)
 		
 		## Setup ports for UDP block messaging
@@ -121,7 +121,7 @@ class generic_radio_control_block(gr.basic_block):
 			self.message_port_register_in(self.msgPort_udp)
 			self.set_msg_handler(self.msgPort_udp, self.rxUdpMsg)
 		if self._portEnable_udpTx:
-			self.log.debug("Enabling UDP message reception")
+			self.log.debug("Enabling UDP message transmission")
 			self.message_port_register_out(self.msgPort_udp)
 	
 	def __del__(self,):

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 ##################################################################
-# \package CyberRadioDriver.radios.NDR357 
-# \brief NDR357 Support
+# \package CyberRadioDriver.radios.ndr378 
+# \brief NDR378 Support
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
-#    All rights reserved.
+# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
+#     All rights reserved.
 ##################################################################
 
 # Imports from other modules in this package
@@ -18,35 +18,36 @@ from CyberRadioDriver.radios.ndr551 import ndr551, \
                                            ndr551_ddc_ifSpec, \
                                            ndr551_adc_ifSpec, \
                                            ndr551_demod_ifSpec
-
+from CyberRadioDriver.command import _jsonCommandBase, jsonConfig
+from CyberRadioDriver import configKeys
 # Imports from external modules
 # Python standard library imports
 
 ##
-# \brief Tuner component class for the NDR357.
+# \brief Tuner component class for the NDR378.
 #
-class ndr357_tuner(ndr551_tuner):
-    _name = "Tuner(NDR357)"
+class ndr378_tuner(ndr551_tuner):
+    _name = "Tuner(NDR378)"
     frqRange = (20e6,6e9)
 
 ##
-# \brief WBDDC component class for the NDR357.
-class ndr357_wbddc(ndr551_wbddc):
-    _name = "WBDDC(NDR357)"
+# \brief WBDDC component class for the NDR378.
+class ndr378_wbddc(ndr551_wbddc):
+    _name = "WBDDC(NDR378)"
 
 ##
-# \brief NBDDC component class for the NDR357.
-class ndr357_nbddc(ndr551_nbddc):
-    _name = "NBDDC(NDR357)"
+# \brief NBDDC component class for the NDR378.
+class ndr378_nbddc(ndr551_nbddc):
+    _name = "NBDDC(NDR378)"
 
 ##
-# \brief NBDDC component class for the NDR357.
-class ndr357_ddc_group(ndr551_ddc_group):
-    _name = "DDCGroup(NDR357)"
+# \brief NBDDC component class for the NDR378.
+class ndr378_ddc_group(ndr551_ddc_group):
+    _name = "DDCGroup(NDR378)"
 
 ##
 # \internal
-# \brief VITA 49 interface specification class for the NDR357's DDC format.
+# \brief VITA 49 interface specification class for the NDR378's DDC format.
 # \note Some explanation for these values is probably in order.
 # * The "header" includes not only the 7 words of the standard VITA
 #   packet header, but also the 5 words of the metadata included in
@@ -58,13 +59,13 @@ class ndr357_ddc_group(ndr551_ddc_group):
 #   contains data samples.  
 # ** For DDC format, each 32-bit word contains one 16-bit I/16-bit Q 
 #    sample, so the number of samples is getVitaPayloadSize("ddc") / 4.
-class ndr357_ddc_ifSpec(ndr551_ddc_ifSpec):
+class ndr378_ddc_ifSpec(ndr551_ddc_ifSpec):
     pass
 
 
 ##
 # \internal
-# \brief VITA 49 interface specification class for NDR357's ADC format.
+# \brief VITA 49 interface specification class for NDR378's ADC format.
 # \note Some explanation for these values is probably in order.
 # * The "header" includes not only the 7 words of the standard VITA
 #   packet header, but also the 5 words of the metadata included in
@@ -76,13 +77,13 @@ class ndr357_ddc_ifSpec(ndr551_ddc_ifSpec):
 #   contains data samples.  
 # ** For ADC format, each 32-bit word contains two 16-bit ADC samples,
 #    so the number of samples is getVitaPayloadSize("adc") / 2.
-class ndr357_adc_ifSpec(ndr551_adc_ifSpec):
+class ndr378_adc_ifSpec(ndr551_adc_ifSpec):
     pass
 
 
 ##
 # \internal
-# \brief VITA 49 interface specification class for the NDR357's demod format.
+# \brief VITA 49 interface specification class for the NDR378's demod format.
 # \note Some explanation for these values is probably in order.
 # * The "header" includes not only the 7 words of the standard VITA
 #   packet header, but also the 5 words of the metadata included in
@@ -94,25 +95,24 @@ class ndr357_adc_ifSpec(ndr551_adc_ifSpec):
 #   contains data samples.  
 # ** For demod format, each 32-bit word contains two 16-bit demod samples,
 #    so the number of samples is getVitaPayloadSize("demod") / 2.
-class ndr357_demod_ifSpec(ndr551_demod_ifSpec):
+class ndr378_demod_ifSpec(ndr551_demod_ifSpec):
     pass
 
 
 ##
-# \brief Radio handler class for the NDR357.
+# \brief Radio handler class for the NDR378.
 #
 # This class implements the CyberRadioDriver.IRadio interface.
 #
-# \section ConnectionModes_NDR357 Connection Modes
+# \section ConnectionModes_NDR378 Connection Modes
 #
 # "udp"
 #
-# \section RadioConfig_NDR357 Radio Configuration Options
+# \section RadioConfig_NDR378 Radio Configuration Options
 #
 # \code
 # configDict = {
 #      "referenceMode": [0, 1],
-#      "ppsSource": [0, 1],
 #      "function": [integer (meaning is radio-dependent],
 #      "tunerConfiguration": {
 #            0: {
@@ -134,7 +134,7 @@ class ndr357_demod_ifSpec(ndr551_demod_ifSpec):
 #               "aal": [1.0-30.0, step 1.0],
 #               "adl": [1.0-30.0, step 1.0],
 #            },
-#         ...3 (repeat for each tuner)
+#         ...7 (repeat for each tuner)
 #      },
 #      "ddcConfiguration": {
 #         "wideband": {
@@ -166,7 +166,7 @@ class ndr357_demod_ifSpec(ndr551_demod_ifSpec):
 #                 "dat": [1-100, step 1],
 #                 "ddt": [1-100, step 1],
 #              },
-#           ...3 (repeat for each WBDDC)
+#           ...7 (repeat for each WBDDC)
 #         },
 #         "narrowband": {
 #              0: {
@@ -200,21 +200,8 @@ class ndr357_demod_ifSpec(ndr551_demod_ifSpec):
 #                 "dat": [1-100, step 1],
 #                 "ddt": [1-100, step 1],
 #              },
-#           ...31 (repeat for each NBDDC)
+#           ...63 (repeat for each NBDDC)
 #         },
-#      },
-#      "ddcGroupConfiguration": {
-#            "combined": {
-#                0: {
-#                   "enable": [True, False],
-#                   "enable": [True, False],
-#                   "startTime": [ISO 8601 time string],
-#                   "samples": [number of samples],
-#                   "frequency": [-40e6-40e6, step 1e3],
-#                   "streamId": [stream ID],
-#                },
-#             ...7 (repeat for each DDC group)
-#            },
 #      },
 #      "ipConfiguration": {
 #            0: {
@@ -239,7 +226,7 @@ class ndr357_demod_ifSpec(ndr551_demod_ifSpec):
 # }
 # \endcode
 #
-# \section VITA_Notes_NDR357 VITA 49 Notes
+# \section VITA_Notes_NDR378 VITA 49 Notes
 #
 # When dealing with VITA 49 payloads, we have historically relied on the 
 # following convention:
@@ -273,24 +260,20 @@ class ndr357_demod_ifSpec(ndr551_demod_ifSpec):
 #    so the number of samples is getVitaPayloadSize("demod") / 2.
 #
 # \implements CyberRadioDriver.IRadio    
-class ndr357(ndr551):
-    _name = "NDR357"
-    ifSpec = ndr357_ddc_ifSpec
+class ndr378(ndr551):
+    _name = "NDR378"
+    ifSpec = ndr378_ddc_ifSpec
     ifSpecMap = {
-            "ddc":   ndr357_ddc_ifSpec,
-            "adc":   ndr357_adc_ifSpec,
-            "demod": ndr357_demod_ifSpec,
+            "ddc":   ndr378_ddc_ifSpec,
+            "adc":   ndr378_adc_ifSpec,
+            "demod": ndr378_demod_ifSpec,
         }
-    tunerType = ndr357_tuner
-    numTuner = 4
-    wbddcType = ndr357_wbddc
-    numWbddc = 4
-    nbddcType = ndr357_nbddc
-    cddcGroupType = ndr357_ddc_group
-
-class ndr357_coherent(ndr357):
-    _name = "NDR357-Coherent"
+    tunerType = ndr378_tuner
+    numTuner = 8
+    wbddcType = ndr378_wbddc
     numWbddc = 8
+    nbddcType = ndr378_nbddc
+    cddcGroupType = None
 
-if __name__ == '__main__':
-    pass
+
+            

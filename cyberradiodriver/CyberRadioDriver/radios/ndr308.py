@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 ##################################################################
-# \package CyberRadioDriver.radios.ndr308 
+# \package CyberRadioDriver.radios.ndr308
 # \brief NDR308 Support
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017 G3 Technologies, Inc.  All rights
-#    reserved.
+# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.
+#    All rights reserved.
 ##################################################################
 
 # Imports from other modules in this package
@@ -72,7 +72,7 @@ class dip308(_commandBase):
                         (configKeys.GIGE_SOURCE_PORT, int, False), \
                         (configKeys.GIGE_DEST_PORT, int, False), \
                         ]
-    
+
 
 ##
 # \internal
@@ -90,14 +90,14 @@ class sip308(_commandBase):
                         (configKeys.GIGE_PORT_INDEX, int, False), \
                         (configKeys.IP_SOURCE, str, False), \
                         ]
-    
+
 
 ##
 # \internal
 # \brief Status command bitmask values for the NDR308.
 #
-# Static member "text" is a dictionary where the keys are bits in 
-# the status bitmask, and the values are text strings indicating what those 
+# Static member "text" is a dictionary where the keys are bits in
+# the status bitmask, and the values are text strings indicating what those
 # bits mean when set.
 #
 class stat308Values():
@@ -157,7 +157,7 @@ class tstat308Values():
     TQ1_COH_LO1_UNLOCKED = 0x100
     TQ1_COH_LO2_UNLOCKED = 0x200
     TQ1_100MHZ_REF_UNLOCKED = 0x400
-    
+
     RF5_LO1_UNLOCKED = 0x1000
     RF5_LO2_UNLOCKED = 0x2000
     RF6_LO1_UNLOCKED = 0x4000
@@ -169,7 +169,7 @@ class tstat308Values():
     TQ2_COH_LO1_UNLOCKED     = 0x100000
     TQ2_COH_LO2_UNLOCKED     = 0x200000
     TQ2_100MHZ_REF_UNLOCKED = 0x400000
-    
+
     text = {
         RF1_LO1_UNLOCKED: "RF1 LO1 Unlocked", \
         RF1_LO2_UNLOCKED: "RF1 LO2 Unlocked", \
@@ -216,10 +216,10 @@ class ndr308_tuner(_tuner):
     fifCmd = command.fif
     tadjCmd = command.tadj
     validConfigurationKeywords = [
-                                  configKeys.TUNER_FREQUENCY, 
-                                  configKeys.TUNER_ATTENUATION, 
+                                  configKeys.TUNER_FREQUENCY,
+                                  configKeys.TUNER_ATTENUATION,
                                   configKeys.TUNER_RF_ATTENUATION,
-                                  configKeys.ENABLE, 
+                                  configKeys.ENABLE,
                                   configKeys.TUNER_FILTER,
                                   configKeys.TUNER_TIMING_ADJ,
                                   ]
@@ -230,19 +230,19 @@ class ndr308_tuner(_tuner):
 # \brief WBDDC component class for the NDR308.
 class ndr308_wbddc(_wbddc):
     _name = "WBDDC(NDR308)"
-    rateSet = { 0: 51.2e6, 
-                1: 25.6e6, 
-                2: 12.8e6, 
-                3: 102.4e6, 
-                4: 6.4e6, 
-                5: 3.2e6, 
+    rateSet = { 0: 51.2e6,
+                1: 25.6e6,
+                2: 12.8e6,
+                3: 102.4e6,
+                4: 6.4e6,
+                5: 3.2e6,
                  }
     bwSet = { 0: 40e6, \
-                1: 0.8*25.6e6, 
-                2: 0.8*12.8e6, 
-                3: 40e6, 
-                4: 0.8*6.4e6, 
-                5: 0.8*3.2e6, 
+                1: 0.8*25.6e6,
+                2: 0.8*12.8e6,
+                3: 40e6,
+                4: 0.8*6.4e6,
+                5: 0.8*3.2e6,
                  }
     dataFormat = { 3:DDC_DATA_FORMAT.REAL }
 #    cfgCmd = command.wbddc308
@@ -251,11 +251,11 @@ class ndr308_wbddc(_wbddc):
     dportCmd = command.wbdp
     # OVERRIDE
     validConfigurationKeywords = [
-                                  configKeys.ENABLE, 
-                                  configKeys.DDC_RATE_INDEX, 
-                                  configKeys.DDC_UDP_DESTINATION, 
-                                  configKeys.DDC_VITA_ENABLE, 
-                                  configKeys.DDC_STREAM_ID, 
+                                  configKeys.ENABLE,
+                                  configKeys.DDC_RATE_INDEX,
+                                  configKeys.DDC_UDP_DESTINATION,
+                                  configKeys.DDC_VITA_ENABLE,
+                                  configKeys.DDC_STREAM_ID,
                                   configKeys.DDC_DATA_PORT,
                                   ]
 
@@ -302,34 +302,34 @@ class ndr308_1_nbddc(_nbddc):
     frqCmd = None
     # OVERRIDE
     validConfigurationKeywords = [
-                                  configKeys.ENABLE, 
-                                  configKeys.DDC_FREQUENCY_OFFSET, 
-                                  configKeys.DDC_RATE_INDEX, 
-                                  configKeys.DDC_UDP_DESTINATION, 
-                                  configKeys.DDC_VITA_ENABLE, 
-                                  configKeys.DDC_STREAM_ID, 
+                                  configKeys.ENABLE,
+                                  configKeys.DDC_FREQUENCY_OFFSET,
+                                  configKeys.DDC_RATE_INDEX,
+                                  configKeys.DDC_UDP_DESTINATION,
+                                  configKeys.DDC_VITA_ENABLE,
+                                  configKeys.DDC_STREAM_ID,
                                   ]
 
     # OVERRIDE
     ##
     # \protected
-    # Queries hardware to determine the object's current configuration.  
+    # Queries hardware to determine the object's current configuration.
     def _queryConfiguration(self):
         if self.cfgCmd is not None:
-            cmd = self.cfgCmd(**{ "parent": self, 
+            cmd = self.cfgCmd(**{ "parent": self,
                                    configKeys.INDEX: self.index,
                                    "query": True,
-                                    "verbose": self.verbose, 
+                                    "verbose": self.verbose,
                                     "logFile": self.logFile })
             cmd.send( self.callback, )
             self._addLastCommandErrorInfo(cmd)
             rspInfo = cmd.getResponseInfo()
             #self.logIfVerbose("rspInfo =", rspInfo)
             if rspInfo is not None:
-                for key in [configKeys.ENABLE, 
-                            configKeys.DDC_RATE_INDEX, 
-                            configKeys.DDC_UDP_DESTINATION, 
-                            configKeys.DDC_VITA_ENABLE, 
+                for key in [configKeys.ENABLE,
+                            configKeys.DDC_RATE_INDEX,
+                            configKeys.DDC_UDP_DESTINATION,
+                            configKeys.DDC_VITA_ENABLE,
                             configKeys.DDC_STREAM_ID]:
                     self.configuration[key] = rspInfo.get(key, None)
                 freq = rspInfo.get(configKeys.DDC_FREQUENCY_OFFSET, 0)
@@ -340,28 +340,28 @@ class ndr308_1_nbddc(_nbddc):
     # OVERRIDE
     ##
     # \protected
-    # Sets the component's current configuration.  
+    # Sets the component's current configuration.
     def _setConfiguration(self, confDict):
         ret = True
-        keys = [configKeys.ENABLE, 
-                configKeys.DDC_RATE_INDEX, 
-                configKeys.DDC_UDP_DESTINATION, 
-                configKeys.DDC_VITA_ENABLE, 
-                configKeys.DDC_STREAM_ID, 
+        keys = [configKeys.ENABLE,
+                configKeys.DDC_RATE_INDEX,
+                configKeys.DDC_UDP_DESTINATION,
+                configKeys.DDC_VITA_ENABLE,
+                configKeys.DDC_STREAM_ID,
                 configKeys.DDC_FREQUENCY_OFFSET]
         if any([q in confDict for q in keys]):
             if self.cfgCmd is not None:
                 cDict = {}
                 if confDict.has_key(configKeys.DDC_FREQUENCY_OFFSET):
                     confDict[configKeys.DDC_FREQUENCY_OFFSET] = adjustFrequency(
-                                          float(confDict[configKeys.DDC_FREQUENCY_OFFSET]), 
-                                          self.frqRange, 
-                                          self.frqRes, 
+                                          float(confDict[configKeys.DDC_FREQUENCY_OFFSET]),
+                                          self.frqRange,
+                                          self.frqRes,
                                           self.frqUnits)
                 self._dictUpdate(cDict, confDict, self.configuration, keys)
-                cDict.update({ "parent": self, 
+                cDict.update({ "parent": self,
                                 configKeys.INDEX: self.index,
-                                 "verbose": self.verbose, 
+                                 "verbose": self.verbose,
                                  "logFile": self.logFile })
                 cmd = self.cfgCmd(**cDict)
                 ret &= cmd.send( self.callback, )
@@ -387,12 +387,12 @@ class ndr308_nbddc(ndr308_1_nbddc):
     dportCmd = command.nbdp
     # OVERRIDE
     validConfigurationKeywords = [
-                                  configKeys.ENABLE, 
-                                  configKeys.DDC_FREQUENCY_OFFSET, 
-                                  configKeys.DDC_RATE_INDEX, 
-                                  configKeys.DDC_UDP_DESTINATION, 
-                                  configKeys.DDC_VITA_ENABLE, 
-                                  configKeys.DDC_STREAM_ID, 
+                                  configKeys.ENABLE,
+                                  configKeys.DDC_FREQUENCY_OFFSET,
+                                  configKeys.DDC_RATE_INDEX,
+                                  configKeys.DDC_UDP_DESTINATION,
+                                  configKeys.DDC_VITA_ENABLE,
+                                  configKeys.DDC_STREAM_ID,
                                   configKeys.NBDDC_RF_INDEX,
                                   configKeys.DDC_DATA_PORT,
                                   ]
@@ -400,23 +400,23 @@ class ndr308_nbddc(ndr308_1_nbddc):
     # OVERRIDE
     ##
     # \protected
-    # Queries hardware to determine the object's current configuration.  
+    # Queries hardware to determine the object's current configuration.
     def _queryConfiguration(self):
         if self.cfgCmd is not None:
-            cmd = self.cfgCmd(**{ "parent": self, 
+            cmd = self.cfgCmd(**{ "parent": self,
                                    configKeys.INDEX: self.index,
                                    "query": True,
-                                    "verbose": self.verbose, 
+                                    "verbose": self.verbose,
                                     "logFile": self.logFile })
             cmd.send( self.callback, )
             self._addLastCommandErrorInfo(cmd)
             rspInfo = cmd.getResponseInfo()
             #self.logIfVerbose("rspInfo =", rspInfo)
             if rspInfo is not None:
-#                 for key in [configKeys.ENABLE, 
-#                             configKeys.DDC_RATE_INDEX, 
-#                             configKeys.DDC_UDP_DESTINATION, 
-#                             configKeys.DDC_VITA_ENABLE, 
+#                 for key in [configKeys.ENABLE,
+#                             configKeys.DDC_RATE_INDEX,
+#                             configKeys.DDC_UDP_DESTINATION,
+#                             configKeys.DDC_VITA_ENABLE,
 #                             configKeys.DDC_STREAM_ID]:
                 keys = [i[0] for i in self.cfgCmd.queryResponseData \
                         if i[0] != configKeys.INDEX]
@@ -426,31 +426,31 @@ class ndr308_nbddc(ndr308_1_nbddc):
                 self.configuration[configKeys.DDC_FREQUENCY_OFFSET] = None if freq is None else \
                                                                       freq * self.frqUnits
         if self.nbssCmd is not None:
-            cmd = self.nbssCmd(**{ "parent": self, 
+            cmd = self.nbssCmd(**{ "parent": self,
                                    configKeys.INDEX: self.index,
                                    "query": True,
-                                    "verbose": self.verbose, 
+                                    "verbose": self.verbose,
                                     "logFile": self.logFile })
             cmd.send( self.callback, )
             self._addLastCommandErrorInfo(cmd)
             rspInfo = cmd.getResponseInfo()
             #self.logIfVerbose("rspInfo =", rspInfo)
             if rspInfo is not None:
-                for key in [configKeys.NBDDC_RF_INDEX, 
+                for key in [configKeys.NBDDC_RF_INDEX,
                             ]:
                     self.configuration[key] = rspInfo.get(key, None)
         if self.dportCmd is not None:
-            cmd = self.dportCmd(**{ "parent": self, 
+            cmd = self.dportCmd(**{ "parent": self,
                                    configKeys.INDEX: self.index,
                                    "query": True,
-                                    "verbose": self.verbose, 
+                                    "verbose": self.verbose,
                                     "logFile": self.logFile })
             cmd.send( self.callback, )
             self._addLastCommandErrorInfo(cmd)
             rspInfo = cmd.getResponseInfo()
             #self.logIfVerbose("rspInfo =", rspInfo)
             if rspInfo is not None:
-                for key in [configKeys.DDC_DATA_PORT, 
+                for key in [configKeys.DDC_DATA_PORT,
                             ]:
                     self.configuration[key] = rspInfo.get(key, None)
         pass
@@ -458,17 +458,17 @@ class ndr308_nbddc(ndr308_1_nbddc):
     # OVERRIDE
     ##
     # \protected
-    # Sets the component's current configuration.  
+    # Sets the component's current configuration.
     def _setConfiguration(self, confDict):
         ret = True
         if self.dportCmd is not None and \
            configKeys.DDC_DATA_PORT in confDict:
             cDict = {}
-            self._dictUpdate(cDict, confDict, self.configuration, 
+            self._dictUpdate(cDict, confDict, self.configuration,
                              [configKeys.DDC_DATA_PORT])
-            cDict.update({ "parent": self, 
+            cDict.update({ "parent": self,
                             configKeys.INDEX: self.index,
-                             "verbose": self.verbose, 
+                             "verbose": self.verbose,
                              "logFile": self.logFile })
             cmd = self.dportCmd(**cDict)
             ret &= cmd.send( self.callback, )
@@ -483,11 +483,11 @@ class ndr308_nbddc(ndr308_1_nbddc):
             #print repr(self),"self.configuration =",self.configuration
             #print repr(self),"confDict =",confDict
         else:
-            keys = [configKeys.ENABLE, 
-                configKeys.DDC_RATE_INDEX, 
-                configKeys.DDC_UDP_DESTINATION, 
-                configKeys.DDC_VITA_ENABLE, 
-                configKeys.DDC_STREAM_ID, 
+            keys = [configKeys.ENABLE,
+                configKeys.DDC_RATE_INDEX,
+                configKeys.DDC_UDP_DESTINATION,
+                configKeys.DDC_VITA_ENABLE,
+                configKeys.DDC_STREAM_ID,
                 configKeys.DDC_FREQUENCY_OFFSET,
                 ]
         if any([q in confDict for q in keys]):
@@ -495,14 +495,14 @@ class ndr308_nbddc(ndr308_1_nbddc):
                 cDict = {}
                 if confDict.has_key(configKeys.DDC_FREQUENCY_OFFSET):
                     confDict[configKeys.DDC_FREQUENCY_OFFSET] = adjustFrequency(
-                                          float(confDict[configKeys.DDC_FREQUENCY_OFFSET]), 
-                                          self.frqRange, 
-                                          self.frqRes, 
+                                          float(confDict[configKeys.DDC_FREQUENCY_OFFSET]),
+                                          self.frqRange,
+                                          self.frqRes,
                                           self.frqUnits)
                 self._dictUpdate(cDict, confDict, self.configuration, keys)
-                cDict.update({ "parent": self, 
+                cDict.update({ "parent": self,
                                 configKeys.INDEX: self.index,
-                                 "verbose": self.verbose, 
+                                 "verbose": self.verbose,
                                  "logFile": self.logFile })
                 cmd = self.cfgCmd(**cDict)
                 ret &= cmd.send( self.callback, )
@@ -515,11 +515,11 @@ class ndr308_nbddc(ndr308_1_nbddc):
         if self.nbssCmd is not None and \
            configKeys.NBDDC_RF_INDEX in confDict:
             cDict = {}
-            self._dictUpdate(cDict, confDict, self.configuration, 
+            self._dictUpdate(cDict, confDict, self.configuration,
                              [configKeys.NBDDC_RF_INDEX])
-            cDict.update({ "parent": self, 
+            cDict.update({ "parent": self,
                             configKeys.INDEX: self.index,
-                             "verbose": self.verbose, 
+                             "verbose": self.verbose,
                              "logFile": self.logFile })
             cmd = self.nbssCmd(**cDict)
             ret &= cmd.send( self.callback, )
@@ -554,13 +554,13 @@ class ndr308ts_nbddc(ndr308_nbddc):
 # \internal
 # \brief WBDDC group component class specific to the NDR308.
 #
-# A WBDDC group component object maintains one WBDDC group on the radio.  
+# A WBDDC group component object maintains one WBDDC group on the radio.
 #
 class ndr308_wbddc_group(wbddc_group):
     _name = "WBDDCGroup(NDR308)"
-    ## \brief Group member index base (what number indices start at) 
+    ## \brief Group member index base (what number indices start at)
     groupMemberIndexBase = 1
-    ## \brief Number of potential group members 
+    ## \brief Number of potential group members
     numGroupMembers = 8
 
 
@@ -568,13 +568,13 @@ class ndr308_wbddc_group(wbddc_group):
 # \internal
 # \brief NBDDC group component class specific to the NDR308.
 #
-# A NBDDC group component object maintains one NBDDC group on the radio.  
+# A NBDDC group component object maintains one NBDDC group on the radio.
 #
 class ndr308_nbddc_group(nbddc_group):
     _name = "NBDDCGroup(NDR308)"
-    ## \brief Group member index base (what number indices start at) 
+    ## \brief Group member index base (what number indices start at)
     groupMemberIndexBase = 1
-    ## \brief Number of potential group members 
+    ## \brief Number of potential group members
     numGroupMembers = 32
 
 
@@ -759,7 +759,7 @@ class ndr308_1(_radio):
                          2: "VITA-49 header disabled",
                          3: "VITA-49 header enabled, fractional timestamp in sample counts",
                          }
-    
+
     def configureDipTable(self,index,sip,dip,dmac,udpBase):
         success = True
         x = [ int(i) for i in dip.split(".") ]
@@ -776,7 +776,7 @@ class ndr308_1(_radio):
             if success:
                 self.dipTable[index][i] = {"dip":dip,"dport":udpBase+i,"sport":udpBase+i,"sip":self.sipTable.get(index,None),}
         return success
-    
+
     def getDipTableEntry(self,ifIndex=None,dipIndex=None):
         if ifIndex is None:
             return self.dipTable
@@ -787,10 +787,10 @@ class ndr308_1(_radio):
 
     def disableTenGigFlowControl(self,):
         return self.setTenGigFlowControlStatus(False)
-    
+
     def enableTenGigFlowControl(self,):
         return self.setTenGigFlowControlStatus(True)
-    
+
     def setTenGigFlowControlStatus(self,enable=False):
         success = False
         if self.tgfcCmd is not None and self.tgfcCmd.settable:
@@ -798,19 +798,19 @@ class ndr308_1(_radio):
                     configKeys.CONFIG_IP: {
                         }
                 }
-            for gigEPortNum in xrange(self.gigEIndexBase, 
+            for gigEPortNum in xrange(self.gigEIndexBase,
                                       self.gigEIndexBase + self.numGigE, 1):
                 confDict[configKeys.CONFIG_IP][gigEPortNum] = {
                         configKeys.GIGE_FLOW_CONTROL: 1 if enable else 0,
                     }
             success = self.setConfiguration(confDict)
         return success
-    
+
     def getTenGigFlowControlStatus(self,):
         status = {}
         if self.tgfcCmd is not None:
             confDict = self.getConfiguration()[configKeys.CONFIG_IP]
-            for gigEPortNum in xrange(self.gigEIndexBase, 
+            for gigEPortNum in xrange(self.gigEIndexBase,
                                       self.gigEIndexBase + self.numGigE, 1):
                 if configKeys.GIGE_FLOW_CONTROL in confDict[gigEPortNum]:
                     status |= (confDict[gigEPortNum][configKeys.GIGE_FLOW_CONTROL]    == 1)
@@ -1331,7 +1331,7 @@ class ndr308_ts(ndr308):
 # \implements CyberRadioDriver.IRadio
 class ndr308a(ndr308):
     _name = "NDR308A"
-    
+
 ##
 # \brief Radio handler class for the NDR318-TS.
 #
@@ -1453,9 +1453,27 @@ class ndr308a(ndr308):
 # <tr><td>3</td><td>VITA-49 header enabled, fractional timestamp in sample counts</td></tr>
 # </table>
 #
-# \implements CyberRadioDriver.IRadio    
+# \implements CyberRadioDriver.IRadio
 class ndr318_ts(ndr308a):
     _name = "NDR318-TS"
-    
+
+class ndr318(ndr308a):
+    _name = "NDR318"
+
+class ndr308_6(ndr308):
+    _name = "NDR308-6"
+
+class ndr318a(ndr318):
+    _name = "NDR318A"
+    numTuner = 4
+    numTunerBoards = 1
+
+class ndr814(ndr308):
+    _name = "NDR814"
+
+class ndr818(ndr318):
+    _name = "NDR818"
+
+
 if __name__ == '__main__':
     pass

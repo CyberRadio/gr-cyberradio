@@ -15,8 +15,8 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
-#     All rights reserved.
+# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+#    All rights reserved.
 #
 ###############################################################
 
@@ -119,10 +119,13 @@ class _base(log._logger, configKeys.Configurable):
     #    CyberRadioDriver.transport.radio_transport). 
     # \param callback A method that the component uses to send data over the
     #   connected transport.
-    def addTransport(self,transport,callback,):
+    # \param queryConfig Whether or not to query the configuration
+    #   through hardware commands
+    def addTransport(self,transport,callback,queryConfig=True):
         self.transport = transport
         self.callback = callback
-        self.queryConfiguration()
+        if queryConfig:
+            self.queryConfiguration()
         
     ##
     # Deletes the communication transport from this component.
@@ -1066,10 +1069,12 @@ class _tx(_base):
     #    CyberRadioDriver.transport.radio_transport). 
     # \param callback A method that the component uses to send data over the
     #   connected transport.
-    def addTransport(self,transport,callback,):
+    # \param queryConfig Whether or not to query the configuration
+    #   through hardware commands
+    def addTransport(self,transport,callback,queryConfig=True):
         for i in self.toneGenDict:
-            self.toneGenDict[i].addTransport(transport, callback)
-        _base.addTransport(self, transport, callback)
+            self.toneGenDict[i].addTransport(transport, callback, queryConfig)
+        _base.addTransport(self, transport, callback, queryConfig)
         
     # OVERRIDE
     ##

@@ -23,8 +23,8 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  All
-#    rights reserved.
+# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.
+#    All rights reserved.
 #
 ###############################################################
 
@@ -56,7 +56,7 @@
 # <table>
 #    <tr><th>Radio</th><th>Name String</th></tr>
 #    <tr><td>\link CyberRadioDriver::radios::ndr301::ndr301 NDR301 \endlink</td><td>"ndr301"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radios::ndr301ptt::ndr301_ptt NDR301PTT \endlink</td><td>"ndr301ptt"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr301ptt::ndr301_ptt NDR301PTT \endlink</td><td>"ndr301-ptt"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radios::internal::ndr303::ndr303 NDR303 \endlink</td><td>"ndr303"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radios::ndr304::ndr304 NDR304 \endlink</td><td>"ndr304"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radios::ndr308::ndr308_1 NDR308-1 \endlink</td><td>"ndr308_1"</td></tr>
@@ -108,7 +108,7 @@ name = "CyberRadioDriver"
 description = "CyberRadio Solutions NDR Driver"
 ##
 # \brief Driver version number (string).
-version = "20.02.14e"
+version = "20.09.04a"
 
 # # This section of code inspects the "radio" module for radio handler
 # # objects (objects derived from _radio, thus implementing the IRadio interface)
@@ -252,13 +252,19 @@ def getRadioClass(nameString):
 # \brief Factory method for obtaining a radio handler object from the name
 # of the radio.
 #
-# The name string used to identify the radio can be any string returned
-# by getSupportedRadios(), but the check is not case-sensitive.  The name
-# string can also be "auto", in which case the method will attempt to
-# auto-detect the type of radio connected to the system.  Since radios can
-# operate over both TCP and TTY (serial) links, the user needs to supply
-# keyword arguments to indicate which devices to scan ("host" to scan over TCP,
-# and/or "dev" to scan over TTY -- see below).
+# The name string used to identify the radio can be:
+# * Any string returned by getSupportedRadios() (but the check is not case-
+#   sensitive).
+# * "auto", in which case the method will attempt to auto-detect the type of
+#   radio connected to the system.  Since radios can operate over both
+#   Ethernet and TTY (serial) links, the user needs to supply keyword
+#   arguments to indicate which devices to scan ("host" to scan over
+#   Ethernet and/or "dev" to scan over TTY -- see below).
+# * "server" or "crdd", in which case the method attempts to connect to the
+#   radio via the CyberRadio Driver Daemon (crdd).  Supply the "host" and/or
+#   "port" arguments if CRDD is not running at the default location (local
+#   host, port 65432).  Also, supply the "clientId" argument if you want
+#   crdd to log transactions for this client specially.
 #
 # This method uses keyword arguments to configure the returned radio handler
 # object.  It consumes the following keyword arguments:
@@ -278,6 +284,8 @@ def getRadioClass(nameString):
 #    on this device if requested, and automatically connect to it.
 # <li> "baudrate": For TTY-connected radios, this is the baud rate for the serial
 #    connection.  If not provided, this defaults to the standard (921600).
+# <li> "clientId": For connections through crdd, this provides an identifier
+#    that crdd can use to identify this client for logging purposes.
 # </ul>
 # If the "host" and "dev" keyword arguments are both provided, then the auto-
 # detection algorithm will try a TCP connection first before falling back to a
@@ -354,10 +362,17 @@ def getRadioObject(nameString, *args, **kwargs):
                 radioType = radioType.replace("ts", "_ts")
                 radioType = radioType.replace("-", "_")
                 radioType = radioType.replace("__", "_")
+                # NDR804-PTT weirdness: the model name has a space in it -- DA
+                if radioType == "ndr804 ptt":
+                    radioType = "ndr804-ptt"
+                # NDR301-PTT weirdness: sometimes the model name does not have the dash
+                # in it -- DA
+                if radioType == "ndr301ptt":
+                    radioType = "ndr301-ptt"
                 # NDR358 weirdness: the NDR358 Recorder mode variant can self-identify
                 # as "NDR358-5", per NH -- DA
                 if radioType == "ndr358_5":
-                    radioType = "ndr358_recorder" 
+                    radioType = "ndr358_recorder"
                 # For NDR358 models, read the radio function to identify we should use
                 # a handler for a specific variant.  Note that we don't have handlers
                 # for all potential variants yet. -- DA
@@ -375,6 +390,7 @@ def getRadioObject(nameString, *args, **kwargs):
             if radioType != "":
                 break
         if radioType != "":
+            kwargs["clientId"] = None
             obj = getRadioClass(radioType)(*args, **kwargs)
             if connMode in ["tcp", "udp", "https"]:
                 obj.connect(connMode, kwargs.get("host"), kwargs.get("port", None))
@@ -383,22 +399,23 @@ def getRadioObject(nameString, *args, **kwargs):
             return obj
         else:
             raise RuntimeError("Radio not found")
-    elif nameString == "server":
+    elif nameString == "server" or nameString == "crdd":
         connMode = "tcp"
         host = kwargs.get("host", "localhost")
-        port = kwargs.get("port", 31415)
+        port = kwargs.get("port", 65432)
         radioType = ""
         # Use a temporary radio identifier class to determine what kind of radio the
         # server is managing
         tmpHandler = None
-        # -- Try the non-JSON radio identifier first, since the handshake is just a 
+        # -- Try the non-JSON radio identifier first, since the handshake is just a
         #    line feed.  If that doesn't work, then try the JSON identifier.
         for radioIdentifierCls in [radio._radio_identifier, radio._radio_identifier_json]:
-            tmpHandler = radioIdentifierCls(verbose=False, 
-                                            logFile=None, 
+            tmpHandler = radioIdentifierCls(verbose=False,
+                                            logFile=None,
                                             timeout=kwargs.get("timeout", None))
             tmpHandler.connect(connMode, host, port)
-            if tmpHandler.isConnected() or any(["Radio is not connected" in q for q in tmpHandler.connectError]):
+            #if tmpHandler.isConnected() or any(["Radio is not connected" in q for q in tmpHandler.connectError]):
+            if tmpHandler.isConnected():
                 break
         # If the radio identifier connected, then identify the radio managed by the server
         # and establish a radio-specific handler.
@@ -410,13 +427,39 @@ def getRadioObject(nameString, *args, **kwargs):
             radioType = radioType.replace("ts", "_ts")
             radioType = radioType.replace("-", "_")
             radioType = radioType.replace("__", "_")
+            # NDR804-PTT weirdness: the model name has a space in it -- DA
+            if radioType == "ndr804 ptt":
+                radioType = "ndr804-ptt"
+            # NDR301-PTT weirdness: sometimes the model name does not have the dash
+            # in it -- DA
+            if radioType == "ndr301ptt":
+                radioType = "ndr301-ptt"
+            # NDR358 weirdness: the NDR358 Recorder mode variant can self-identify
+            # as "NDR358-5", per NH -- DA
+            if radioType == "ndr358_5":
+                radioType = "ndr358_recorder"
+            # For NDR358 models, read the radio function to identify we should use
+            # a handler for a specific variant.  Note that we don't have handlers
+            # for all potential variants yet. -- DA
+            if radioType == "ndr358":
+                radioFn = tmpHandler.getConfigurationByKeys(configKeys.RADIO_FUNCTION)
+                # radioFn == 0 ==> Receiver mode
+                # radioFn == 1 ==> Fast Scan mode
+                if radioFn == 2:
+                    radioType = "ndr358_coherent"
+                # radioFn == 3 ==> Resampler mode
+                elif radioFn == 4:
+                    radioType = "ndr358_recorder"
+                # radioFn == 5 ==> ALT_RX1 mode
             tmpHandler.disconnect()
         if radioType != "":
             obj = getRadioClass(radioType)(*args, **kwargs)
-            # Make sure that the connection mode used for the server is in 
+            # Make sure that the connection mode used for the server is in
             # the allowed connection mode list for the radio handler
             if not obj.isConnectionModeSupported(connMode):
                 obj.connectionModes.append(connMode)
+            # Set crdd flag
+            obj.isCrddConnection = True
             # Connect to the new handler
             obj.connect(connMode, host, port)
             return obj
@@ -426,6 +469,7 @@ def getRadioObject(nameString, *args, **kwargs):
             else:
                 raise RuntimeError("Radio not found")
     else:
+        kwargs["clientId"] = None
         obj = getRadioClass(nameString)(*args, **kwargs)
         if kwargs.get("host", None) and any(obj.isConnectionModeSupported(i) for i in ("https","tcp","udp")):
             hostname = kwargs["host"]
@@ -1069,9 +1113,13 @@ class IRadio(object):
     #
     # \param checkTime Whether to verify that the time was set properly.
     # \param useGpsTime Whether to use the GPS time rather than the system time.
+    # \param newPpsTime A specific UTC date/time to set the radio's clock to
+    #     (string).  This method supports several formats for the time string,
+    #     including YYYY-MM-DD HH:MM:SS and ISO 8601.  Set this to None if you
+    #     want to use the current system/GPS time.
     # \return True if successful, False if the radio does not support
     # PPS edge detection and time setting or if the command was unsuccessful.
-    def setTimeNextPps(self,checkTime=False,useGpsTime=False):
+    def setTimeNextPps(self,checkTime=False,useGpsTime=False,newPpsTime=None):
         raise NotImplementedError
 
     ##
@@ -1223,6 +1271,14 @@ class IRadio(object):
         raise NotImplementedError
 
     ##
+    # \brief Gets the current bandwith of the given tuner.
+    # \param tuner Tuner index number
+    # \returns The tuner bandwidth, in Hz
+    # \throws ValueError if the tuner does not exist on the radio
+    def getTunerBandwidth(self, tuner):
+        raise NotImplementedError
+
+    ##
     # \brief Gets the name of the radio.
     #
     # \return The name, as a string.
@@ -1308,7 +1364,16 @@ class IRadio(object):
     @classmethod
     def getTunerIfFilterList(cls):
         raise NotImplementedError
-    
+
+    ##
+    # \brief Gets whether or not the radio supports setting tuner
+    #     bandwidth
+    #
+    # \return True if the bandwidth is settable, False otherwise
+    @classmethod
+    def isTunerBandwidthSettable(cls):
+        raise NotImplementedError
+
     ##
     # \brief Gets the number of wideband DDCs on the radio.
     #

@@ -52,7 +52,7 @@ fi
 # -- CMake project: Both the "%cmake" and "%{__make}" steps
 # -- Autotools project: TBD
 # -- Python project: None (the install step takes care of this)
-%cmake . -DPACKAGE_VERSION=RPM_PKG_VERSION
+cmake . -DPACKAGE_VERSION=RPM_PKG_VERSION -DCMAKE_INSTALL_PREFIX=/usr
 %{__make} %{?_smp_mflags}
 
 %install
