@@ -69,4 +69,3 @@ namespace gr {
 } // namespace gr
 
 #endif /* INCLUDED_CYBERRADIO_VITA_UDP_RX_H */
-

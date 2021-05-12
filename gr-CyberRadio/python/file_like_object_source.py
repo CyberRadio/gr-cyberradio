@@ -69,7 +69,7 @@ class file_like_object_source(gr.sync_block):
         if len(self.buffer)>0:
             noutput_items = len(output_items[0])
             noutput_items_processed = min(noutput_items, len(self.buffer))
-            for i in xrange(0, noutput_items_processed, 1):
+            for i in range(0, noutput_items_processed, 1):
                 output_items[0][i] = numpy.int8(ord(self.buffer[i]))
             self.buffer = self.buffer[noutput_items_processed:]
         else:

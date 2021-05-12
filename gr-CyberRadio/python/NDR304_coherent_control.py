@@ -96,13 +96,13 @@ class NDR304_coherent_control(gr.basic_block):
         return len(output_items[0])
     
     def _set_configuration(self, confDict, printJson=True):
-        print((" _set_configuration ").center(80,'~'))
+        print(((" _set_configuration ").center(80,'~')))
         if printJson:
-            print( json.dumps(confDict, sort_keys=True, indent=4) )
+            print(( json.dumps(confDict, sort_keys=True, indent=4) ))
         self.radio.setConfiguration(confDict)
     
     def _set_radio_configuration(self,):
-        print((" _set_radio_configuration ").center(80,'~'))
+        print(((" _set_radio_configuration ").center(80,'~')))
         self.radio = crd.ndr304(verbose=self.radio_verbose)
         self.radio.connect("tty",self.radio_device,self.radio_baudrate)
         
@@ -119,7 +119,7 @@ class NDR304_coherent_control(gr.basic_block):
         self._set_configuration(conf)
     
     def _set_tuner_configuration(self, index, freq, atten):
-        print((" _set_tuner_configuration ").center(80,'~'))
+        print(((" _set_tuner_configuration ").center(80,'~')))
         conf = { crd.configKeys.CONFIG_TUNER: 
                     { index: 
                         { crd.configKeys.TUNER_FREQUENCY:freq, 
@@ -139,7 +139,7 @@ class NDR304_coherent_control(gr.basic_block):
             self.radio.sendCommand("COH %d\n"%mode)
     
     def _set_ddc_configuration(self, index, enable=False, rateIndex=0, freq=0.0, vitaLevel=0, udpPort=0):
-        print((" _set_ddc_configuration ").center(80,'~'))
+        print(((" _set_ddc_configuration ").center(80,'~')))
         conf = { crd.configKeys.CONFIG_DDC: 
                     { crd.configKeys.CONFIG_WBDDC: 
                         { index: 
@@ -185,75 +185,75 @@ class NDR304_coherent_control(gr.basic_block):
 
 ##############################  radio Parameters  ##############################
     def update_radio(self, disable=False,):
-        print((" update_radio(disable=%s) "%(disable)).center(80,'~'))
+        print(((" update_radio(disable=%s) "%(disable)).center(80,'~')))
         if not self.init:
             self._set_radio_configuration()
 
     def set_radio_device(self, radio_device):
-        print((" set_radio_device ").center(80,'~'))
+        print(((" set_radio_device ").center(80,'~')))
         if self.radio_device != radio_device:
-            print("radio_device: %r -> %r"%(self.radio_device, radio_device))
+            print(("radio_device: %r -> %r"%(self.radio_device, radio_device)))
             self.radio_device = radio_device
             self.update_radio()
 
     def set_radio_baudrate(self, radio_baudrate):
-        print((" set_radio_baudrate ").center(80,'~'))
+        print(((" set_radio_baudrate ").center(80,'~')))
         if self.radio_baudrate != radio_baudrate:
-            print("radio_baudrate: %r -> %r"%(self.radio_baudrate, radio_baudrate))
+            print(("radio_baudrate: %r -> %r"%(self.radio_baudrate, radio_baudrate)))
             self.radio_baudrate = radio_baudrate
             self.update_radio()
 
     def set_radio_verbose(self, radio_verbose):
-        print((" set_radio_verbose ").center(80,'~'))
+        print(((" set_radio_verbose ").center(80,'~')))
         if self.radio_verbose != radio_verbose:
-            print("radio_verbose: %r -> %r"%(self.radio_verbose, radio_verbose))
+            print(("radio_verbose: %r -> %r"%(self.radio_verbose, radio_verbose)))
             self.radio_verbose = radio_verbose
             self.update_radio()
 
     def set_radio_interface(self, radio_interface):
-        print((" set_radio_interface ").center(80,'~'))
+        print(((" set_radio_interface ").center(80,'~')))
         if self.radio_interface != radio_interface:
-            print("radio_interface: %r -> %r"%(self.radio_interface, radio_interface))
+            print(("radio_interface: %r -> %r"%(self.radio_interface, radio_interface)))
             self.radio_interface = radio_interface
             self.update_radio()
 
 ##############################  tuner Parameters  ##############################
     def update_tuner(self, disable=False,):
-        print((" update_tuner(disable=%s) "%(disable)).center(80,'~'))
+        print(((" update_tuner(disable=%s) "%(disable)).center(80,'~')))
         if not self.init:
             for i in range(6):
                 tunerIndex = i+1
-                print tunerIndex,i,self.tuner_freq,self.tuner_coherent,(len(self.tuner_freq)<tunerIndex),(self.tuner_coherent or (len(self.tuner_freq)<tunerIndex))
+                print(tunerIndex,i,self.tuner_freq,self.tuner_coherent,(len(self.tuner_freq)<tunerIndex),(self.tuner_coherent or (len(self.tuner_freq)<tunerIndex)))
                 freq = self.tuner_freq[0] if (self.tuner_coherent or (len(self.tuner_freq)<tunerIndex)) else self.tuner_freq[i]
                 att = self.tuner_atten_dict[i] if len(self.tuner_atten_dict)>=tunerIndex else self.tuner_atten_dict[0]
                 self._set_tuner_configuration(tunerIndex, freq, att)
                 
 
     def set_tuner_freq(self, tuner_freq):
-        print((" set_tuner_freq ").center(80,'~'))
+        print(((" set_tuner_freq ").center(80,'~')))
         if self.tuner_freq != tuner_freq:
-            print("tuner_freq: %r -> %r"%(self.tuner_freq, tuner_freq))
+            print(("tuner_freq: %r -> %r"%(self.tuner_freq, tuner_freq)))
             self.tuner_freq = tuner_freq
             self.update_tuner()
 
     def set_tuner_atten_dict(self, tuner_atten_dict):
-        print((" set_tuner_atten_dict ").center(80,'~'))
+        print(((" set_tuner_atten_dict ").center(80,'~')))
         if self.tuner_atten_dict != tuner_atten_dict:
-            print("tuner_atten_dict: %r -> %r"%(self.tuner_atten_dict, tuner_atten_dict))
+            print(("tuner_atten_dict: %r -> %r"%(self.tuner_atten_dict, tuner_atten_dict)))
             self.tuner_atten_dict = tuner_atten_dict
             self.update_tuner()
 
     def set_tuner_coherent(self, tuner_coherent):
-        print((" set_tuner_coherent ").center(80,'~'))
+        print(((" set_tuner_coherent ").center(80,'~')))
         if self.tuner_coherent != tuner_coherent:
-            print("tuner_coherent: %r -> %r"%(self.tuner_coherent, tuner_coherent))
+            print(("tuner_coherent: %r -> %r"%(self.tuner_coherent, tuner_coherent)))
             self.tuner_coherent = tuner_coherent
             self._set_coh_mode()
             self.update_tuner()
 
 ##############################   ddc Parameters   ##############################
     def update_ddc(self, disable=False, index=None):
-        print((" update_ddc(disable=%s) "%(disable)).center(80,'~'))
+        print(((" update_ddc(disable=%s) "%(disable)).center(80,'~')))
         if not self.init:
             self.radio.sendCommand("WBGE 1, 0\n")
             for i in range(6):
@@ -270,44 +270,44 @@ class NDR304_coherent_control(gr.basic_block):
                 self.radio.sendCommand("WBGE 1, 1\n")
 
     def set_ddc_enable(self, ddc_enable):
-        print((" set_ddc_enable ").center(80,'~'))
+        print(((" set_ddc_enable ").center(80,'~')))
         if self.ddc_enable != ddc_enable:
-            print("ddc_enable: %r -> %r"%(self.ddc_enable, ddc_enable))
+            print(("ddc_enable: %r -> %r"%(self.ddc_enable, ddc_enable)))
             self.ddc_enable = ddc_enable
             self.update_ddc()
 
     def set_ddc_vita49_level(self, ddc_vita49_level):
-        print((" set_ddc_vita49_level ").center(80,'~'))
+        print(((" set_ddc_vita49_level ").center(80,'~')))
         if self.ddc_vita49_level != ddc_vita49_level:
-            print("ddc_vita49_level: %r -> %r"%(self.ddc_vita49_level, ddc_vita49_level))
+            print(("ddc_vita49_level: %r -> %r"%(self.ddc_vita49_level, ddc_vita49_level)))
             self.ddc_vita49_level = ddc_vita49_level
             self.update_ddc()
 
     def set_ddc_freq(self, ddc_freq):
-        print((" set_ddc_freq ").center(80,'~'))
+        print(((" set_ddc_freq ").center(80,'~')))
         if self.ddc_freq != ddc_freq:
-            print("ddc_freq: %r -> %r"%(self.ddc_freq, ddc_freq))
+            print(("ddc_freq: %r -> %r"%(self.ddc_freq, ddc_freq)))
             self.ddc_freq = ddc_freq
             self.update_ddc()
 
     def set_ddc_udp_port(self, ddc_udp_port):
-        print((" set_ddc_udp_port ").center(80,'~'))
+        print(((" set_ddc_udp_port ").center(80,'~')))
         if self.ddc_udp_port != ddc_udp_port:
-            print("ddc_udp_port: %r -> %r"%(self.ddc_udp_port, ddc_udp_port))
+            print(("ddc_udp_port: %r -> %r"%(self.ddc_udp_port, ddc_udp_port)))
             self.ddc_udp_port = ddc_udp_port
             self.update_ddc()
 
     def set_ddc_coherent(self, ddc_coherent):
-        print((" set_ddc_coherent ").center(80,'~'))
+        print(((" set_ddc_coherent ").center(80,'~')))
         if self.ddc_coherent != ddc_coherent:
-            print("ddc_coherent: %r -> %r"%(self.ddc_coherent, ddc_coherent))
+            print(("ddc_coherent: %r -> %r"%(self.ddc_coherent, ddc_coherent)))
             self.ddc_coherent = ddc_coherent
             self.update_ddc()
 
     def set_ddc_group(self, ddc_group):
-        print((" set_ddc_group ").center(80,'~'))
+        print(((" set_ddc_group ").center(80,'~')))
         if self.ddc_group != ddc_group:
-            print("ddc_group: %r -> %r"%(self.ddc_group, ddc_group))
+            print(("ddc_group: %r -> %r"%(self.ddc_group, ddc_group)))
             self.ddc_group = ddc_group
             self.update_ddc()
 

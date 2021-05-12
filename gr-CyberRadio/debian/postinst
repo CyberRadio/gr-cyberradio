@@ -21,6 +21,11 @@ chmod 777 /public /public/ndrDemoGui
 # delete previously compiled *.pyc files in order to force
 # a recompile.
 rm -f $(find /usr/lib/python2.7/dist-packages/CyberRadio -name '*.pyc')
+rm -f $(find /usr/lib/python3/dist-packages/CyberRadio -name '*.pyc')
+
+# make sure cache files are cleared so gnuradio is forced to read new modules
+echo "checking for and clearing gnuradio cache files."
+rm -f $(find /home/*/.cache/grc_gnuradio/ -name '*.json')
 
 for TEMPLATE in `find /usr/{local/,}lib -name "flow_graph.tmpl"`
 do
@@ -80,5 +85,5 @@ if [ -f /etc/sysctl.d/uhd-usrp2.conf ]
 then
 	mv -v /etc/sysctl.d/uhd-usrp2.conf /etc/sysctl.d/90-uhd-usrp2.conf
 fi
-sysctl -p /etc/sysctl.d/98-gr-cyberradio.conf
+#sysctl -p /etc/sysctl.d/98-gr-cyberradio.conf
 

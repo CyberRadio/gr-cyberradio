@@ -9,7 +9,7 @@ from gnuradio import blocks
 from gnuradio import filter
 from gnuradio import gr
 from gnuradio.filter import firdes
-from grc_gnuradio import blks2 as grc_blks2
+from gnuradio import blocks as grc_blks2
 from numpy import pi,round
 import math
 import threading
@@ -175,7 +175,7 @@ class sinad_calc_block(gr.hier_block2):
 
     def set_fs(self, fs):
         if fs != self.fs:
-            print "Setting fs: old=%r, new=%r"%(self.fs,fs)
+            print("Setting fs: old=%r, new=%r"%(self.fs,fs))
             self.fs = fs
             self.set_estimatedFrequency(round( self.fs*self.freqEstQuery ))
             self.set_rotation(-2*pi*self.rotationFreq/self.fs)

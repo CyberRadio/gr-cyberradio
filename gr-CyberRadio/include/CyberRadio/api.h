@@ -25,9 +25,9 @@
 #include <gnuradio/attributes.h>
 
 #ifdef gnuradio_CyberRadio_EXPORTS
-#  define CYBERRADIO_API __GR_ATTR_EXPORT
+#define CYBERRADIO_API __GR_ATTR_EXPORT
 #else
-#  define CYBERRADIO_API __GR_ATTR_IMPORT
+#define CYBERRADIO_API __GR_ATTR_IMPORT
 #endif
 
 #endif /* INCLUDED_CYBERRADIO_API_H */

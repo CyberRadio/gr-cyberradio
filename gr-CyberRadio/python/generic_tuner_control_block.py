@@ -26,7 +26,7 @@ import logging
 import numpy
 
 import CyberRadioDriver as crd
-from generic_radio_control_block import generic_radio_control_block
+from .generic_radio_control_block import generic_radio_control_block
 
 
 class generic_tuner_control_block(generic_radio_control_block, gr.basic_block):
@@ -47,8 +47,7 @@ class generic_tuner_control_block(generic_radio_control_block, gr.basic_block):
 					group=None,
 					otherArgs={},
 					debug=False, 
-					autoStart = True, 
-					 ):
+					autoStart = True):
 		self._configParams = {"freq": self.set_freq, 
 						"attenuation": self.set_attenuation, 
 						"ifFilter": self.set_filter, 

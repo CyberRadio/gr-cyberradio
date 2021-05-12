@@ -37,7 +37,7 @@ class safe_audio_sink(gr.hier_block2):
         self.ok_to_block = bool(ok_to_block)
         self.samp_rate = int(samp_rate)
         try:
-            print "Using a sample rate of ",self.samp_rate
+            print("Using a sample rate of ",self.samp_rate)
             self.audioSink = audio.sink(self.samp_rate, self.device_name, self.ok_to_block)
         except:
             self.audioSink = None

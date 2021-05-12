@@ -24,7 +24,7 @@ import json
 import numpy
 
 import CyberRadioDriver as crd
-from generic_radio_control_block import generic_radio_control_block
+from .generic_radio_control_block import generic_radio_control_block
 
 
 class generic_group_control_block(generic_radio_control_block, gr.basic_block):

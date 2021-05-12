@@ -9,7 +9,7 @@ Section: devel
 Priority: extra
 Maintainer: CyberRadio Solutions, Inc. <sales@cyberradiosolutions.com>
 Build-Depends: debhelper (>= 8.0.0), 
-               python (>= 2.7), 
+               python3, 
                libcyberradio, 
                gnuradio-dev | gnuradio, 
                libpcap-dev, 
@@ -20,8 +20,8 @@ X-Python-Version: >= 2.7
 
 Package: DEB_PKG_NAME
 Architecture: DEB_PKG_ARCH
-Depends: python-cyberradiodriver, 
-         python-netifaces, 
+Depends: python-cyberradiodriver | python3-cyberradiodriver, 
+         python3-netifaces, 
          ${shlibs:Depends}
 Description: GNU Radio Blocks for CyberRadio Solutions, Inc. Radios
  This package provides blocks for controlling CyberRadio Solutions, Inc. 

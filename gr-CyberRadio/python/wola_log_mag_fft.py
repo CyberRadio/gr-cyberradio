@@ -68,7 +68,7 @@ class wola_log_mag_fft(gr.hier_block2):
         self.nullSink_small = blocks.null_sink(gr.sizeof_float*fftSize)
         # self.nullSink_large = blocks.null_sink(gr.sizeof_float*inputSize)
         self.multiplyConstant = []
-        for n in xrange(self.N):
+        for n in range(self.N):
             self.multiplyConstant.append(blocks.multiply_const_vcc((fftWindow[n*fftSize:(n+1)*fftSize]/fftWindowScale)))
         self.logMagFFT_wola = CyberRadio.log_mag_fft(
             numInputs=1,
@@ -116,7 +116,7 @@ class wola_log_mag_fft(gr.hier_block2):
         self.connect((self.logMagFFT_wola, 1), (self.nullSink_wola, 1))
         self.connect((self.logMagFFT_wola, 0), (self, 0))
         self.connect((self.logMagFFT_wola, 1), (self, 1))
-        for n in xrange(self.N):
+        for n in range(self.N):
             self.connect((self.vecToStreams, n), (self.multiplyConstant[n], 0))
             self.connect((self.multiplyConstant[n], 0), (self.adder, n))
         # self.connect((self, 0), (self.logMagFFT_large, 0))
@@ -164,7 +164,7 @@ class wola_log_mag_fft(gr.hier_block2):
             self.set_inputSize(self.fftSize*self.N)
             self.set_fftWindowScale(self.fftWindowEnergy/self.fftSize)
             for i,j in enumerate(self.multiplyConstant):
-                print("set_fftSize for multiplier %d"%(i,))
+                print(("set_fftSize for multiplier %d"%(i,)))
                 j.set_k((self.fftWindow[i*self.fftSize:(i+1)*self.fftSize]/self.fftWindowScale))
 
     def get_N(self):
@@ -199,7 +199,7 @@ class wola_log_mag_fft(gr.hier_block2):
         with self._lock:
             self.fftWindow = fftWindow
             for i,j in enumerate(self.multiplyConstant):
-                print("set_fftWindow for multiplier %d"%(i,))
+                print(("set_fftWindow for multiplier %d"%(i,)))
                 j.set_k((self.fftWindow[i*self.fftSize:(i+1)*self.fftSize]/self.fftWindowScale))
 
     def get_fftWindowEnergy(self):
@@ -217,7 +217,7 @@ class wola_log_mag_fft(gr.hier_block2):
         with self._lock:
             self.fftWindowScale = fftWindowScale
             for i,j in enumerate(self.multiplyConstant):
-                print("set_fftWindowScale for multiplier %d"%(i,))
+                print(("set_fftWindowScale for multiplier %d"%(i,)))
                 j.set_k((self.fftWindow[i*self.fftSize:(i+1)*self.fftSize]/self.fftWindowScale))
 
     def get_avgAlpha(self):

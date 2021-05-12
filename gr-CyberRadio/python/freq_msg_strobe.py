@@ -26,7 +26,7 @@ from gnuradio import gr
 from gnuradio.gr import pmt
 import threading
 
-from generic_radio_control_block import generic_radio_control_block
+from .generic_radio_control_block import generic_radio_control_block
 
 
 class freq_msg_strobe(generic_radio_control_block,gr.basic_block):
@@ -162,7 +162,7 @@ class freq_msg_strobe(generic_radio_control_block,gr.basic_block):
 			self._currentFreq = self._freqList.pop(0)
 			self.sendFreqMsg(self._currentFreq)
 			numSleeps = int( numpy.round( float(self.dwell)/0.001 ) )
-			for i in xrange(numSleeps):
+			for i in range(numSleeps):
 				time.sleep(0.001)
 				if not self._keepScanning:
 					break

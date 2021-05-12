@@ -217,6 +217,18 @@ namespace gr {
 			this->rxVec[2].iov_base = new char[8];
 			this->rxVec[2].iov_len = 8;
 
+		} else if ( d_radio_type.compare("ndr324") == 0 ) {
+			this->set_iqSwap(false);
+			this->set_byteSwap(true);
+
+			this->d_samples_per_frame = 2048;
+
+			this->rxVec[0].iov_base = new char[ 4*7 ];
+			this->rxVec[0].iov_len = 4*7;
+
+			this->rxVec[2].iov_base = new char[ 4 ];
+			this->rxVec[2].iov_len = 4;
+
 		} else {
 			perror("Unknown radio type");
 			throw "Unknown radio type";

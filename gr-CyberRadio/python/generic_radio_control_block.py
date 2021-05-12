@@ -136,9 +136,9 @@ class generic_radio_control_block(gr.basic_block):
 			self.radioObj = crd.getRadioObject(self.radioParam["type"])
 		if not self.radioObj.isConnected():
 			self.log.debug("Connecting to radio...")
-			if all( self.radioParam.has_key(i) for i in ("host","port") ):
+			if all( i in self.radioParam for i in ("host","port") ):
 				self.radioObj.connect( "tcp", self.radioParam["host"], self.radioParam["port"] )
-			elif all( self.radioParam.has_key(i) for i in ("device","baudrate") ):
+			elif all( i in self.radioParam for i in ("device","baudrate") ):
 				self.radioObj.connect( "tty", self.radioParam["device"], self.radioParam["baudrate"] )
 			else:
 				raise Exception("%s :: Can't connect to radio"%(self._name))
@@ -222,11 +222,11 @@ class generic_radio_control_block(gr.basic_block):
 			self._sendPmtPair(self.msgPort_status, msgId, json.dumps(info))
 		elif isinstance( content.get("config",None), dict ):
 			setList = []
-			for k,v in content.get("config",{}).iteritems():
+			for k,v in content.get("config",{}).items():
 				k = str(k)
 				try:
 					self.log.debug("Can I use parameter %r (%r)?"%(k,v,))
-					if self._configParams.has_key(k):
+					if k in self._configParams:
 						self.log.debug("Yes I can!")
 						self._configParams[k](v)
 						setList.append(k)

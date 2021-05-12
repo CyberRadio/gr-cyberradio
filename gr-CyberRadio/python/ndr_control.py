@@ -30,7 +30,7 @@ import CyberRadioDriver.configKeys as cfgKeys
 import json
 
 def printJson(obj):
-    print json.dumps(obj, indent=4, sort_keys=True)
+    print(json.dumps(obj, indent=4, sort_keys=True))
 
 class ndr_control(gr.hier_block2):
     configuring = False
@@ -131,31 +131,31 @@ class ndr_control(gr.hier_block2):
         self.fileLikeObjectSource = CyberRadio.file_like_object_source()
         self.connect((self.fileLikeObjectSource, 0), (self, 0))
         
-        print("radioType = %r (%s)"%(radioType,type(radioType)))
-        print("hostname = %r (%s)"%(hostname,type(hostname)))
-        print("verbose = %r (%s)"%(verbose,type(verbose)))
-        print("interface = %r (%s)"%(interface,type(interface)))
-        print("dataPort = %r (%s)"%(dataPort,type(dataPort)))
-        print("tunerFreq = %r (%s)"%(tunerFreq,type(tunerFreq)))
-        print("tunerAtten = %r (%s)"%(tunerAtten,type(tunerAtten)))
-        print("tunerIndex = %r (%s)"%(tunerIndex,type(tunerIndex)))
-        print("calFrequency = %r (%s)"%(calFrequency,type(calFrequency)))
-        print("wbddcEnable = %r (%s)"%(wbddcEnable,type(wbddcEnable)))
-        print("wbddcVitaLevel = %r (%s)"%(wbddcVitaLevel,type(wbddcVitaLevel)))
-        print("wbddcRate = %r (%s)"%(wbddcRate,type(wbddcRate)))
-        print("wbddcFormat = %r (%s)"%(wbddcFormat,type(wbddcFormat)))
-        print("wbddcFreq = %r (%s)"%(wbddcFreq,type(wbddcFreq)))
-        print("wbddcPort = %r (%s)"%(wbddcPort,type(wbddcPort)))
-        print("wbddcIndex = %r (%s)"%(wbddcIndex,type(wbddcIndex)))
-        print("specRate = %r (%s)"%(specRate,type(specRate)))
-        print("nbddcEnable = %r (%s)"%(nbddcEnable,type(nbddcEnable)))
-        print("nbddcVitaLevel = %r (%s)"%(nbddcVitaLevel,type(nbddcVitaLevel)))
-        print("nbddcRate = %r (%s)"%(nbddcRate,type(nbddcRate)))
-        print("nbddcFreq = %r (%s)"%(nbddcFreq,type(nbddcFreq)))
-        print("nbddcPort = %r (%s)"%(nbddcPort,type(nbddcPort)))
-        print("nbddcIndex = %r (%s)"%(nbddcIndex,type(nbddcIndex)))
-        print("otherNbddcEnable = %r (%s)"%(otherNbddcEnable,type(otherNbddcEnable)))
-        print("otherNbddcPort = %r (%s)"%(otherNbddcPort,type(otherNbddcPort)))
+        print(("radioType = %r (%s)"%(radioType,type(radioType))))
+        print(("hostname = %r (%s)"%(hostname,type(hostname))))
+        print(("verbose = %r (%s)"%(verbose,type(verbose))))
+        print(("interface = %r (%s)"%(interface,type(interface))))
+        print(("dataPort = %r (%s)"%(dataPort,type(dataPort))))
+        print(("tunerFreq = %r (%s)"%(tunerFreq,type(tunerFreq))))
+        print(("tunerAtten = %r (%s)"%(tunerAtten,type(tunerAtten))))
+        print(("tunerIndex = %r (%s)"%(tunerIndex,type(tunerIndex))))
+        print(("calFrequency = %r (%s)"%(calFrequency,type(calFrequency))))
+        print(("wbddcEnable = %r (%s)"%(wbddcEnable,type(wbddcEnable))))
+        print(("wbddcVitaLevel = %r (%s)"%(wbddcVitaLevel,type(wbddcVitaLevel))))
+        print(("wbddcRate = %r (%s)"%(wbddcRate,type(wbddcRate))))
+        print(("wbddcFormat = %r (%s)"%(wbddcFormat,type(wbddcFormat))))
+        print(("wbddcFreq = %r (%s)"%(wbddcFreq,type(wbddcFreq))))
+        print(("wbddcPort = %r (%s)"%(wbddcPort,type(wbddcPort))))
+        print(("wbddcIndex = %r (%s)"%(wbddcIndex,type(wbddcIndex))))
+        print(("specRate = %r (%s)"%(specRate,type(specRate))))
+        print(("nbddcEnable = %r (%s)"%(nbddcEnable,type(nbddcEnable))))
+        print(("nbddcVitaLevel = %r (%s)"%(nbddcVitaLevel,type(nbddcVitaLevel))))
+        print(("nbddcRate = %r (%s)"%(nbddcRate,type(nbddcRate))))
+        print(("nbddcFreq = %r (%s)"%(nbddcFreq,type(nbddcFreq))))
+        print(("nbddcPort = %r (%s)"%(nbddcPort,type(nbddcPort))))
+        print(("nbddcIndex = %r (%s)"%(nbddcIndex,type(nbddcIndex))))
+        print(("otherNbddcEnable = %r (%s)"%(otherNbddcEnable,type(otherNbddcEnable))))
+        print(("otherNbddcPort = %r (%s)"%(otherNbddcPort,type(otherNbddcPort))))
         
         self.init = True
         self.set_radioType( radioType )
@@ -216,7 +216,7 @@ class ndr_control(gr.hier_block2):
         self.updateCal()
     
     def stop(self,):
-        print "STOP"
+        print("STOP")
         self.disableNbddc(True)
         self.disableWbddc(True)
 
@@ -233,17 +233,17 @@ class ndr_control(gr.hier_block2):
     
     def set_radioType(self, radioType):
         if radioType != self.radioType:
-            print "Changing radioType from %r -> %r"%(self.radioType,radioType)
+            print("Changing radioType from %r -> %r"%(self.radioType,radioType))
             self.radioType = radioType
 
     def set_hostname(self, hostname):
         if hostname != self.hostname:
-            print "Changing hostname from %r -> %r"%(self.hostname,hostname)
+            print("Changing hostname from %r -> %r"%(self.hostname,hostname))
             self.hostname = hostname
 
     def set_verbose(self, verbose):
         if verbose != self.verbose:
-            print "Changing verbose from %r -> %r"%(self.verbose,verbose)
+            print("Changing verbose from %r -> %r"%(self.verbose,verbose))
             self.verbose = verbose
 
     #~ def set_interface(self, interface):
@@ -259,7 +259,7 @@ class ndr_control(gr.hier_block2):
 
 
     def set_dataPort(self, interface, dataPort):
-        print "set_dataPort(%s, %s)"%(interface, dataPort,)
+        print("set_dataPort(%s, %s)"%(interface, dataPort,))
         self.interface = interface
         self.dataPort = dataPort
         self.destMac,self.destIp = crd.getInterfaceAddresses(interface)
@@ -285,76 +285,76 @@ class ndr_control(gr.hier_block2):
 
     def set_tunerIndex(self, tunerIndex):
         if tunerIndex != self.tunerIndex:
-            print "Changing tunerIndex from %r -> %r"%(self.tunerIndex,tunerIndex)
+            print("Changing tunerIndex from %r -> %r"%(self.tunerIndex,tunerIndex))
             self.tunerIndex = tunerIndex
             self.updateTuner()
             self.updateNbddc()
 
     def set_tunerFreq(self, tunerFreq):
         if tunerFreq != self.tunerFreq:
-            print "Changing tunerFreq from %r -> %r"%(self.tunerFreq,tunerFreq)
+            print("Changing tunerFreq from %r -> %r"%(self.tunerFreq,tunerFreq))
             self.tunerFreq = tunerFreq
             self.updateTuner(updateFreq=True)
 
     def set_tunerAtten(self, tunerAtten):
         if tunerAtten != self.tunerAtten:
-            print "Changing tunerAtten from %r -> %r"%(self.tunerAtten,tunerAtten)
+            print("Changing tunerAtten from %r -> %r"%(self.tunerAtten,tunerAtten))
             self.tunerAtten = tunerAtten
             self.updateTuner(updateAtten=True)
 
     def set_tunerFilter(self, tunerFilter):
         if tunerFilter != self.tunerFilter:
-            print "Changing tunerFilter from %r -> %r"%(self.tunerFilter,tunerFilter)
+            print("Changing tunerFilter from %r -> %r"%(self.tunerFilter,tunerFilter))
             self.tunerFilter = tunerFilter
             self.updateTuner(updateFilter=True)
     
     def set_calFrequency(self, calFrequency):
         if calFrequency != self.calFrequency:
-            print "Changing calFrequency from %r -> %r"%(self.calFrequency,calFrequency)
+            print("Changing calFrequency from %r -> %r"%(self.calFrequency,calFrequency))
             self.calFrequency = calFrequency
             self.updateCal()
 
     def set_wbddcIndex(self, wbddcIndex):
         if wbddcIndex != self.wbddcIndex:
-            print "Changing wbddcIndex from %r -> %r"%(self.wbddcIndex,wbddcIndex)
+            print("Changing wbddcIndex from %r -> %r"%(self.wbddcIndex,wbddcIndex))
             self.disableWbddc()
             self.wbddcIndex = wbddcIndex
             self.updateWbddc()
 
     def set_wbddcEnable(self, wbddcEnable):
         if wbddcEnable != self.wbddcEnable:
-            print "Changing wbddcEnable from %r -> %r"%(self.wbddcEnable,wbddcEnable)
+            print("Changing wbddcEnable from %r -> %r"%(self.wbddcEnable,wbddcEnable))
             self.wbddcEnable = wbddcEnable
             self.updateWbddc()
 
     def set_wbddcVitaLevel(self, wbddcVitaLevel):
         if wbddcVitaLevel != self.wbddcVitaLevel:
-            print "Changing wbddcVitaLevel from %r -> %r"%(self.wbddcVitaLevel,wbddcVitaLevel)
+            print("Changing wbddcVitaLevel from %r -> %r"%(self.wbddcVitaLevel,wbddcVitaLevel))
             self.wbddcVitaLevel = wbddcVitaLevel
             self.updateWbddc()
 
     def set_wbddcRate(self, wbddcRate):
         if wbddcRate != self.wbddcRate:
-            print "Changing wbddcRate from %r -> %r"%(self.wbddcRate,wbddcRate)
+            print("Changing wbddcRate from %r -> %r"%(self.wbddcRate,wbddcRate))
             self.wbddcRate = wbddcRate
             self.updateWbddc()
 
     def set_wbddcFormat(self, wbddcFormat):
         if wbddcFormat != self.wbddcFormat:
-            print "Changing wbddcFormat from %r -> %r"%(self.wbddcFormat,wbddcFormat)
+            print("Changing wbddcFormat from %r -> %r"%(self.wbddcFormat,wbddcFormat))
             self.disableWbddc()
             self.wbddcFormat = wbddcFormat
             self.updateWbddc()
 
     def set_wbddcFreq(self, wbddcFreq):
         if wbddcFreq != self.wbddcFreq:
-            print "Changing wbddcFreq from %r -> %r"%(self.wbddcFreq,wbddcFreq)
+            print("Changing wbddcFreq from %r -> %r"%(self.wbddcFreq,wbddcFreq))
             self.wbddcFreq = wbddcFreq
             self.updateWbddc()
 
     def set_wbddcPort(self, wbddcPort):
         if wbddcPort != self.wbddcPort:
-            print "Changing wbddcPort from %r -> %r"%(self.wbddcPort,wbddcPort)
+            print("Changing wbddcPort from %r -> %r"%(self.wbddcPort,wbddcPort))
             self.wbddcPort = wbddcPort
             self.setDipEntry(self.wbddcDipIndex,self.wbddcPort)
             self.setDipEntry(self.wbddcDipIndex+4,self.wbddcPort+4)
@@ -362,39 +362,39 @@ class ndr_control(gr.hier_block2):
 
     def set_specAlpha(self, specAlpha):
         if specAlpha != self.specAlpha:
-            print "Changing specAlpha from %r -> %r"%(self.specAlpha,specAlpha)
+            print("Changing specAlpha from %r -> %r"%(self.specAlpha,specAlpha))
             self.specAlpha = specAlpha
             self.updateWbddc()
 
     def set_specRate(self, specRate):
         if specRate != self.specRate:
-            print "Changing specRate from %r -> %r"%(self.specRate,specRate)
+            print("Changing specRate from %r -> %r"%(self.specRate,specRate))
             self.specRate = specRate
             self.updateWbddc()
 
 
     def set_nbddcIndex(self, nbddcIndex):
         if nbddcIndex != self.nbddcIndex:
-            print "Changing nbddcIndex from %r -> %r"%(self.nbddcIndex,nbddcIndex)
+            print("Changing nbddcIndex from %r -> %r"%(self.nbddcIndex,nbddcIndex))
             self.disableNbddc()
             self.nbddcIndex = nbddcIndex
             self.updateNbddc()
 
     def set_nbddcEnable(self, nbddcEnable):
         if nbddcEnable != self.nbddcEnable:
-            print "Changing nbddcEnable from %r -> %r"%(self.nbddcEnable,nbddcEnable)
+            print("Changing nbddcEnable from %r -> %r"%(self.nbddcEnable,nbddcEnable))
             self.nbddcEnable = nbddcEnable
             self.updateNbddc(updateDdc=True)
 
     def set_nbddcVitaLevel(self, nbddcVitaLevel):
         if nbddcVitaLevel != self.nbddcVitaLevel:
-            print "Changing nbddcVitaLevel from %r -> %r"%(self.nbddcVitaLevel,nbddcVitaLevel)
+            print("Changing nbddcVitaLevel from %r -> %r"%(self.nbddcVitaLevel,nbddcVitaLevel))
             self.nbddcVitaLevel = nbddcVitaLevel
             self.updateNbddc(updateDdc=True)
 
     def set_nbddcRate(self, nbddcRate):
         if nbddcRate != self.nbddcRate:
-            print "Changing nbddcRate from %r -> %r"%(self.nbddcRate,nbddcRate)
+            print("Changing nbddcRate from %r -> %r"%(self.nbddcRate,nbddcRate))
             self.nbddcRate = nbddcRate
             self.updateNbddc(updateDdc=True,updateDemod=(self.nbddcFormat==1))
 
@@ -406,78 +406,78 @@ class ndr_control(gr.hier_block2):
 
     def set_nbddcDemodType(self, nbddcDemodType):
         if nbddcDemodType != self.nbddcDemodType and self.radioType=="ndr328":
-            print "Changing nbddcDemodType from %r -> %r"%(self.nbddcDemodType,nbddcDemodType)
+            print("Changing nbddcDemodType from %r -> %r"%(self.nbddcDemodType,nbddcDemodType))
             self.nbddcFormat = 0 if nbddcDemodType<0 else 1
             self.nbddcDemodType = nbddcDemodType
             self.updateNbddc(updateDemod=True, updateAlc=True)
 
     def set_nbddcDemodBfo(self, nbddcDemodBfo):
         if nbddcDemodBfo != self.nbddcDemodBfo and self.radioType=="ndr328":
-            print "Changing nbddcDemodBfo from %r -> %r"%(self.nbddcDemodBfo,nbddcDemodBfo)
+            print("Changing nbddcDemodBfo from %r -> %r"%(self.nbddcDemodBfo,nbddcDemodBfo))
             self.nbddcDemodBfo = nbddcDemodBfo
             #~ self.updateNbddc()
             if (not self.init) and (self.nbddcFormat==1):
-                print self.radio.sendCommand("BFO %d, %d\n"%(self.nbddcIndex,self.nbddcDemodBfo))
+                print(self.radio.sendCommand("BFO %d, %d\n"%(self.nbddcIndex,self.nbddcDemodBfo)))
 
     def set_nbddcDemodDcBlock(self, nbddcDemodDcBlock):
         if nbddcDemodDcBlock != self.nbddcDemodDcBlock and self.radioType=="ndr328":
-            print "Changing nbddcDemodDcBlock from %r -> %r"%(self.nbddcDemodDcBlock,nbddcDemodDcBlock)
+            print("Changing nbddcDemodDcBlock from %r -> %r"%(self.nbddcDemodDcBlock,nbddcDemodDcBlock))
             self.nbddcDemodDcBlock = nbddcDemodDcBlock
             self.updateNbddc(updateDemod=True)
 
     def set_nbddcDemodAlcType(self, nbddcDemodAlcType):
         if nbddcDemodAlcType != self.nbddcDemodAlcType and self.radioType=="ndr328":
-            print "Changing nbddcDemodAlcType from %r -> %r"%(self.nbddcDemodAlcType,nbddcDemodAlcType)
+            print("Changing nbddcDemodAlcType from %r -> %r"%(self.nbddcDemodAlcType,nbddcDemodAlcType))
             self.nbddcDemodAlcType = nbddcDemodAlcType
             self.updateNbddc(updateAlc=True)
 
     def set_nbddcDemodAlcLevel(self, nbddcDemodAlcLevel):
         if nbddcDemodAlcLevel != self.nbddcDemodAlcLevel and self.radioType=="ndr328":
-            print "Changing nbddcDemodAlcLevel from %r -> %r"%(self.nbddcDemodAlcLevel,nbddcDemodAlcLevel)
+            print("Changing nbddcDemodAlcLevel from %r -> %r"%(self.nbddcDemodAlcLevel,nbddcDemodAlcLevel))
             self.nbddcDemodAlcLevel = nbddcDemodAlcLevel
             self.updateNbddc(updateAlc=True)
 
     def set_nbddcDemodSquelchLevel(self, nbddcDemodSquelchLevel):
         if nbddcDemodSquelchLevel != self.nbddcDemodSquelchLevel and self.radioType=="ndr328":
-            print "Changing nbddcDemodSquelchLevel from %r -> %r"%(self.nbddcDemodSquelchLevel,nbddcDemodSquelchLevel)
+            print("Changing nbddcDemodSquelchLevel from %r -> %r"%(self.nbddcDemodSquelchLevel,nbddcDemodSquelchLevel))
             self.nbddcDemodSquelchLevel = nbddcDemodSquelchLevel
             self.updateNbddc(updateAlc=True)
 
     def set_nbddcDagcType(self, nbddcDagcType):
         if nbddcDagcType != self.nbddcDagcType and self.radioType=="ndr328":
-            print "Changing nbddcDagcType from %r -> %r"%(self.nbddcDagcType,nbddcDagcType)
+            print("Changing nbddcDagcType from %r -> %r"%(self.nbddcDagcType,nbddcDagcType))
             self.nbddcDagcType = nbddcDagcType
             self.updateNbddc(updateAlc=True)
 
     def set_nbddcDagcLevel(self, nbddcDagcLevel):
         if nbddcDagcLevel != self.nbddcDagcLevel and self.radioType=="ndr328":
-            print "Changing nbddcDagcLevel from %r -> %r"%(self.nbddcDagcLevel,nbddcDagcLevel)
+            print("Changing nbddcDagcLevel from %r -> %r"%(self.nbddcDagcLevel,nbddcDagcLevel))
             self.nbddcDagcLevel = nbddcDagcLevel
             self.updateNbddc(updateAlc=True)
 
     def set_nbddcFreq(self, nbddcFreq):
         if nbddcFreq != self.nbddcFreq:
-            print "Changing nbddcFreq from %r -> %r"%(self.nbddcFreq,nbddcFreq)
+            print("Changing nbddcFreq from %r -> %r"%(self.nbddcFreq,nbddcFreq))
             self.nbddcFreq = nbddcFreq
             self.updateNbddc(updateDdc=True)
 
     def set_nbddcPort(self, nbddcPort):
         if nbddcPort != self.nbddcPort:
-            print "Changing nbddcPort from %r -> %r"%(self.nbddcPort,nbddcPort)
+            print("Changing nbddcPort from %r -> %r"%(self.nbddcPort,nbddcPort))
             self.nbddcPort = nbddcPort
             self.setDipEntry(self.nbddcDipIndex,self.nbddcPort)
             self.updateNbddc()
     
     def set_otherNbddcPort(self, otherNbddcPort):
         if otherNbddcPort != self.otherNbddcPort:
-            print "Changing nbddcPort from %r -> %r"%(self.otherNbddcPort,otherNbddcPort)
+            print("Changing nbddcPort from %r -> %r"%(self.otherNbddcPort,otherNbddcPort))
             self.otherNbddcPort = otherNbddcPort
             self.setDipEntry(self.otherNbddcDipIndex, self.otherNbddcPort)
             self.updateNbddc()
     
     def set_otherNbddcEnable(self, otherNbddcEnable):
         if otherNbddcEnable != self.otherNbddcEnable:
-            print "Changing otherNbddcEnable from %r -> %r"%(self.otherNbddcEnable,otherNbddcEnable)
+            print("Changing otherNbddcEnable from %r -> %r"%(self.otherNbddcEnable,otherNbddcEnable))
             self.otherNbddcEnable = otherNbddcEnable
             self.disableNbddc(True)
             self.updateNbddc()
@@ -500,7 +500,7 @@ class ndr_control(gr.hier_block2):
     
     def updateWbddc(self,):
         self.configuring = True#False
-        print "updateWbddc!",self.wbddcIndex, self.wbddcFreq, self.wbddcRate
+        print("updateWbddc!",self.wbddcIndex, self.wbddcFreq, self.wbddcRate)
         if (self.radio is not None) and (not self.init) and (self.wbddcIndex is not None and self.wbddcIndex>0):
             conf = { crd.configKeys.CONFIG_DDC: { 
                         crd.configKeys.CONFIG_WBDDC: { 
@@ -546,7 +546,7 @@ class ndr_control(gr.hier_block2):
             if allddc:
                 for nbddcIndex in self.radio.getNbddcIndexRange():
                     if nbddcIndex != self.nbddcIndex:
-                        rate = random.choice( self.radio.getNbddcRateSet(nbddcIndex).keys() )
+                        rate = random.choice( list(self.radio.getNbddcRateSet(nbddcIndex).keys()) )
                         conf[crd.configKeys.CONFIG_DDC][crd.configKeys.CONFIG_NBDDC][nbddcIndex] = { 
                                                 crd.configKeys.DDC_FREQUENCY_OFFSET: random.randint(-20000000,20000000) if self.otherNbddcEnable else 0, 
                                                 #~ crd.configKeys.DDC_FREQUENCY_OFFSET: nbddcIndex*100e3 if self.otherNbddcEnable else 0, 
@@ -562,7 +562,7 @@ class ndr_control(gr.hier_block2):
                                                 crd.configKeys.DDC_BEAT_FREQ_OSC: 0, 
                                                 }
             else:
-                rate = random.choice( self.radio.getNbddcRateSet(self.nbddcIndex).keys() )
+                rate = random.choice( list(self.radio.getNbddcRateSet(self.nbddcIndex).keys()) )
                 conf[crd.configKeys.CONFIG_DDC][crd.configKeys.CONFIG_NBDDC][self.nbddcIndex] = { 
                                             #~ crd.configKeys.DDC_FREQUENCY_OFFSET: random.randint(-20000000,20000000) if self.otherNbddcEnable else 0, 
                                             #~ crd.configKeys.DDC_FREQUENCY_OFFSET: self.nbddcIndex*100e3 if self.otherNbddcEnable else 0, 
@@ -700,7 +700,7 @@ class ndr_control(gr.hier_block2):
     ## Specific to 10GbE radios
     def setDipEntry(self,index,port):
         self.configuring = True#False
-        print "setDipEntry(%d, %d)"%(index,port)
+        print("setDipEntry(%d, %d)"%(index,port))
         if self.destIp is not None:
             conf = {crd.configKeys.CONFIG_IP:{
                         self.dataPort: {crd.configKeys.IP_DEST: { index: {cfgKeys.GIGE_SOURCE_PORT:port,
@@ -718,19 +718,19 @@ class ndr_control(gr.hier_block2):
 
 ##############################  special  ##############################
     def set_radio_cmd(self, radio_cmd):
-        print((" set_radio_cmd ").center(80,'~'))
+        print(((" set_radio_cmd ").center(80,'~')))
         if not self.configuring:
             if radio_cmd is not None:
-                print("radio_cmd: %r -> %r"%(self.radio_cmd, radio_cmd))
+                print(("radio_cmd: %r -> %r"%(self.radio_cmd, radio_cmd)))
                 self.radio_cmd = radio_cmd.strip()
                 if (not self.init) and self.radio_cmd:
                     self.radio_rsp = self.radio.sendCommand("%s\n"%self.radio_cmd)
                 return self.radio_rsp
     
     def send_radio_rsp(self, trigger=False):
-        print((" send_radio_rsp ").center(80,'~'))
+        print(((" send_radio_rsp ").center(80,'~')))
         if trigger and not self.configuring:
-            print("trigger = %r, self.radio_rsp = %r"%(trigger,self.radio_rsp))
+            print(("trigger = %r, self.radio_rsp = %r"%(trigger,self.radio_rsp)))
             if self.radio_rsp:
                 for cmd in (self.radio_rsp[0],self.radio_cmd):
                     self.radio_rsp = self.radio.sendCommand("%s\n"%cmd)
@@ -745,7 +745,7 @@ class ndr_control(gr.hier_block2):
             try:
                 if self.nbddcIndex>0:
                     rsp = self.radio.sendCommand("RSSI? %d\n"%self.nbddcIndex)
-                    print "RSSI Rsp = %r"%rsp
+                    print("RSSI Rsp = %r"%rsp)
                     return rsp[0] if rsp is not None else "error"
                 else:
                     return "n/a"

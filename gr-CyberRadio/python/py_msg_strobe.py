@@ -41,7 +41,7 @@ class py_msg_strobe(gr.basic_block):
         self.rate = 0.0
         self.interval = 0.0
         
-        print "py_msg_strobe.__init__".center(80,"~")
+        print("py_msg_strobe.__init__".center(80,"~"))
         self.inPortName = pmt.intern("msg")
         self.message_port_register_in(self.inPortName)
         self.set_msg_handler(self.inPortName, self.msgRx)
@@ -58,9 +58,9 @@ class py_msg_strobe(gr.basic_block):
     
     def setValue(self, value):
         if value != self.value:
-            print "py_msg_strobe.setValue".center(80,"~")
-            print "Current:",type(self.value),repr(self.value)
-            print "    New:",type(value),repr(value),
+            print("py_msg_strobe.setValue".center(80,"~"))
+            print("Current:",type(self.value),repr(self.value))
+            print("    New:",type(value),repr(value))#, end=' ')
             self.value = value
             if type(self.value) in (str,float,int,bool):
                 if type(self.value) is float:
@@ -83,9 +83,9 @@ class py_msg_strobe(gr.basic_block):
     
     def setRate(self, rate):
         if rate != self.rate:
-            print "py_msg_strobe.setRate".center(80,"~")
-            print "Current:",self.rate
-            print "    New:",rate
+            print("py_msg_strobe.setRate".center(80,"~"))
+            print("Current:",self.rate)
+            print("    New:",rate)
             self.rate = float(rate)
             if self.rate>0:
                 self.interval = 1.0/self.rate

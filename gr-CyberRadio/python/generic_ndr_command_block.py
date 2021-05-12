@@ -23,7 +23,7 @@ import numpy
 from gnuradio import gr
 
 import CyberRadioDriver as crd
-from generic_radio_control_block import generic_radio_control_block
+from .generic_radio_control_block import generic_radio_control_block
 
 class generic_ndr_command_block(generic_radio_control_block):
     """

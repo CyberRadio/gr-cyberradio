@@ -178,13 +178,13 @@ class NDR_demo_control(gr.hier_block2):
         return len(output_items[0])
     
     def _set_configuration(self, confDict, printJson=True):
-        print((" _set_configuration ").center(80,'~'))
+        print(((" _set_configuration ").center(80,'~')))
         if printJson:
-            print( json.dumps(confDict, sort_keys=True, indent=4) )
+            print(( json.dumps(confDict, sort_keys=True, indent=4) ))
         self.radio.setConfiguration(confDict)
     
     def _set_tuner_configuration(self, index, freq, atten):
-        print((" _set_tuner_configuration ").center(80,'~'))
+        print(((" _set_tuner_configuration ").center(80,'~')))
         conf = { crd.configKeys.CONFIG_TUNER: 
                     { index: 
                         { crd.configKeys.TUNER_FREQUENCY:freq, 
@@ -221,7 +221,7 @@ class NDR_demo_control(gr.hier_block2):
         self._set_configuration(conf)
     
     def _set_ddc_configuration(self, index, wideband, enable=False, rateIndex=0, freq=0.0, vitaLevel=0, rfSource=1, udpPort=0, dipIndex=0, dataPort=1):
-        print((" _set_ddc_configuration ").center(80,'~'))
+        print(((" _set_ddc_configuration ").center(80,'~')))
         if self.radio_type in ["ndr354", "ndr364"]:
             conf = { crd.configKeys.CONFIG_DDC: 
                         { crd.configKeys.CONFIG_WBDDC if wideband else crd.configKeys.CONFIG_NBDDC: 
@@ -258,10 +258,10 @@ class NDR_demo_control(gr.hier_block2):
         self._set_configuration(conf)
     
     def _set_interface_configuration(self,):
-        print((" _set_interface_configuration ").center(80,'~'))
+        print(((" _set_interface_configuration ").center(80,'~')))
         if self.radio_type.strip().lower() in ("ndr304","ndr470","ndr472",):
-            for ind,iface in self.interface_dict.iteritems():
-                print ind,iface
+            for ind,iface in self.interface_dict.items():
+                print(ind,iface)
                 dmac,dip,mask = GetInterfaceAddress(iface)
                 temp = [int(i) for i in dip.split(".")]
                 temp[-1]+=10
@@ -278,7 +278,7 @@ class NDR_demo_control(gr.hier_block2):
             for data_port,dip_index,udp_port in ((self.ddc1_data_port, self.ddc1_dip_index, self.ddc1_udp_port), 
                                                     (self.ddc2_data_port, self.ddc2_dip_index, self.ddc2_udp_port), 
                                                      ):
-                if self.interface_dict.has_key(data_port):
+                if data_port in self.interface_dict:
                     iface = self.interface_dict.get(data_port)
                     dmac,dip,mask = GetInterfaceAddress(iface)
                     temp = [int(i) for i in dip.split(".")]
@@ -323,7 +323,7 @@ class NDR_demo_control(gr.hier_block2):
 
 ##############################  radio Parameters  ##############################
     def update_radio(self, disable=False,):
-        print((" update_radio(disable=%s) "%(disable)).center(80,'~'))
+        print(((" update_radio(disable=%s) "%(disable)).center(80,'~')))
         if not self.init:
             self.ten_gbe_radio = not any(i in self.radio_type for i in ("304","470","472"))
             self.radio = crd.getRadioObject(self.radio_type, verbose=self.verbose, logFile=self.fileLikeObjectSource)
@@ -331,83 +331,83 @@ class NDR_demo_control(gr.hier_block2):
             self._disable_all_ddcs()
 
     def set_radio_type(self, radio_type):
-        print((" set_radio_type ").center(80,'~'))
+        print(((" set_radio_type ").center(80,'~')))
         if self.radio_type != radio_type:
-            print("radio_type: %r -> %r"%(self.radio_type, radio_type))
+            print(("radio_type: %r -> %r"%(self.radio_type, radio_type)))
             self.radio_type = radio_type
             self.update_radio()
 
     def set_radio_hostname(self, radio_hostname):
-        print((" set_radio_hostname ").center(80,'~'))
+        print(((" set_radio_hostname ").center(80,'~')))
         if self.radio_hostname != radio_hostname:
-            print("radio_hostname: %r -> %r"%(self.radio_hostname, radio_hostname))
+            print(("radio_hostname: %r -> %r"%(self.radio_hostname, radio_hostname)))
             self.radio_hostname = radio_hostname
             self.update_radio()
 
     def set_radio_port(self, radio_port):
-        print((" set_radio_port ").center(80,'~'))
+        print(((" set_radio_port ").center(80,'~')))
         if self.radio_port != radio_port:
-            print("radio_port: %r -> %r"%(self.radio_port, radio_port))
+            print(("radio_port: %r -> %r"%(self.radio_port, radio_port)))
             self.radio_port = radio_port
             self.update_radio()
 
 ############################## tuner1 Parameters  ##############################
     def update_tuner1(self, disable=False,):
-        print((" update_tuner1(disable=%s) "%(disable)).center(80,'~'))
+        print(((" update_tuner1(disable=%s) "%(disable)).center(80,'~')))
         if not self.init and self.tuner1_index>=0:
             self._set_tuner_configuration(self.tuner1_index, self.tuner1_freq, self.tuner1_atten)
 
     def set_tuner1_index(self, tuner1_index):
-        print((" set_tuner1_index ").center(80,'~'))
+        print(((" set_tuner1_index ").center(80,'~')))
         if self.tuner1_index != tuner1_index:
-            print("tuner1_index: %r -> %r"%(self.tuner1_index, tuner1_index))
+            print(("tuner1_index: %r -> %r"%(self.tuner1_index, tuner1_index)))
             self.tuner1_index = tuner1_index
             self.update_tuner1()
 
     def set_tuner1_freq(self, tuner1_freq):
-        print((" set_tuner1_freq ").center(80,'~'))
+        print(((" set_tuner1_freq ").center(80,'~')))
         if self.tuner1_freq != tuner1_freq:
-            print("tuner1_freq: %r -> %r"%(self.tuner1_freq, tuner1_freq))
+            print(("tuner1_freq: %r -> %r"%(self.tuner1_freq, tuner1_freq)))
             self.tuner1_freq = tuner1_freq
             self.update_tuner1()
 
     def set_tuner1_atten(self, tuner1_atten):
-        print((" set_tuner1_atten ").center(80,'~'))
+        print(((" set_tuner1_atten ").center(80,'~')))
         if self.tuner1_atten != tuner1_atten:
-            print("tuner1_atten: %r -> %r"%(self.tuner1_atten, tuner1_atten))
+            print(("tuner1_atten: %r -> %r"%(self.tuner1_atten, tuner1_atten)))
             self.tuner1_atten = tuner1_atten
             self.update_tuner1()
 
 ############################## tuner2 Parameters  ##############################
     def update_tuner2(self, disable=False,):
-        print((" update_tuner2(disable=%s) "%(disable)).center(80,'~'))
+        print(((" update_tuner2(disable=%s) "%(disable)).center(80,'~')))
         if not self.init and self.tuner2_index>=0:
             self._set_tuner_configuration(self.tuner2_index, self.tuner2_freq, self.tuner2_atten)
 
     def set_tuner2_index(self, tuner2_index):
-        print((" set_tuner2_index ").center(80,'~'))
+        print(((" set_tuner2_index ").center(80,'~')))
         if self.tuner2_index != tuner2_index:
-            print("tuner2_index: %r -> %r"%(self.tuner2_index, tuner2_index))
+            print(("tuner2_index: %r -> %r"%(self.tuner2_index, tuner2_index)))
             self.tuner2_index = tuner2_index
             self.update_tuner2()
 
     def set_tuner2_freq(self, tuner2_freq):
-        print((" set_tuner2_freq ").center(80,'~'))
+        print(((" set_tuner2_freq ").center(80,'~')))
         if self.tuner2_freq != tuner2_freq:
-            print("tuner2_freq: %r -> %r"%(self.tuner2_freq, tuner2_freq))
+            print(("tuner2_freq: %r -> %r"%(self.tuner2_freq, tuner2_freq)))
             self.tuner2_freq = tuner2_freq
             self.update_tuner2()
 
     def set_tuner2_atten(self, tuner2_atten):
-        print((" set_tuner2_atten ").center(80,'~'))
+        print(((" set_tuner2_atten ").center(80,'~')))
         if self.tuner2_atten != tuner2_atten:
-            print("tuner2_atten: %r -> %r"%(self.tuner2_atten, tuner2_atten))
+            print(("tuner2_atten: %r -> %r"%(self.tuner2_atten, tuner2_atten)))
             self.tuner2_atten = tuner2_atten
             self.update_tuner2()
 
 ##############################  ddc1 Parameters   ##############################
     def update_ddc1(self, disable=False,):
-        print((" update_ddc1(disable=%s) "%(disable)).center(80,'~'))
+        print(((" update_ddc1(disable=%s) "%(disable)).center(80,'~')))
         if not self.init and self.ddc1_index>=0:
             #~ _set_ddc_configuration(self, index, wideband, enable=False, rateIndex=0, freq=0.0, vitaLevel=0, rfSource=1, udpPort=0, dipIndex=0, dataPort=1)
             self._set_ddc_configuration(self.ddc1_index, 
@@ -423,72 +423,72 @@ class NDR_demo_control(gr.hier_block2):
                                          )
 
     def set_ddc1_index(self, ddc1_index):
-        print((" set_ddc1_index ").center(80,'~'))
+        print(((" set_ddc1_index ").center(80,'~')))
         if self.ddc1_index != ddc1_index:
-            print("ddc1_index: %r -> %r"%(self.ddc1_index, ddc1_index))
+            print(("ddc1_index: %r -> %r"%(self.ddc1_index, ddc1_index)))
             self.update_ddc1(True)
             self.ddc1_index = ddc1_index
             self.update_ddc1()
 
     def set_ddc1_wideband(self, ddc1_wideband):
-        print((" set_ddc1_wideband ").center(80,'~'))
+        print(((" set_ddc1_wideband ").center(80,'~')))
         if self.ddc1_wideband != ddc1_wideband:
-            print("ddc1_wideband: %r -> %r"%(self.ddc1_wideband, ddc1_wideband))
+            print(("ddc1_wideband: %r -> %r"%(self.ddc1_wideband, ddc1_wideband)))
             self.ddc1_wideband = ddc1_wideband
             self.update_ddc1()
 
     def set_ddc1_enable(self, ddc1_enable):
-        print((" set_ddc1_enable ").center(80,'~'))
+        print(((" set_ddc1_enable ").center(80,'~')))
         if self.ddc1_enable != ddc1_enable:
-            print("ddc1_enable: %r -> %r"%(self.ddc1_enable, ddc1_enable))
+            print(("ddc1_enable: %r -> %r"%(self.ddc1_enable, ddc1_enable)))
             self.ddc1_enable = ddc1_enable
             self.update_ddc1()
 
     def set_ddc1_vita49_level(self, ddc1_vita49_level):
-        print((" set_ddc1_vita49_level ").center(80,'~'))
+        print(((" set_ddc1_vita49_level ").center(80,'~')))
         if self.ddc1_vita49_level != ddc1_vita49_level:
-            print("ddc1_vita49_level: %r -> %r"%(self.ddc1_vita49_level, ddc1_vita49_level))
+            print(("ddc1_vita49_level: %r -> %r"%(self.ddc1_vita49_level, ddc1_vita49_level)))
             self.ddc1_vita49_level = ddc1_vita49_level
             self.update_ddc1()
 
     def set_ddc1_rate_index(self, ddc1_rate_index):
-        print((" set_ddc1_rate_index ").center(80,'~'))
+        print(((" set_ddc1_rate_index ").center(80,'~')))
         if self.ddc1_rate_index != ddc1_rate_index:
-            print("ddc1_rate_index: %r -> %r"%(self.ddc1_rate_index, ddc1_rate_index))
+            print(("ddc1_rate_index: %r -> %r"%(self.ddc1_rate_index, ddc1_rate_index)))
             self.ddc1_rate_index = ddc1_rate_index
             self.update_ddc1()
 
     def set_ddc1_freq(self, ddc1_freq):
-        print((" set_ddc1_freq ").center(80,'~'))
+        print(((" set_ddc1_freq ").center(80,'~')))
         if self.ddc1_freq != ddc1_freq:
-            print("ddc1_freq: %r -> %r"%(self.ddc1_freq, ddc1_freq))
+            print(("ddc1_freq: %r -> %r"%(self.ddc1_freq, ddc1_freq)))
             self.ddc1_freq = ddc1_freq
             self.update_ddc1()
 
     def set_ddc1_udp_port(self, ddc1_udp_port):
-        print((" set_ddc1_udp_port ").center(80,'~'))
+        print(((" set_ddc1_udp_port ").center(80,'~')))
         if self.ddc1_udp_port != ddc1_udp_port:
-            print("ddc1_udp_port: %r -> %r"%(self.ddc1_udp_port, ddc1_udp_port))
+            print(("ddc1_udp_port: %r -> %r"%(self.ddc1_udp_port, ddc1_udp_port)))
             self.ddc1_udp_port = ddc1_udp_port
             self.update_ddc1()
 
     def set_ddc1_rf_source(self, ddc1_rf_source):
-        print((" set_ddc1_rf_source ").center(80,'~'))
+        print(((" set_ddc1_rf_source ").center(80,'~')))
         if self.ddc1_rf_source != ddc1_rf_source:
-            print("ddc1_rf_source: %r -> %r"%(self.ddc1_rf_source, ddc1_rf_source))
+            print(("ddc1_rf_source: %r -> %r"%(self.ddc1_rf_source, ddc1_rf_source)))
             self.ddc1_rf_source = ddc1_rf_source
             self.update_ddc1()
 
     def set_ddc1_data_port(self, ddc1_data_port):
-        print((" set_ddc1_data_port ").center(80,'~'))
+        print(((" set_ddc1_data_port ").center(80,'~')))
         if self.ddc1_data_port != ddc1_data_port:
-            print("ddc1_data_port: %r -> %r"%(self.ddc1_data_port, ddc1_data_port))
+            print(("ddc1_data_port: %r -> %r"%(self.ddc1_data_port, ddc1_data_port)))
             self.ddc1_data_port = ddc1_data_port
             self.update_ddc1()
 
 ##############################  ddc2 Parameters   ##############################
     def update_ddc2(self, disable=False,):
-        print((" update_ddc2(disable=%s) "%(disable)).center(80,'~'))
+        print(((" update_ddc2(disable=%s) "%(disable)).center(80,'~')))
         if not self.init and self.ddc2_index>=0:
             #~ _set_ddc_configuration(self, index, wideband, enable=False, rateIndex=0, freq=0.0, vitaLevel=0, udpPort=0):
             self._set_ddc_configuration(self.ddc2_index, 
@@ -504,126 +504,126 @@ class NDR_demo_control(gr.hier_block2):
                                          )
 
     def set_ddc2_index(self, ddc2_index):
-        print((" set_ddc2_index ").center(80,'~'))
+        print(((" set_ddc2_index ").center(80,'~')))
         if self.ddc2_index != ddc2_index:
-            print("ddc2_index: %r -> %r"%(self.ddc2_index, ddc2_index))
+            print(("ddc2_index: %r -> %r"%(self.ddc2_index, ddc2_index)))
             self.update_ddc2(True)
             self.ddc2_index = ddc2_index
             self.update_ddc2()
 
     def set_ddc2_wideband(self, ddc2_wideband):
-        print((" set_ddc2_wideband ").center(80,'~'))
+        print(((" set_ddc2_wideband ").center(80,'~')))
         if self.ddc2_wideband != ddc2_wideband:
-            print("ddc2_wideband: %r -> %r"%(self.ddc2_wideband, ddc2_wideband))
+            print(("ddc2_wideband: %r -> %r"%(self.ddc2_wideband, ddc2_wideband)))
             self.ddc2_wideband = ddc2_wideband
             self.update_ddc2()
 
     def set_ddc2_enable(self, ddc2_enable):
-        print((" set_ddc2_enable ").center(80,'~'))
+        print(((" set_ddc2_enable ").center(80,'~')))
         if self.ddc2_enable != ddc2_enable:
-            print("ddc2_enable: %r -> %r"%(self.ddc2_enable, ddc2_enable))
+            print(("ddc2_enable: %r -> %r"%(self.ddc2_enable, ddc2_enable)))
             self.ddc2_enable = ddc2_enable
             self.update_ddc2()
 
     def set_ddc2_vita49_level(self, ddc2_vita49_level):
-        print((" set_ddc2_vita49_level ").center(80,'~'))
+        print(((" set_ddc2_vita49_level ").center(80,'~')))
         if self.ddc2_vita49_level != ddc2_vita49_level:
-            print("ddc2_vita49_level: %r -> %r"%(self.ddc2_vita49_level, ddc2_vita49_level))
+            print(("ddc2_vita49_level: %r -> %r"%(self.ddc2_vita49_level, ddc2_vita49_level)))
             self.ddc2_vita49_level = ddc2_vita49_level
             self.update_ddc2()
 
     def set_ddc2_rate_index(self, ddc2_rate_index):
-        print((" set_ddc2_rate_index ").center(80,'~'))
+        print(((" set_ddc2_rate_index ").center(80,'~')))
         if self.ddc2_rate_index != ddc2_rate_index:
-            print("ddc2_rate_index: %r -> %r"%(self.ddc2_rate_index, ddc2_rate_index))
+            print(("ddc2_rate_index: %r -> %r"%(self.ddc2_rate_index, ddc2_rate_index)))
             self.ddc2_rate_index = ddc2_rate_index
             self.update_ddc2()
 
     def set_ddc2_freq(self, ddc2_freq):
-        print((" set_ddc2_freq ").center(80,'~'))
+        print(((" set_ddc2_freq ").center(80,'~')))
         if self.ddc2_freq != ddc2_freq:
-            print("ddc2_freq: %r -> %r"%(self.ddc2_freq, ddc2_freq))
+            print(("ddc2_freq: %r -> %r"%(self.ddc2_freq, ddc2_freq)))
             self.ddc2_freq = ddc2_freq
             self.update_ddc2()
 
     def set_ddc2_udp_port(self, ddc2_udp_port):
-        print((" set_ddc2_udp_port ").center(80,'~'))
+        print(((" set_ddc2_udp_port ").center(80,'~')))
         if self.ddc2_udp_port != ddc2_udp_port:
-            print("ddc2_udp_port: %r -> %r"%(self.ddc2_udp_port, ddc2_udp_port))
+            print(("ddc2_udp_port: %r -> %r"%(self.ddc2_udp_port, ddc2_udp_port)))
             self.ddc2_udp_port = ddc2_udp_port
             self.update_ddc2()
 
     def set_ddc2_rf_source(self, ddc2_rf_source):
-        print((" set_ddc2_rf_source ").center(80,'~'))
+        print(((" set_ddc2_rf_source ").center(80,'~')))
         if self.ddc2_rf_source != ddc2_rf_source:
-            print("ddc2_rf_source: %r -> %r"%(self.ddc2_rf_source, ddc2_rf_source))
+            print(("ddc2_rf_source: %r -> %r"%(self.ddc2_rf_source, ddc2_rf_source)))
             self.ddc2_rf_source = ddc2_rf_source
             self.update_ddc2()
 
     def set_ddc2_data_port(self, ddc2_data_port):
-        print((" set_ddc2_data_port ").center(80,'~'))
+        print(((" set_ddc2_data_port ").center(80,'~')))
         if self.ddc2_data_port != ddc2_data_port:
-            print("ddc2_data_port: %r -> %r"%(self.ddc2_data_port, ddc2_data_port))
+            print(("ddc2_data_port: %r -> %r"%(self.ddc2_data_port, ddc2_data_port)))
             self.ddc2_data_port = ddc2_data_port
             self.update_ddc2()
 
 ##############################   cal Parameters   ##############################
     def update_cal(self, disable=False,):
-        print((" update_cal(disable=%s) "%(disable)).center(80,'~'))
+        print(((" update_cal(disable=%s) "%(disable)).center(80,'~')))
         if not self.init:
             pass
 
     def set_cal_freq(self, cal_freq):
-        print((" set_cal_freq ").center(80,'~'))
+        print(((" set_cal_freq ").center(80,'~')))
         if self.cal_freq != cal_freq:
-            print("cal_freq: %r -> %r"%(self.cal_freq, cal_freq))
+            print(("cal_freq: %r -> %r"%(self.cal_freq, cal_freq)))
             self.cal_freq = cal_freq
             self.update_cal()
 
 ##############################interface Parameters##############################
     def update_interface(self, disable=False,):
-        print((" update_interface(disable=%s) "%(disable)).center(80,'~'))
+        print(((" update_interface(disable=%s) "%(disable)).center(80,'~')))
         if not self.init:
             self._set_interface_configuration()
 
     def set_interface_dict(self, interface_dict):
-        print((" set_interface_dict ").center(80,'~'))
+        print(((" set_interface_dict ").center(80,'~')))
         if self.interface_dict != interface_dict:
-            print("interface_dict: %r -> %r"%(self.interface_dict, interface_dict))
+            print(("interface_dict: %r -> %r"%(self.interface_dict, interface_dict)))
             self.interface_dict = interface_dict
             self.update_interface()
 
 ############################## verbose Parameters ##############################
     def update_verbose(self, disable=False,):
-        print((" update_verbose(disable=%s) "%(disable)).center(80,'~'))
+        print(((" update_verbose(disable=%s) "%(disable)).center(80,'~')))
         if not self.init:
             pass
 
     def set_verbose(self, verbose):
-        print((" set_verbose ").center(80,'~'))
+        print(((" set_verbose ").center(80,'~')))
         if self.verbose != verbose:
-            print("verbose: %r -> %r"%(self.verbose, verbose))
+            print(("verbose: %r -> %r"%(self.verbose, verbose)))
             self.verbose = verbose
             self.update_verbose()
 
 ##############################  other Parameters  ##############################
     def update_other(self, disable=False,):
-        print((" update_other(disable=%s) "%(disable)).center(80,'~'))
+        print(((" update_other(disable=%s) "%(disable)).center(80,'~')))
         if not self.init:
             pass
 
     def set_other_args(self, other_args):
-        print((" set_other_args ").center(80,'~'))
+        print(((" set_other_args ").center(80,'~')))
         if self.other_args != other_args:
-            print("other_args: %r -> %r"%(self.other_args, other_args))
+            print(("other_args: %r -> %r"%(self.other_args, other_args)))
             self.other_args = other_args
             self.update_other()
 
 ##############################  special  ##############################
     def set_radio_cmd(self, radio_cmd):
-        print((" set_radio_cmd ").center(80,'~'))
+        print(((" set_radio_cmd ").center(80,'~')))
         if radio_cmd is not None:
-            print("ddc2_rate_index: %r -> %r"%(self.radio_cmd, radio_cmd))
+            print(("ddc2_rate_index: %r -> %r"%(self.radio_cmd, radio_cmd)))
             self.radio_cmd = radio_cmd.strip()
             if not self.init:
                 self.radio_rsp = "; ".join( self.radio.sendCommand("%s\n"%self.radio_cmd) )

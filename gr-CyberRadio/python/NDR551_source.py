@@ -1839,8 +1839,8 @@ class NDR551_source(gr.hier_block2):
             return 0
         
     def _get_tengig_iface_index(self, tengig_iface_to_use):
-        tengig_iface_dict = dict(zip(self.tengig_iface_list, 
-                                     self.CyberRadio_NDR_driver_interface_0.getGigEIndexRange()))
+        tengig_iface_dict = dict(list(zip(self.tengig_iface_list, 
+                                     self.CyberRadio_NDR_driver_interface_0.getGigEIndexRange())))
         return tengig_iface_dict.get(tengig_iface_to_use, 0)
     
     # UDP destination index assignment: 
@@ -1865,7 +1865,7 @@ class NDR551_source(gr.hier_block2):
                     "narrowband": { },
                 },
             }
-        for tengig_iface_index in xrange(0, self.tengig_iface_list, 1):
+        for tengig_iface_index in range(0, self.tengig_iface_list, 1):
             destMac, destIp = CyberRadioDriver.getInterfaceAddresses(self.tengig_iface_list[tengig_iface_index])
             srcIpVec = destIp.split(".")
             srcIpVec[-1] = str(int(srcIpVec[-1]) + 100)
@@ -2007,7 +2007,7 @@ class NDR551_source(gr.hier_block2):
         if not isinstance(b, dict):
             return b
         result = copy.deepcopy(a)
-        for k, v in b.iteritems():
+        for k, v in b.items():
             if k in result and isinstance(result[k], dict):
                     result[k] = self._merge_dicts(result[k], v)
             else:

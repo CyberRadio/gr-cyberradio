@@ -5,7 +5,8 @@
 # Generated: Wed Mar 30 09:41:34 2016
 ##################################################
 
-from PyQt4 import Qt
+from PyQt5 import Qt
+#from PyQt4 import Qt
 from gnuradio import blocks
 from gnuradio import gr
 from gnuradio import qtgui
@@ -135,7 +136,7 @@ class qt_freq_time_sink_iq(gr.hier_block2, Qt.QWidget):
                       0, 0, 0, 0, 0]
             alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
                       1.0, 1.0, 1.0, 1.0, 1.0]
-            for i in xrange(1):
+            for i in range(1):
                 if len(labels[i]) == 0:
                     self.waterfallSink.set_line_label(i, "Data {0}".format(i))
                 else:
@@ -182,7 +183,7 @@ class qt_freq_time_sink_iq(gr.hier_block2, Qt.QWidget):
             alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
                       1.0, 1.0, 1.0, 1.0, 1.0]
             
-            for i in xrange(2*1):
+            for i in range(2*1):
                 if len(labels[i]) == 0:
                     if(i % 2 == 0):
                         self.timeSink.set_line_label(i, "Re{{Data {0}}}".format(i/2))
@@ -235,7 +236,7 @@ class qt_freq_time_sink_iq(gr.hier_block2, Qt.QWidget):
                       ("black", "black"), ("black", "black"), ("black", "black"), ("black", "black"), ("black", "black")]
             factor = [1, 1, 1, 1, 1,
                       1, 1, 1, 1, 1]
-            for i in xrange(1):
+            for i in range(1):
                 self.numberSInk.set_min(i, fftPlotRange[0])
                 self.numberSInk.set_max(i, fftPlotRange[1])
                 self.numberSInk.set_color(i, colors[i][0], colors[i][1])
@@ -281,7 +282,7 @@ class qt_freq_time_sink_iq(gr.hier_block2, Qt.QWidget):
                       "magenta", "yellow", "dark red", "dark green", "dark blue"]
             alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
                       1.0, 1.0, 1.0, 1.0, 1.0]
-            for i in xrange(1):
+            for i in range(1):
                 if len(labels[i]) == 0:
                     self.freqSink.set_line_label(i, "Data {0}".format(i))
                 else:
@@ -330,7 +331,7 @@ class qt_freq_time_sink_iq(gr.hier_block2, Qt.QWidget):
                 fftSizeN = int( numpy.log2( float(fftSize) ) )
                 if firstRun or fftSizeN!=self.fftSizeN:
                     firstRun = False
-                    print self.label, "Adjusting FFT Scaling", fftSize, fftSizeN
+                    print(self.label, "Adjusting FFT Scaling", fftSize, fftSizeN)
                     self.set_fftSizeN = fftSizeN
                     self.fftSize = fftSize
                     winType = self.freqSink.fft_window()
@@ -338,7 +339,7 @@ class qt_freq_time_sink_iq(gr.hier_block2, Qt.QWidget):
                     #~ wsum = numpy.sum(numpy.sum(w))
                     #~ print wsum, fftSizeN, float(fftSize)/wsum
                     logScale = 20*numpy.log10( float(fftSize)/numpy.sum(firdes.window(winType, fftSize, 6.76)) )
-                    print self.label, winType, logScale
+                    print(self.label, winType, logScale)
                     self.set_fftGainLog(logScale)
             except:
                 traceback.print_exc()
