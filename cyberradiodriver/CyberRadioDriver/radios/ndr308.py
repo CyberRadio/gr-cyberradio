@@ -5,7 +5,7 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.
 #    All rights reserved.
 ##################################################################
 
@@ -352,7 +352,7 @@ class ndr308_1_nbddc(_nbddc):
         if any([q in confDict for q in keys]):
             if self.cfgCmd is not None:
                 cDict = {}
-                if confDict.has_key(configKeys.DDC_FREQUENCY_OFFSET):
+                if configKeys.DDC_FREQUENCY_OFFSET in confDict:
                     confDict[configKeys.DDC_FREQUENCY_OFFSET] = adjustFrequency(
                                           float(confDict[configKeys.DDC_FREQUENCY_OFFSET]),
                                           self.frqRange,
@@ -493,7 +493,7 @@ class ndr308_nbddc(ndr308_1_nbddc):
         if any([q in confDict for q in keys]):
             if self.cfgCmd is not None:
                 cDict = {}
-                if confDict.has_key(configKeys.DDC_FREQUENCY_OFFSET):
+                if configKeys.DDC_FREQUENCY_OFFSET in confDict:
                     confDict[configKeys.DDC_FREQUENCY_OFFSET] = adjustFrequency(
                                           float(confDict[configKeys.DDC_FREQUENCY_OFFSET]),
                                           self.frqRange,
@@ -798,7 +798,7 @@ class ndr308_1(_radio):
                     configKeys.CONFIG_IP: {
                         }
                 }
-            for gigEPortNum in xrange(self.gigEIndexBase,
+            for gigEPortNum in range(self.gigEIndexBase,
                                       self.gigEIndexBase + self.numGigE, 1):
                 confDict[configKeys.CONFIG_IP][gigEPortNum] = {
                         configKeys.GIGE_FLOW_CONTROL: 1 if enable else 0,
@@ -810,7 +810,7 @@ class ndr308_1(_radio):
         status = {}
         if self.tgfcCmd is not None:
             confDict = self.getConfiguration()[configKeys.CONFIG_IP]
-            for gigEPortNum in xrange(self.gigEIndexBase,
+            for gigEPortNum in range(self.gigEIndexBase,
                                       self.gigEIndexBase + self.numGigE, 1):
                 if configKeys.GIGE_FLOW_CONTROL in confDict[gigEPortNum]:
                     status |= (confDict[gigEPortNum][configKeys.GIGE_FLOW_CONTROL]    == 1)

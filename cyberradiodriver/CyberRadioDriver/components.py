@@ -15,15 +15,15 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.  
 #    All rights reserved.
 #
 ###############################################################
 
 # Imports from other modules in this package
-import command
-import configKeys
-import log
+from . import command
+from . import configKeys
+from . import log
 # Imports from external modules
 import numpy
 # Python standard library imports
@@ -505,7 +505,7 @@ class _ddc(_base):
     # \return A list of DDC rates.
     @classmethod
     def getDdcRates(cls,index=None):
-        rateKeys = cls.getDdcRateSet(index).keys()
+        rateKeys = list(cls.getDdcRateSet(index).keys())
         rateKeys.sort()
         return [cls.rateSet[k] for k in rateKeys]
     
@@ -518,7 +518,7 @@ class _ddc(_base):
     @classmethod
     def getDdcRateList(cls,index=None):
         rateDict = cls.getDdcRateSet(index)
-        rateKeys = rateDict.keys()
+        rateKeys = list(rateDict.keys())
         rateKeys.sort()
         return [rateDict[k] for k in rateKeys]
     
@@ -541,7 +541,7 @@ class _ddc(_base):
     #    the corresponding DDC data formats ("iq" or "real").
     @classmethod
     def getDdcDataFormat(cls,):
-        return dict( (i,cls.dataFormat.get(i,DDC_DATA_FORMAT.IQ)) for i in cls.getDdcRateSet().keys() )
+        return dict( (i,cls.dataFormat.get(i,DDC_DATA_FORMAT.IQ)) for i in list(cls.getDdcRateSet().keys()) )
     
     # EXTENSION
     ##
@@ -552,7 +552,7 @@ class _ddc(_base):
     @classmethod
     def getDdcBwList(cls,index=None):
         bwDict = cls.getDdcBwSet(index)
-        rateKeys = bwDict.keys()
+        rateKeys = list(bwDict.keys())
         rateKeys.sort()
         return [bwDict[k] for k in rateKeys]
     
@@ -1050,7 +1050,7 @@ class _tx(_base):
     def __init__(self,*args,**kwargs):
         _base.__init__(self,*args,**kwargs)
         self.toneGenDict = {}
-        for i in xrange(self.toneGenIndexBase, 
+        for i in range(self.toneGenIndexBase, 
                         self.toneGenIndexBase + self.numToneGen, 1):
             self.toneGenDict[i] = self.toneGenType(parent=self, 
                                                    callback=self.callback, 
@@ -1178,7 +1178,7 @@ class _tx(_base):
                     self.configuration[configKeys.TX_ATTENUATION] = rfAttAdj
                 pass
         if self.numToneGen > 0 and configKeys.CONFIG_CW in confDict:
-            for tgNum in xrange(self.toneGenIndexBase, self.toneGenIndexBase + self.numToneGen):
+            for tgNum in range(self.toneGenIndexBase, self.toneGenIndexBase + self.numToneGen):
                 if tgNum in confDict[configKeys.CONFIG_CW]:
                     self.toneGenDict[tgNum].setConfiguration(**confDict[configKeys.CONFIG_CW][tgNum])
                     self.cmdErrorInfo.extend(self.toneGenDict[tgNum].getLastCommandErrorInfo())
@@ -1425,7 +1425,7 @@ class ddc_group(_base):
         # Override
         if self.groupMemberCmd is not None:
             members = []
-            for memberIndex in xrange(self.groupMemberIndexBase,
+            for memberIndex in range(self.groupMemberIndexBase,
                                       self.groupMemberIndexBase + self.numGroupMembers, 1):
                 cmd = self.groupMemberCmd(**{ "parent": self, 
                                        configKeys.INDEX: self.index,
@@ -1468,7 +1468,7 @@ class ddc_group(_base):
                 members = [confDict[configKeys.DDC_GROUP_MEMBERS]]
             else:
                 members = confDict[configKeys.DDC_GROUP_MEMBERS]
-            for member in xrange(self.groupMemberIndexBase, 
+            for member in range(self.groupMemberIndexBase, 
                                  self.groupMemberIndexBase + self.numGroupMembers):
                 enabled = 1 if member in members else 0
                 cDict = { "parent": self, 
@@ -1590,7 +1590,7 @@ class duc_group(_base):
         # Override
         if self.groupMemberCmd is not None:
             members = []
-            for memberIndex in xrange(self.groupMemberIndexBase,
+            for memberIndex in range(self.groupMemberIndexBase,
                                       self.groupMemberIndexBase + self.numGroupMembers, 1):
                 cmd = self.groupMemberCmd(**{ "parent": self, 
                                        configKeys.INDEX: self.index,
@@ -1633,7 +1633,7 @@ class duc_group(_base):
                 members = [confDict[configKeys.DUC_GROUP_MEMBERS]]
             else:
                 members = confDict[configKeys.DUC_GROUP_MEMBERS]
-            for member in xrange(self.groupMemberIndexBase, 
+            for member in range(self.groupMemberIndexBase, 
                                  self.groupMemberIndexBase + self.numGroupMembers):
                 enabled = 1 if member in members else 0
                 cDict = { "parent": self, 
@@ -1740,7 +1740,7 @@ class tuner_group(_base):
         # Override
         if self.groupMemberCmd is not None:
             members = []
-            for memberIndex in xrange(self.groupMemberIndexBase,
+            for memberIndex in range(self.groupMemberIndexBase,
                                       self.groupMemberIndexBase + self.numGroupMembers, 1):
                 cmd = self.groupMemberCmd(**{ "parent": self, 
                                        configKeys.INDEX: self.index,
@@ -1783,7 +1783,7 @@ class tuner_group(_base):
                 members = [confDict[configKeys.TUNER_GROUP_MEMBERS]]
             else:
                 members = confDict[configKeys.TUNER_GROUP_MEMBERS]
-            for member in xrange(self.groupMemberIndexBase, 
+            for member in range(self.groupMemberIndexBase, 
                                  self.groupMemberIndexBase + self.numGroupMembers):
                 enabled = 1 if member in members else 0
                 cDict = { "parent": self, 

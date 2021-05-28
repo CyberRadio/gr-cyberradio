@@ -13,17 +13,17 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.  
 #    All rights reserved.
 #
 ###############################################################
 
 # Imports from other modules in this package
-import command
-import components
-import configKeys
-import log
-import transport
+from . import command
+from . import components
+from . import configKeys
+from . import log
+from . import transport
 # Imports from external modules
 # Python standard library imports
 import ast
@@ -41,8 +41,6 @@ import threading
 # \brief Returns the MAC address and IP address for a given Ethernet interface.
 #
 # \param ifname The name of t# \author DA
-# \copyright Copyright (c) 2017 G3 Technologies, Inc.  All rights
-#    reserved.
 # \param ifname The Ethernet system interface ("eth0", for example).
 # \returns A 2-tuple: (MAC Address, IP Address).
 def getInterfaceAddresses(ifname):
@@ -356,7 +354,7 @@ class _radio(log._logger, configKeys.Configurable):
         self.clientId = kwargs.get("clientId", None)
         if self.transportTimeout is None:
             self.transportTimeout = self.defaultTimeout
-        self.name = "%s%s"%(self._name,"-%s"%kwargs.get("name") if kwargs.has_key("name") else "",)
+        self.name = "%s%s"%(self._name,"-%s"%kwargs.get("name") if "name" in kwargs else "",)
         self.logIfVerbose("Verbose mode!")
         # Communication transport in use 
         self.transport = None
@@ -379,23 +377,23 @@ class _radio(log._logger, configKeys.Configurable):
         # Form the actual index lists for the different components.  Now that certain components
         # have discrete index values rather than a full sequence, we need to store these for
         # later use.
-        self.tunerIndexList = range(self.tunerIndexBase, self.tunerIndexBase + self.numTuner)
-        self.wbddcIndexList = range(self.wbddcIndexBase, self.wbddcIndexBase + self.numWbddc)
+        self.tunerIndexList = list(range(self.tunerIndexBase, self.tunerIndexBase + self.numTuner))
+        self.wbddcIndexList = list(range(self.wbddcIndexBase, self.wbddcIndexBase + self.numWbddc))
         self.nbddcIndexList = self.nbddcIndexOverride if self.nbddcIndexOverride is not None else \
-                              range(self.nbddcIndexBase, self.nbddcIndexBase + self.numNbddc)
-        self.fftStreamIndexList = range(self.fftStreamIndexBase, self.fftStreamIndexBase + self.numFftStream)
-        self.txIndexList = range(self.txIndexBase, self.txIndexBase + self.numTxs)
-        self.wbducIndexList = range(self.wbducIndexBase, self.wbddcIndexBase + self.numWbduc)
-        self.nbducIndexList = range(self.nbducIndexBase, self.nbddcIndexBase + self.numNbduc)
-        self.wbddcGroupIndexList = range(self.wbddcGroupIndexBase, self.wbddcGroupIndexBase + self.numWbddcGroups)
-        self.nbddcGroupIndexList = range(self.nbddcGroupIndexBase, self.nbddcGroupIndexBase + self.numNbddcGroups)
-        self.cddcGroupIndexList = range(self.cddcGroupIndexBase, self.cddcGroupIndexBase + self.numCddcGroups)
-        self.wbducGroupIndexList = range(self.wbducGroupIndexBase, self.wbducGroupIndexBase + self.numWbducGroups)
-        self.tunerGroupIndexList = range(self.tunerGroupIndexBase, self.tunerGroupIndexBase + self.numTunerGroups)
-        self.gigEIndexList = range(self.gigEIndexBase, self.gigEIndexBase + self.numGigE)
-        self.gigEDipEntryIndexList = range(self.gigEDipEntryIndexBase, self.gigEDipEntryIndexBase + self.numGigEDipEntries)
+                              list(range(self.nbddcIndexBase, self.nbddcIndexBase + self.numNbddc))
+        self.fftStreamIndexList = list(range(self.fftStreamIndexBase, self.fftStreamIndexBase + self.numFftStream))
+        self.txIndexList = list(range(self.txIndexBase, self.txIndexBase + self.numTxs))
+        self.wbducIndexList = list(range(self.wbducIndexBase, self.wbddcIndexBase + self.numWbduc))
+        self.nbducIndexList = list(range(self.nbducIndexBase, self.nbddcIndexBase + self.numNbduc))
+        self.wbddcGroupIndexList = list(range(self.wbddcGroupIndexBase, self.wbddcGroupIndexBase + self.numWbddcGroups))
+        self.nbddcGroupIndexList = list(range(self.nbddcGroupIndexBase, self.nbddcGroupIndexBase + self.numNbddcGroups))
+        self.cddcGroupIndexList = list(range(self.cddcGroupIndexBase, self.cddcGroupIndexBase + self.numCddcGroups))
+        self.wbducGroupIndexList = list(range(self.wbducGroupIndexBase, self.wbducGroupIndexBase + self.numWbducGroups))
+        self.tunerGroupIndexList = list(range(self.tunerGroupIndexBase, self.tunerGroupIndexBase + self.numTunerGroups))
+        self.gigEIndexList = list(range(self.gigEIndexBase, self.gigEIndexBase + self.numGigE))
+        self.gigEDipEntryIndexList = list(range(self.gigEDipEntryIndexBase, self.gigEDipEntryIndexBase + self.numGigEDipEntries))
         self.txToneGenIndexList = [] if self.numTxs == 0 else \
-                                  range(self.txType.toneGenIndexBase, self.txType.toneGenIndexBase + self.txType.numToneGen)
+                                  list(range(self.txType.toneGenIndexBase, self.txType.toneGenIndexBase + self.txType.numToneGen))
         # Make component objects
         for objRange,objType,objDict in ( \
                                         (self.tunerIndexList,self.tunerType,self.tunerDict), \
@@ -461,7 +459,7 @@ class _radio(log._logger, configKeys.Configurable):
                 # version info dict) through ast.literal_eval().
                 self.versionInfo = ast.literal_eval(rsp[0])
         # Query hardware for details if we don't have them already
-        if not all([self.versionInfo.has_key(key) for key in \
+        if not all([key in self.versionInfo for key in \
                       [configKeys.VERINFO_MODEL, configKeys.VERINFO_SN]]):
             cmd = self.idnQry(parent=self, 
                               query=True,
@@ -471,7 +469,7 @@ class _radio(log._logger, configKeys.Configurable):
             rspInfo = cmd.getResponseInfo()
             if rspInfo is not None:
                 self.versionInfo.update(rspInfo)
-        if not all([self.versionInfo.has_key(key) for key in [configKeys.VERINFO_SW, 
+        if not all([key in self.versionInfo for key in [configKeys.VERINFO_SW, 
                                                               configKeys.VERINFO_FW,
                                                               configKeys.VERINFO_REF]]):
             cmd = self.verQry(parent=self, 
@@ -482,7 +480,7 @@ class _radio(log._logger, configKeys.Configurable):
             rspInfo = cmd.getResponseInfo()
             if rspInfo is not None:
                 self.versionInfo.update(rspInfo)
-        if not all([self.versionInfo.has_key(key) for key in [configKeys.VERINFO_MODEL, 
+        if not all([key in self.versionInfo for key in [configKeys.VERINFO_MODEL, 
                                                               configKeys.VERINFO_SN,
                                                               configKeys.VERINFO_UNITREV, 
                                                               configKeys.VERINFO_HW]]):
@@ -495,14 +493,14 @@ class _radio(log._logger, configKeys.Configurable):
             if rspInfo is not None:
                 # Don't mask previously determined model and S/N information!
                 for key in [configKeys.VERINFO_MODEL, configKeys.VERINFO_SN]:
-                    if self.versionInfo.has_key(key) and rspInfo.has_key(key):
+                    if key in self.versionInfo and key in rspInfo:
                         del rspInfo[key]
                 self.versionInfo.update(rspInfo)
         for key in [configKeys.VERINFO_MODEL, configKeys.VERINFO_SN, 
                     configKeys.VERINFO_SW, configKeys.VERINFO_FW, 
                     configKeys.VERINFO_REF, configKeys.VERINFO_UNITREV, 
                     configKeys.VERINFO_HW]:
-            if not self.versionInfo.has_key(key):
+            if key not in self.versionInfo:
                 self.versionInfo[key] = "N/A"
         return self.versionInfo
         
@@ -639,7 +637,7 @@ class _radio(log._logger, configKeys.Configurable):
                 # Tuner configuration
                 tunerConfDict = configDict2.get(configKeys.CONFIG_TUNER,{})
                 for index in self.tunerIndexList:
-                    if tunerConfDict.has_key(index):
+                    if index in tunerConfDict:
                         confDict = tunerConfDict[index]
                         confDict[configKeys.TUNER_INDEX] = index
                         success &= self.setTunerConfigurationNew(**confDict)
@@ -649,7 +647,7 @@ class _radio(log._logger, configKeys.Configurable):
                     ddcConfDict = configDict2.get(configKeys.CONFIG_DDC,{}).get(ddcType,{})
                     ddcIndexRange = self.wbddcIndexList if isWideband else self.nbddcIndexList
                     for index in ddcIndexRange:
-                        if ddcConfDict.has_key(index):
+                        if index in ddcConfDict:
                             confDict = ddcConfDict[index]
                             confDict[configKeys.DDC_INDEX] = index
                             success &= self.setDdcConfigurationNew(wideband=isWideband, **confDict)
@@ -658,7 +656,7 @@ class _radio(log._logger, configKeys.Configurable):
                 # Transmitter configuration
                 txConfDict = configDict2.get(configKeys.CONFIG_TX,{})
                 for index in self.getTransmitterIndexRange():
-                    if txConfDict.has_key(index):
+                    if index in txConfDict:
                         confDict = txConfDict[index]
                         confDict[configKeys.TX_INDEX] = index
                         success &= self.setTxConfigurationNew(**confDict)
@@ -667,7 +665,7 @@ class _radio(log._logger, configKeys.Configurable):
                     ducConfDict = configDict2.get(configKeys.CONFIG_DUC,{}).get(ducType,{})
                     ducIndexRange = self.wbducIndexList if isWideband else self.nbducIndexList
                     for index in ducIndexRange:
-                        if ducConfDict.has_key(index):
+                        if index in ducConfDict:
                             confDict = ducConfDict[index]
                             confDict[configKeys.DUC_INDEX] = index
                             success &= self.setDucConfigurationNew(wideband=isWideband, **confDict)
@@ -679,7 +677,7 @@ class _radio(log._logger, configKeys.Configurable):
                     ddcGroupConfDict = configDict2.get(configKeys.CONFIG_DDC_GROUP,{}).get(ddcType,{})
                     ddcGroupIndexRange = self.wbddcGroupIndexList if isWideband else self.nbddcGroupIndexList
                     for index in ddcGroupIndexRange:
-                        if ddcGroupConfDict.has_key(index):
+                        if index in ddcGroupConfDict:
                             confDict = ddcGroupConfDict[index]
                             confDict[configKeys.INDEX] = index
                             success &= self.setDdcGroupConfigurationNew(wideband=isWideband, **confDict)
@@ -702,7 +700,7 @@ class _radio(log._logger, configKeys.Configurable):
                     ddcGroupConfDict = configDict2.get(configKeys.CONFIG_DDC_GROUP,{}).get(ddcType,{})
                     ddcGroupIndexRange = self.cddcGroupIndexList
                     for index in ddcGroupIndexRange:
-                        if ddcGroupConfDict.has_key(index):
+                        if index in ddcGroupConfDict:
                             confDict = ddcGroupConfDict[index]
                             confDict[configKeys.INDEX] = index
                             #self.logIfVerbose("[ndr551][setConfiguration()] Combined DDC", index)
@@ -728,7 +726,7 @@ class _radio(log._logger, configKeys.Configurable):
                     ducGroupConfDict = configDict2.get(configKeys.CONFIG_DUC_GROUP,{}).get(ducType,{})
                     ducGroupIndexRange = self.wbducGroupIndexList if isWideband else self.nbducGroupIndexList
                     for index in ducGroupIndexRange:
-                        if ducGroupConfDict.has_key(index):
+                        if index in ducGroupConfDict:
                             confDict = ducGroupConfDict[index]
                             confDict[configKeys.INDEX] = index
                             success &= self.setDucGroupConfigurationNew(wideband=isWideband, **confDict)
@@ -746,7 +744,7 @@ class _radio(log._logger, configKeys.Configurable):
                 # FFT streaming configuration
                 fftStreamConfDict = configDict2.get(configKeys.CONFIG_FFT,{})
                 for index in self.fftStreamIndexList:
-                    if fftStreamConfDict.has_key(index):
+                    if index in fftStreamConfDict:
                         confDict = fftStreamConfDict[index]
                         confDict[configKeys.FFT_INDEX] = index
                         success &= self.setFftStreamConfiguration(**confDict)
@@ -755,7 +753,7 @@ class _radio(log._logger, configKeys.Configurable):
                 tunerGroupConfDict = configDict2.get(configKeys.CONFIG_TUNER_GROUP,{})
                 tunerGroupIndexRange = self.tunerGroupIndexList
                 for index in tunerGroupIndexRange:
-                    if tunerGroupConfDict.has_key(index):
+                    if index in tunerGroupConfDict:
                         confDict = tunerGroupConfDict[index]
                         confDict[configKeys.INDEX] = index
                         success &= self.setTunerGroupConfigurationNew(**confDict)
@@ -1031,7 +1029,7 @@ class _radio(log._logger, configKeys.Configurable):
                     self.configuration[configKey] = rspInfo.get(configKey, 0)
         # IP configuration query -- The format of this section depends on whether
         # the radio has Gigabit Ethernet ports on it or not.
-        if not self.configuration.has_key(configKeys.CONFIG_IP):
+        if configKeys.CONFIG_IP not in self.configuration:
             self.configuration[configKeys.CONFIG_IP] = {}
         self.configuration[configKeys.CONFIG_IP].update( self.queryIpConfigurationNew() )
 
@@ -1201,56 +1199,56 @@ class _radio(log._logger, configKeys.Configurable):
         fullConfiguration = copy.deepcopy(configuration)
         # -- Tuner configuration
         cDict = fullConfiguration.pop(configKeys.CONFIG_TUNER, {})
-        for index in cDict.keys():
+        for index in list(cDict.keys()):
             self.tunerDict[index].configuration = cDict[index]
         # -- DDC configuration
         cDict = fullConfiguration.pop(configKeys.CONFIG_DDC, {})
-        for ddcType in cDict.keys():
+        for ddcType in list(cDict.keys()):
             ddcDict = self.wbddcDict 
             if ddcType == "narrowband":
                 ddcDict = self.nbddcDict
-            for index in cDict[ddcType].keys():
+            for index in list(cDict[ddcType].keys()):
                 ddcDict[index].configuration = cDict[ddcType][index]
         # -- FFT streams
         cDict = fullConfiguration.pop(configKeys.CONFIG_FFT, {})
-        for index in cDict.keys():
+        for index in list(cDict.keys()):
             self.fftStreamDict[index].configuration = cDict[index]
         # -- TX configuration
         cDict = fullConfiguration.pop(configKeys.CONFIG_TX, {})
-        for index in cDict.keys():
+        for index in list(cDict.keys()):
             cDict2 = cDict[index].pop(configKeys.CONFIG_CW, {})
-            for index2 in cDict2.keys():
+            for index2 in list(cDict2.keys()):
                 self.txDict[index].toneGenDict[index2].configuration = cDict2[index2]
             self.txDict[index].configuration = cDict[index]
         # -- DUC configuration
         cDict = fullConfiguration.pop(configKeys.CONFIG_DUC, {})
-        for ducType in cDict.keys():
+        for ducType in list(cDict.keys()):
             ducDict = self.wbducDict 
             if ducType == "narrowband":
                 ducDict = self.nbducDict
-            for index in cDict[ducType].keys():
+            for index in list(cDict[ducType].keys()):
                 ducDict[index].configuration = cDict[ducType][index]
         # -- DDC group configuration
         cDict = fullConfiguration.pop(configKeys.CONFIG_DDC_GROUP, {})
-        for ddcType in cDict.keys():
+        for ddcType in list(cDict.keys()):
             ddcDict = self.wbddcGroupDict
             if ddcType == "narrowband":
                 ddcDict = self.nbddcGroupDict
             elif ddcType == "combined":
                 ddcDict = self.cddcGroupDict
-            for index in cDict[ddcType].keys():
+            for index in list(cDict[ddcType].keys()):
                 ddcDict[index].configuration = cDict[ddcType][index]
         # -- WBDUC groups
         cDict = fullConfiguration.pop(configKeys.CONFIG_DUC_GROUP, {})
-        for ducType in cDict.keys():
+        for ducType in list(cDict.keys()):
             ducDict = self.wbducGroupDict 
             #if ducType == "narrowband":
             #    ducDict = self.nbducGroupDict
-            for index in cDict[ducType].keys():
+            for index in list(cDict[ducType].keys()):
                 ducDict[index].configuration = cDict[ducType][index]
         # -- Tuner groups
         cDict = fullConfiguration.pop(configKeys.CONFIG_TUNER_GROUP, {})
-        for index in cDict.keys():
+        for index in list(cDict.keys()):
             self.tunerGroupDict[index].configuration = cDict[index]
         # -- What is left after all the popping are the radio-specific 
         #    config items, and the IP config
@@ -1342,6 +1340,30 @@ class _radio(log._logger, configKeys.Configurable):
     
     ##
     # \internal
+    # \brief Gets the list of currently connected data port indices from crdd.
+    # \note This capability does not depend on whether the radio is JSON or not. 
+    # \returns Either the returned data port list (if the command 
+    #    completed successfully), or an empty list (if it did not). 
+    def _crddGetConnectedDataPortIndices(self):
+        ret = []
+        # Get the radio's current configuration from crdd
+        rsp = self._crddSendCommand(cmd="QUERYCDPS", data=None)
+        # Deal with out-of-bound conditions
+        try:
+            if all( [
+                    rsp is not None,
+                    rsp != "Empty Read",
+                    rsp[0] != "TIMEOUT"
+                ] ):
+                # Get the returned list by running the first response 
+                # string (the data port list) through ast.literal_eval().
+                ret = ast.literal_eval(rsp[0])
+        except:
+            pass
+        return ret
+    
+    ##
+    # \internal
     # \brief Helper method for converting Unicode strings to ASCII strings
     #    during the JSON conversion process.
     #
@@ -1353,12 +1375,12 @@ class _radio(log._logger, configKeys.Configurable):
     def encodeJsonAsAscii(data):
         def _foo(item):
             ret = item
-            if isinstance(item, unicode):
+            if isinstance(item, str):
                 ret = item.encode('ascii')
             elif isinstance(item, list):
                 ret = [ _foo(q) for q in item ]
             elif isinstance(item, dict):
-                ret = { _foo(key): _foo(value) for key, value in item.iteritems() }
+                ret = { _foo(key): _foo(value) for key, value in item.items() }
             return ret
         adjPairs = []
         for pair in data:
@@ -1490,7 +1512,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::setReferenceMode()
     def setReferenceMode(self,mode):
         try:
-            modeInt = int(mode) if int(mode) in self.refModes.keys() else None
+            modeInt = int(mode) if int(mode) in list(self.refModes.keys()) else None
         except:
             modeInt = None
         if modeInt is not None and self.refCmd is not None:
@@ -1510,7 +1532,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::setBypassMode()
     def setBypassMode(self,mode):
         try:
-            modeInt = int(mode) if int(mode) in self.rbypModes.keys() else None
+            modeInt = int(mode) if int(mode) in list(self.rbypModes.keys()) else None
         except:
             modeInt = None
         if modeInt is not None and self.rbypCmd is not None:
@@ -1721,7 +1743,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getTunerIndexRange()
     @classmethod
     def getTunerIndexRange(cls):
-        return range(cls.tunerIndexBase, cls.tunerIndexBase + cls.numTuner, 1)
+        return list(range(cls.tunerIndexBase, cls.tunerIndexBase + cls.numTuner, 1))
     
     ##
     # \brief Gets the frequency range for the tuners on the radio.
@@ -1812,7 +1834,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getWbddcIndexRange()
     @classmethod
     def getWbddcIndexRange(cls):
-        return range(cls.wbddcIndexBase, cls.wbddcIndexBase + cls.numWbddc, 1)
+        return list(range(cls.wbddcIndexBase, cls.wbddcIndexBase + cls.numWbddc, 1))
     
     ##
     # \brief Gets whether the wideband DDCs on the radio are tunable.
@@ -1898,7 +1920,7 @@ class _radio(log._logger, configKeys.Configurable):
         elif cls.nbddcIndexOverride is not None:
             return cls.nbddcIndexOverride
         else:
-            return range(cls.nbddcIndexBase, cls.nbddcIndexBase + cls.numNbddc, 1)
+            return list(range(cls.nbddcIndexBase, cls.nbddcIndexBase + cls.numNbddc, 1))
     
     ##
     # \brief Gets whether the narrowband DDCs on the radio are tunable.
@@ -1980,7 +2002,7 @@ class _radio(log._logger, configKeys.Configurable):
     @classmethod
     def getFftStreamIndexRange(cls):
         return [] if cls.numFftStream == 0 else \
-               range(cls.fftStreamIndexBase, cls.fftStreamIndexBase + cls.numFftStream, 1)
+               list(range(cls.fftStreamIndexBase, cls.fftStreamIndexBase + cls.numFftStream, 1))
     
     ##
     # \brief Gets the allowed rate set for the FFTs on the radio.
@@ -2108,7 +2130,7 @@ class _radio(log._logger, configKeys.Configurable):
     @classmethod
     def getGigEIndexRange(cls):
         return [] if cls.numGigE == 0 else \
-               range(cls.gigEIndexBase, cls.gigEIndexBase + cls.numGigE, 1)
+               list(range(cls.gigEIndexBase, cls.gigEIndexBase + cls.numGigE, 1))
     
     ##
     # \brief Gets the number of destination IP address table entries available for 
@@ -2127,8 +2149,8 @@ class _radio(log._logger, configKeys.Configurable):
     @classmethod
     def getGigEDipEntryIndexRange(cls):
         return [] if cls.numGigE == 0 else \
-               range(cls.gigEDipEntryIndexBase, \
-                     cls.gigEDipEntryIndexBase + cls.numGigEDipEntries, 1)
+               list(range(cls.gigEDipEntryIndexBase, \
+                     cls.gigEDipEntryIndexBase + cls.numGigEDipEntries, 1))
     
     ##
     # \brief Gets the list of connection modes that the radio supports.
@@ -2185,8 +2207,8 @@ class _radio(log._logger, configKeys.Configurable):
     @classmethod
     def getTransmitterIndexRange(cls):
         return [] if cls.numTxs == 0 else \
-               range(cls.txIndexBase, \
-                     cls.txIndexBase + cls.numTxs, 1)
+               list(range(cls.txIndexBase, \
+                     cls.txIndexBase + cls.numTxs, 1))
     
     ##
     # \brief Gets the frequency range for the transmitters on the radio.
@@ -2253,8 +2275,8 @@ class _radio(log._logger, configKeys.Configurable):
     @classmethod
     def getTransmitterCWIndexRange(cls):
         return [] if not cls.transmitterSupportsCW() else \
-               range(cls.txType.toneGenIndexBase, \
-                     cls.txType.toneGenIndexBase + cls.txType.numToneGen, 1)
+               list(range(cls.txType.toneGenIndexBase, \
+                     cls.txType.toneGenIndexBase + cls.txType.numToneGen, 1))
     
     ##
     # \brief Gets the CW tone generator frequency range for transmitters on the radio.
@@ -2407,7 +2429,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getWbducIndexRange()
     @classmethod
     def getWbducIndexRange(cls):
-        return range(cls.wbducIndexBase, cls.wbducIndexBase + cls.numWbduc, 1)
+        return list(range(cls.wbducIndexBase, cls.wbducIndexBase + cls.numWbduc, 1))
     
     ##
     # \brief Gets the frequency offset range for the wideband DUCs on the radio.
@@ -2509,7 +2531,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getWbddcGroupIndexRange()
     @classmethod
     def getWbddcGroupIndexRange(cls):
-        return range(cls.wbddcGroupIndexBase, cls.wbddcGroupIndexBase + cls.numWbddcGroups, 1)
+        return list(range(cls.wbddcGroupIndexBase, cls.wbddcGroupIndexBase + cls.numWbddcGroups, 1))
     
     ##
     # \brief Gets the number of narrowband DDC groups on the radio.
@@ -2524,7 +2546,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getNbddcGroupIndexRange()
     @classmethod
     def getNbddcGroupIndexRange(cls):
-        return range(cls.nbddcGroupIndexBase, cls.nbddcGroupIndexBase + cls.numNbddcGroups, 1)
+        return list(range(cls.nbddcGroupIndexBase, cls.nbddcGroupIndexBase + cls.numNbddcGroups, 1))
     
     ##
     # \brief Gets the number of combined DDC groups on the radio.
@@ -2539,7 +2561,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getCombinedDdcGroupIndexRange()
     @classmethod
     def getCombinedDdcGroupIndexRange(cls):
-        return range(cls.cddcGroupIndexBase, cls.cddcGroupIndexBase + cls.numCddcGroups, 1)
+        return list(range(cls.cddcGroupIndexBase, cls.cddcGroupIndexBase + cls.numCddcGroups, 1))
     
     ##
     # \brief Gets the number of wideband DUC groups on the radio.
@@ -2555,7 +2577,7 @@ class _radio(log._logger, configKeys.Configurable):
     # \copydetails CyberRadioDriver::IRadio::getWbducGroupIndexRange()
     @classmethod
     def getWbducGroupIndexRange(cls):
-        return range(cls.wbducGroupIndexBase, cls.wbducGroupIndexBase + cls.numWbducGroups, 1)
+        return list(range(cls.wbducGroupIndexBase, cls.wbducGroupIndexBase + cls.numWbducGroups, 1))
     
 
     # ------------- Deprecated/Helper Methods ----------------- #
@@ -2571,11 +2593,11 @@ class _radio(log._logger, configKeys.Configurable):
     # \brief Helper function that returns an index list.
     def _getIndexList(self,objIndex,objDict):
         if objIndex is None:
-            return objDict.keys()
+            return list(objDict.keys())
         elif type(objIndex) is int:
-            return [objIndex,] if objIndex in objDict.keys() else []
+            return [objIndex,] if objIndex in list(objDict.keys()) else []
         elif type(objIndex) is list:
-            return [i for i in objIndex if i in objDict.keys()]
+            return [i for i in objIndex if i in list(objDict.keys())]
         else:
             return []
     
@@ -2613,11 +2635,11 @@ class _radio(log._logger, configKeys.Configurable):
             for entryNum in entryIndexList:
                 newConfigDict[entryNum] = copy.deepcopy(tmpDict)
         for entryNum in configDict:
-            if newConfigDict.has_key(entryNum):
+            if entryNum in newConfigDict:
                 self._dictUpdate(newConfigDict[entryNum], \
                                  configDict[entryNum], \
                                  newConfigDict[entryNum], \
-                                 configDict[entryNum].keys())
+                                 list(configDict[entryNum].keys()))
             else:
                 newConfigDict[entryNum] = copy.deepcopy(configDict[entryNum])
         return newConfigDict
@@ -2652,8 +2674,8 @@ class _radio(log._logger, configKeys.Configurable):
                 newConfigDict[configKeys.CONFIG_IP] = self._normalizeConfigDictSection( \
                             tmpDict, self.gigEIndexList)
                 for gigEPortNum in self.gigEIndexList:
-                    if newConfigDict[configKeys.CONFIG_IP].has_key(gigEPortNum) and \
-                       newConfigDict[configKeys.CONFIG_IP][gigEPortNum].has_key(configKeys.IP_DEST):
+                    if gigEPortNum in newConfigDict[configKeys.CONFIG_IP] and \
+                       configKeys.IP_DEST in newConfigDict[configKeys.CONFIG_IP][gigEPortNum]:
                         tmpDict = copy.deepcopy(newConfigDict[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST])
                         newConfigDict[configKeys.CONFIG_IP][gigEPortNum][configKeys.IP_DEST] = \
                               self._normalizeConfigDictSection(tmpDict, \
@@ -2664,8 +2686,8 @@ class _radio(log._logger, configKeys.Configurable):
                                                             tmpDict, \
                                                             self.txIndexList)
                 for txNum in self.getTransmitterIndexRange():
-                    if newConfigDict[configKeys.CONFIG_TX].has_key(txNum):
-                        if newConfigDict[configKeys.CONFIG_TX][txNum].has_key(configKeys.CONFIG_CW):
+                    if txNum in newConfigDict[configKeys.CONFIG_TX]:
+                        if configKeys.CONFIG_CW in newConfigDict[configKeys.CONFIG_TX][txNum]:
                             newConfigDict[configKeys.CONFIG_TX][txNum][configKeys.CONFIG_CW] = \
                                  self._normalizeConfigDictSection( newConfigDict[configKeys.CONFIG_TX][txNum][configKeys.CONFIG_CW], \
                                                                    self.txToneGenIndexList)
@@ -3030,7 +3052,7 @@ class _radio(log._logger, configKeys.Configurable):
                                       configKeys.GIGE_SOURCE_PORT, \
                                       configKeys.GIGE_DEST_PORT, \
                                       configKeys.GIGE_ARP]:
-                        if hasattr(cmd, "queryParamMap") and cmd.queryParamMap.has_key(configKey):
+                        if hasattr(cmd, "queryParamMap") and configKey in cmd.queryParamMap:
                             ret[gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum][configKey] = None
                         elif hasattr(cmd, "queryResponseData") and configKey in [q[0] for q in cmd.queryResponseData]:
                             ret[gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum][configKey] = None
@@ -3051,7 +3073,7 @@ class _radio(log._logger, configKeys.Configurable):
                                           configKeys.GIGE_SOURCE_PORT, \
                                           configKeys.GIGE_DEST_PORT, \
                                           configKeys.GIGE_ARP]:
-                            if rspInfo.has_key(configKey):
+                            if configKey in rspInfo:
                                 ret[gigEPortNum][configKeys.IP_DEST][gigEDipEntryNum][configKey] = \
                                    rspInfo[configKey]
         return ret
@@ -3346,7 +3368,7 @@ class _radio(log._logger, configKeys.Configurable):
                 if len(udpBase)==1:
                     udpBase.append(udpBase[0])
             for index,interface in enumerate(iface):
-                udpList.append( range(udpBase[index]+index*100,udpBase[index]+maxUdp+index*100) )
+                udpList.append( list(range(udpBase[index]+index*100,udpBase[index]+maxUdp+index*100)) )
                 mac,dip = getInterfaceAddresses(iface[index])
                 x = [ int(i) for i in dip.split(".") ]
                 x[-1]+=10
@@ -3365,7 +3387,7 @@ class _radio(log._logger, configKeys.Configurable):
                 iface = iface[0]
             if maxUdp is None:
                 maxUdp = self.numWbddc+self.numNbddc
-            self.udpList = [range(udpBase,udpBase+maxUdp),]
+            self.udpList = [list(range(udpBase,udpBase+maxUdp)),]
             mac,dip = getInterfaceAddresses(iface)
             x = [ int(i) for i in dip.split(".") ]
             x[-1]+=10
@@ -3717,6 +3739,16 @@ class _radio(log._logger, configKeys.Configurable):
             obj.setLogFile(logFile)
 
     ##
+    # \brief Gets the list of connected data port interface indices.
+    #
+    # \copydetails CyberRadioDriver::IRadio::getConnectedDataPorts()
+    def getConnectedDataPorts(self):
+        ret = []
+        if self.isCrddConnection:
+            ret = self._crddGetConnectedDataPortIndices()
+        return ret
+    
+    ##
     # \internal
     # \brief Converts a user-specified time string into a number of seconds 
     #      since 1/1/70.  
@@ -3743,7 +3775,7 @@ class _radio(log._logger, configKeys.Configurable):
         elif tstr == "begin":
             ret = 0
         elif tstr == "end":
-            ret = sys.maxint
+            ret = sys.maxsize
         else:
             if tstr.find('now') != -1:
                 tm = datetime.datetime.utcnow() if utc else datetime.datetime.now()
@@ -4025,7 +4057,7 @@ class _radio_identifier_json(_radio):
                 configKeys.VERINFO_SW, configKeys.VERINFO_FW, 
                 configKeys.VERINFO_REF, configKeys.VERINFO_UNITREV, 
                 configKeys.VERINFO_HW]
-        if not all([self.versionInfo.has_key(key) for key in keys]):
+        if not all([key in self.versionInfo for key in keys]):
             cmd = self.statQry(parent=self, 
                                query=True,
                                verbose=self.verbose, logFile=self.logFile)
@@ -4035,7 +4067,7 @@ class _radio_identifier_json(_radio):
             if rspInfo is not None:
                 self._dictUpdate(self.versionInfo, rspInfo, {}, keys)
         for key in keys:
-            if not self.versionInfo.has_key(key):
+            if key not in self.versionInfo:
                 self.versionInfo[key] = "N/A"
         return self.versionInfo
 

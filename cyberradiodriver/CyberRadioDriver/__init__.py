@@ -23,7 +23,7 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.
 #    All rights reserved.
 #
 ###############################################################
@@ -64,17 +64,17 @@
 #    <tr><td>\link CyberRadioDriver::radios::ndr308::ndr308 NDR308 \endlink</td><td>"ndr308"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radios::ndr308::ndr308_4 NDR308 4-tuner \endlink</td><td>"ndr308_4"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radios::internal::ndr328::ndr328 NDR328 \endlink</td><td>"ndr328"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radios::internal::ndr354::ndr354 NDR354 \endlink</td><td>"ndr354"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radios::internal::ndr357::ndr357 NDR357 \endlink</td><td>"ndr357"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radios::internal::ndr358::ndr358 NDR358 \endlink</td><td>"ndr358"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radios::internal::ndr358::ndr358_recorder NDR358 Recorder Variant\endlink</td><td>"ndr358-recorder"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radios::internal::ndr364::ndr364 NDR364 \endlink</td><td>"ndr364"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr354::ndr354 NDR354 \endlink</td><td>"ndr354"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr357::ndr357 NDR357 \endlink</td><td>"ndr357"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr358::ndr358 NDR358 \endlink</td><td>"ndr358"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr358::ndr358_recorder NDR358 Recorder Variant\endlink</td><td>"ndr358-recorder"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr364::ndr364 NDR364 \endlink</td><td>"ndr364"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radios::internal::ndr470::ndr470 NDR470 \endlink</td><td>"ndr470"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radios::internal::ndr472::ndr472_1 NDR472-1 \endlink</td><td>"ndr472_1"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radios::internal::ndr472::ndr472 NDR472 \endlink</td><td>"ndr472"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radios::internal::ndr551::ndr551 NDR551 \endlink</td><td>"ndr551"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr551::ndr551 NDR551 \endlink</td><td>"ndr551"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radios::internal::ndr559::ndr559 NDR559 \endlink</td><td>"ndr559"</td></tr>
-#    <tr><td>\link CyberRadioDriver::radios::internal::ndr562::ndr562 NDR562 \endlink</td><td>"ndr562"</td></tr>
+#    <tr><td>\link CyberRadioDriver::radios::ndr562::ndr562 NDR562 \endlink</td><td>"ndr562"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radios::ndr601::ndr601 NDR601 \endlink</td><td>"ndr601"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radios::ndr651::ndr651 NDR651 \endlink</td><td>"ndr651"</td></tr>
 #    <tr><td>\link CyberRadioDriver::radios::internal::ndr804::ndr804 NDR804 \endlink</td><td>"ndr804"</td></tr>
@@ -88,8 +88,8 @@
 ###############################################################
 
 # Imports from other modules in this package
-import configKeys
-import radio
+from . import configKeys
+from . import radio
 # Imports from external modules
 # Python standard library imports
 import importlib
@@ -108,7 +108,7 @@ name = "CyberRadioDriver"
 description = "CyberRadio Solutions NDR Driver"
 ##
 # \brief Driver version number (string).
-version = "20.09.04a"
+version = "21.03.22"
 
 # # This section of code inspects the "radio" module for radio handler
 # # objects (objects derived from _radio, thus implementing the IRadio interface)
@@ -211,7 +211,7 @@ def import_submodules(package, recursive=True):
 def create_radio_class_map():
     ret = {}
     radio_module_info = import_submodules("CyberRadioDriver.radios")
-    for modname, modinfo in radio_module_info.iteritems():
+    for modname, modinfo in radio_module_info.items():
         for name, obj in inspect.getmembers(modinfo):
             if inspect.isclass(obj) and issubclass(obj, radio._radio) and "_radio" not in name:
                 # Add the object to the radio class map.
@@ -2348,3 +2348,14 @@ class IRadio(object):
     #    If None, logging is disabled.
     def setLogFile(self, logFile):
         raise NotImplementedError
+    
+    ##
+    # \brief Gets the list of connected data port interface indices.
+    # \note This method only applies to radio handler objects connected through
+    #     crdd.  If the radio handler object is connected directly to the radio,
+    #     then this method will return an empty list.
+    # \returns The list of connected data port indices.  This will be an empty
+    #     list in case of error.
+    def getConnectedDataPorts(self):
+        raise NotImplementedError
+    

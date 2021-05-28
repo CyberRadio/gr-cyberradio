@@ -9,7 +9,7 @@ It defines classes_and_methods
 
 @author:     user_name
 
-@copyright:  2016 organization_name. All rights reserved.
+@copyright:  2016-2021 CyberRadio Solutions, Inc. All rights reserved.
 
 @license:    license
 
@@ -91,7 +91,7 @@ def main(argv=None): # IGNORE:C0111
 	program_license = '''%s
 
 	Created by user_name on %s.
-	Copyright 2016 organization_name. All rights reserved.
+	Copyright 2016-2021 CyberRadio Solutions, Inc. All rights reserved.
 
 	Licensed under the Apache License 2.0
 	http://www.apache.org/licenses/LICENSE-2.0

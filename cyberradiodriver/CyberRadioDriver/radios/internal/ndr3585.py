@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 ##################################################################
-# \package CyberRadioDriver.radios.ndr378 
-# \brief NDR378 Support
+# \package CyberRadioDriver.radios.ndr3585 
+# \brief ndr3585 Support
 # \author NH
 # \author DA
 # \author MN
 # \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.  
-#     All rights reserved.
+#    All rights reserved.
 ##################################################################
 
 # Imports from other modules in this package
@@ -15,100 +15,56 @@ from CyberRadioDriver.radios.ndr551 import ndr551, \
                                            ndr551_wbddc, \
                                            ndr551_nbddc, \
                                            ndr551_ddc_group, \
-                                           ndr551_ddc_ifSpec, \
-                                           ndr551_adc_ifSpec, \
-                                           ndr551_demod_ifSpec
-from CyberRadioDriver.command import _jsonCommandBase, jsonConfig
-from CyberRadioDriver import configKeys
+                                           ndr551_ddc_ifSpec
 # Imports from external modules
 # Python standard library imports
 
 ##
-# \brief Tuner component class for the NDR378.
+# \brief Tuner component class for the ndr3585.
 #
-class ndr378_tuner(ndr551_tuner):
-    _name = "Tuner(NDR378)"
+class ndr3585_tuner(ndr551_tuner):
+    _name = "Tuner(ndr3585)"
     frqRange = (20e6,6e9)
 
 ##
-# \brief WBDDC component class for the NDR378.
-class ndr378_wbddc(ndr551_wbddc):
-    _name = "WBDDC(NDR378)"
+# \brief WBDDC component class for the ndr3585.
+class ndr3585_wbddc(ndr551_wbddc):
+    _name = "WBDDC(ndr3585)"
+    rateSet = { 41 : 125e6 }
+    bwSet = { 41 : 80e6 }
 
 ##
-# \brief NBDDC component class for the NDR378.
-class ndr378_nbddc(ndr551_nbddc):
-    _name = "NBDDC(NDR378)"
+# \brief NBDDC component class for the ndr3585.
+class ndr3585_nbddc(ndr551_nbddc):
+    _name = "NBDDC(ndr3585)"
+    rateSet = { 19 : 25e6,
+                18 : 12.5e6,
+                17 : 6.25e6 }
+    bwSet = { 19 : 25e6,
+              18 : 10e6,
+              17 : 5e6 }
 
 ##
-# \brief NBDDC component class for the NDR378.
-class ndr378_ddc_group(ndr551_ddc_group):
-    _name = "DDCGroup(NDR378)"
-
-##
-# \internal
-# \brief VITA 49 interface specification class for the NDR378's DDC format.
-# \note Some explanation for these values is probably in order.
-# * The "header" includes not only the 7 words of the standard VITA
-#   packet header, but also the 5 words of the metadata included in
-#   each DDC payload.
-# * The "tail" includes not only the standard VITA packet trailer, 
-#   but also the trailer word within the DDC payload.
-# * The definition of "payload" deviates from the ICD here, as we
-#   want the "payload" to be only the part of the packet that 
-#   contains data samples.  
-# ** For DDC format, each 32-bit word contains one 16-bit I/16-bit Q 
-#    sample, so the number of samples is getVitaPayloadSize("ddc") / 4.
-class ndr378_ddc_ifSpec(ndr551_ddc_ifSpec):
-    pass
-
+# \brief NBDDC component class for the ndr3585.
+class ndr3585_ddc_group(ndr551_ddc_group):
+    _name = "DDCGroup(ndr3585)"
 
 ##
 # \internal
-# \brief VITA 49 interface specification class for NDR378's ADC format.
-# \note Some explanation for these values is probably in order.
-# * The "header" includes not only the 7 words of the standard VITA
-#   packet header, but also the 5 words of the metadata included in
-#   each ADC payload.
-# * The "tail" includes not only the standard VITA packet trailer, 
-#   but also the trailer word within the ADC payload.
-# * The definition of "payload" deviates from the ICD here, as we
-#   want the "payload" to be only the part of the packet that 
-#   contains data samples.  
-# ** For ADC format, each 32-bit word contains two 16-bit ADC samples,
-#    so the number of samples is getVitaPayloadSize("adc") / 2.
-class ndr378_adc_ifSpec(ndr551_adc_ifSpec):
-    pass
-
+# \brief VITA 49 interface specification class for the ndr3585.
+class ndr3585_ifSpec(ndr551_ddc_ifSpec):
+    pass 
 
 ##
-# \internal
-# \brief VITA 49 interface specification class for the NDR378's demod format.
-# \note Some explanation for these values is probably in order.
-# * The "header" includes not only the 7 words of the standard VITA
-#   packet header, but also the 5 words of the metadata included in
-#   each demod payload.
-# * The "tail" includes not only the standard VITA packet trailer, 
-#   but also the trailer word within the demod payload.
-# * The definition of "payload" deviates from the ICD here, as we
-#   want the "payload" to be only the part of the packet that 
-#   contains data samples.  
-# ** For demod format, each 32-bit word contains two 16-bit demod samples,
-#    so the number of samples is getVitaPayloadSize("demod") / 2.
-class ndr378_demod_ifSpec(ndr551_demod_ifSpec):
-    pass
-
-
-##
-# \brief Radio handler class for the NDR378.
+# \brief Radio handler class for the ndr3585.
 #
 # This class implements the CyberRadioDriver.IRadio interface.
 #
-# \section ConnectionModes_NDR378 Connection Modes
+# \section ConnectionModes_ndr3585 Connection Modes
 #
 # "udp"
 #
-# \section RadioConfig_NDR378 Radio Configuration Options
+# \section RadioConfig_ndr3585 Radio Configuration Options
 #
 # \code
 # configDict = {
@@ -149,7 +105,6 @@ class ndr378_demod_ifSpec(ndr551_demod_ifSpec):
 #                 "startTime": [start time],
 #                 "samples": [samples],
 #                 "udpDest": [UDP destination table index],
-#                 "groupId": [0-15, step 1],
 #                 "streamId": [stream ID],
 #                 "link": [0, 1, 2, 3],
 #                 "gainMode": ["auto", "manual", "freeze"],
@@ -184,7 +139,6 @@ class ndr378_demod_ifSpec(ndr551_demod_ifSpec):
 #                 "startTime": [ISO 8601 time string],
 #                 "samples": [number of samples],
 #                 "udpDest": [UDP destination table index],
-#                 "groupId": [0-15, step 1],
 #                 "streamId": [stream ID],
 #                 "gainMode": ["auto", "manual", "freeze"],
 #                 "dgv": [0.0-96.0, step 1.0],
@@ -202,6 +156,16 @@ class ndr378_demod_ifSpec(ndr551_demod_ifSpec):
 #              },
 #           ...63 (repeat for each NBDDC)
 #         },
+#      },
+#      "ddcGroupConfiguration": {
+#            "combined": {
+#                0: {
+#                   "enable": [True, False],
+#                   "wbddcMembers": [None, a single WBDDC, or a Python list of WBDDCs],
+#                   "nbddcMembers": [None, a single NBDDC, or a Python list of NBDDCs],
+#                },
+#             ...15 (repeat for each DDC group)
+#            },
 #      },
 #      "ipConfiguration": {
 #            0: {
@@ -226,54 +190,20 @@ class ndr378_demod_ifSpec(ndr551_demod_ifSpec):
 # }
 # \endcode
 #
-# \section VITA_Notes_NDR378 VITA 49 Notes
-#
-# When dealing with VITA 49 payloads, we have historically relied on the 
-# following convention:
-# * getVitaHeaderSize() provides how many bytes contain metadata information 
-#   at the beginning of the packet
-# * getVitaPayloadSize() provides how many bytes contain data samples
-# * getVitaTailSize() provides how many bytes contain metadata information 
-#   at the end of the packet
-#
-# For NDR551-class radios, this convention requires us to deviate, not only
-# from the VITA 49 standard, but also from the NDR551 ICD itself.
-# * The getVitaHeaderSize(), getVitaPayloadSize(), and getVitaTailSize() 
-#   methods use the payloadType argument to differentiate between the 
-#   three supported payload formats.
-#   * DDC format: "ddc"
-#   * ADC format: "adc"
-#   * Demod format: "demod"
-# * The "header" includes not only the 7 words of the standard VITA
-#   packet header, but also the 5 words of the metadata included in
-#   each payload.
-# * The "tail" includes not only the standard VITA packet trailer, 
-#   but also the trailer word within the payload.
-# * The definition of "payload" deviates from the ICD here, as we
-#   want the "payload" to be only the part of the packet that 
-#   contains data samples.  
-# ** For ADC format, each 32-bit word contains two 16-bit ADC samples,
-#    so the number of samples is getVitaPayloadSize("adc") / 2.
-# ** For DDC format, each 32-bit word contains one 16-bit I/16-bit Q 
-#    sample, so the number of samples is getVitaPayloadSize("ddc") / 4.
-# ** For demod format, each 32-bit word contains two 16-bit demod samples,
-#    so the number of samples is getVitaPayloadSize("demod") / 2.
-#
 # \implements CyberRadioDriver.IRadio    
-class ndr378(ndr551):
-    _name = "NDR378"
-    ifSpec = ndr378_ddc_ifSpec
-    ifSpecMap = {
-            "ddc":   ndr378_ddc_ifSpec,
-            "adc":   ndr378_adc_ifSpec,
-            "demod": ndr378_demod_ifSpec,
-        }
-    tunerType = ndr378_tuner
+class ndr3585(ndr551):
+    _name = "ndr3585"
+    ifSpec = ndr3585_ifSpec
+    tunerType = ndr3585_tuner
     numTuner = 8
-    wbddcType = ndr378_wbddc
+    wbddcType = ndr3585_wbddc
     numWbddc = 8
-    nbddcType = ndr378_nbddc
-    cddcGroupType = None
+    nbddcType = ndr3585_nbddc
+    cddcGroupType = ndr3585_ddc_group
 
+class ndr3585_coherent(ndr3585):
+    _name = "ndr3585-Coherent"
+    numWbddc = 16
 
-            
+if __name__ == '__main__':
+    pass

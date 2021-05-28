@@ -13,19 +13,40 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.  
 #    All rights reserved.
 #
 ###############################################################
 
 # Imports from other modules in this package
-import configKeys
-import log
+from . import configKeys
+from . import log
 # Imports from external modules
 # Python standard library imports
 import json
 import string
-import traceback 
+import traceback
+import sys
+
+##
+# \brief Helper function that removes letters from a string.
+#
+# The method used to do this varies between Python 2 and Python 3.
+#
+# \param data: The data to convert, as a string.
+# \returns The converted data, as a string.
+#
+def NO_LETTERS(data):
+    if sys.version_info >= (3,):
+        # Python 3 -- Make a translation table first that specifies
+        # what characters to delete, then apply it to the string
+        # using translate()
+        return data.translate(
+                data.maketrans("", "", string.ascii_letters)
+            )
+    else:
+        # Python 2 -- Using old translate() method
+        return data.translate(None, string.ascii_letters)
 
 ##
 # \internal
@@ -134,7 +155,7 @@ class _commandBase(log._logger):
         self.parameterList = []
         self.mnemonic = kwargs.get("mnemonic",self.mnemonic)
         self.query = kwargs.get("query",not self.settable)
-        if kwargs.has_key("cmdString"):
+        if "cmdString" in kwargs:
             self.cmd = str(kwargs.get("cmdString")).strip()
             self.mnemonic = self.cmd[:self.cmd.find(" ")]
         else:
@@ -144,7 +165,7 @@ class _commandBase(log._logger):
                 if isinstance(parm, tuple):
                     parmName,parmType,parmOpt,parmDefault = parm
     #                 self.logIfVerbose((parmName,parmType,parmOpt,parmDefault,repr(kwargs.get(parmName))))
-                    if not kwargs.has_key(parmName):
+                    if parmName not in kwargs:
                         #self.logIfVerbose(parmName,parmType,parmOpt)
                         if not parmOpt:
                             self.log( "MISSING MANDATORY PARAMETER %s" % repr(parmName) )
@@ -175,8 +196,12 @@ class _commandBase(log._logger):
     
     ##
     # \internal
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.success)
+    
+    ##
+    # \internal
+    __nonzero__ = __bool__
     
     # OVERRIDE
     ##
@@ -292,7 +317,7 @@ class _commandBase(log._logger):
                                 continue
                             # Strip unit designators if desired
                             if rspDataInfo[2]:
-                                rspVec[i] = rspVec[i].translate(None, string.ascii_letters)
+                                rspVec[i] = NO_LETTERS( rspVec[i] )
                             # Convert the response element into the appropriate type
                             # and put it in the dictionary.  If the conversion doesn't
                             # work, assign None instead.
@@ -380,7 +405,7 @@ class _jsonCommandBase(log._logger):
         # Start with a new message ID
         self.cmd = { "msg": jsonConfig.newMessageId() }
         # If the user specified the command string, parse it
-        if kwargs.has_key("cmdString"):
+        if "cmdString" in kwargs:
             self.cmd.update(json.loads(str(kwargs.get("cmdString")), 
                                        object_hook=_jsonCommandBase.ascii_encode_dict))
             self.mnemonic = self.cmd.get("cmd", "")
@@ -420,12 +445,17 @@ class _jsonCommandBase(log._logger):
     # Use this method as the object_hook keyword argument when calling 
     # json.loads().
     #
+    # \note: This method is effectively a no-op under Python 3.
+    #
     @staticmethod
     def ascii_encode_dict(data):
-        ascii_encode = lambda x: x.encode('ascii') if isinstance(x, unicode) else x 
-        return dict(map(ascii_encode, pair) for pair in data.items())
+        if sys.version_info >= (3,):
+            return data
+        else:
+            ascii_encode = lambda x: x.encode('ascii') if isinstance(x, str) else x 
+            return dict(list(map(ascii_encode, pair)) for pair in list(data.items()))
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.success)
     
     def log(self,string):
@@ -499,7 +529,7 @@ class _jsonCommandBase(log._logger):
                         # Translate returned results into attributes/response info
                         # -- Reverse the argument-parameter mapping
                         argParamMap = self.queryParamMap if self.query else self.setParamMap
-                        revMap = dict( (v,k) for (k,v) in argParamMap.iteritems() )
+                        revMap = dict( (v,k) for (k,v) in argParamMap.items() )
                         # -- Map parameter to argument, then make an attribute for it
                         #    and enter the value into the response info dictionary
                         self.responseInfo = {}
@@ -512,13 +542,13 @@ class _jsonCommandBase(log._logger):
                                         setattr(self, revMap[key], rspDict["result"][key])
                                         self.responseInfo[revMap[key]] = rspDict["result"][key]
                                 self.successInfo = ", ".join(["%s: %s" % (k,v) for k,v in \
-                                                              rspDict["result"].iteritems()])
+                                                              rspDict["result"].items()])
                             # ...else "result" is a string
                             else:
                                 self.responseInfo["result"] = rspDict["result"]
                     self.error = "error" in rspDict
                     if self.error:
-                        self.errorInfo = ["%s: %s" % (k,v) for k,v in rspDict["error"].iteritems()]
+                        self.errorInfo = ["%s: %s" % (k,v) for k,v in rspDict["error"].items()]
                     pass
                 except:
                     # Malformed JSON
@@ -1000,15 +1030,15 @@ class hrev(_commandBase):
                     self.responseInfo["model"] = rspLine.replace("Unit Model: ", "")
                 elif "Model: " in rspLine and " Receiver" in rspLine:
                     self.responseInfo["model"] = rspLine.replace("Model: ", "").replace(" Receiver", "")
-                elif "S/N: " in rspLine and not self.responseInfo.has_key("serialNumber"):
+                elif "S/N: " in rspLine and "serialNumber" not in self.responseInfo:
                     self.responseInfo["serialNumber"] = rspLine.replace("S/N: ", "")
-                elif "Unit Serial Number: " in rspLine and not self.responseInfo.has_key("serialNumber"):
+                elif "Unit Serial Number: " in rspLine and "serialNumber" not in self.responseInfo:
                     self.responseInfo["serialNumber"] = rspLine.replace("Unit Serial Number: ", "")
-                elif "Serial: " in rspLine and not self.responseInfo.has_key("serialNumber"):
+                elif "Serial: " in rspLine and "serialNumber" not in self.responseInfo:
                     self.responseInfo["serialNumber"] = rspLine.replace("Serial: ", "")
-                elif "Unit Revision: " in rspLine and not self.responseInfo.has_key("unitRevision"):
+                elif "Unit Revision: " in rspLine and "unitRevision" not in self.responseInfo:
                     self.responseInfo["unitRevision"] = rspLine.replace("Unit Revision: ", "")
-                elif "Revision: " in rspLine and not self.responseInfo.has_key("unitRevision"):
+                elif "Revision: " in rspLine and "unitRevision" not in self.responseInfo:
                     self.responseInfo["unitRevision"] = rspLine.replace("Revision: ", "")
                 else:
                     hwVersionInfo.append(rspLine)
@@ -1193,7 +1223,7 @@ class stat(_commandBase):
 #                            if statRes&mask == mask:
                             if (statRes&mask)>0:
                                 self.responseInfo["statValues"].append(mask)
-                                if mask in self.statTextValues.keys():
+                                if mask in list(self.statTextValues.keys()):
                                     self.responseInfo["statText"].append(self.statTextValues.get(mask))
                         break
         except:

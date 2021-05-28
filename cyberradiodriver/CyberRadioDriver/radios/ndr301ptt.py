@@ -11,7 +11,7 @@
 
 # Imports from other modules in this package
 from CyberRadioDriver import configKeys
-from CyberRadioDriver.command import nbddc, wbdp, nbdp, maybeHex, wbss
+from CyberRadioDriver.command import nbddc, wbdp, maybeHex, _commandBase
 from CyberRadioDriver.components import adjustFrequency, DDC_DATA_FORMAT
 from CyberRadioDriver.radio import _radio
 from CyberRadioDriver.radios.ndr301 import ndr301, \
@@ -70,6 +70,22 @@ class wbsc301ptt(nbddc):
                         ]
 
 
+# Implements the DAGC command for the NDR301-PTT
+class dagc301ptt(_commandBase):
+    mnemonic = "DAGC"
+    setParameters = [   (configKeys.INDEX,            int,    False,    None    ), \
+                        (configKeys.DDC_DGC_MODE,    int,    False,    0        ), \
+                        (configKeys.DDC_DGC_GAIN,    int,    False,    0        ), \
+                        ]
+    queryParameters = [ (configKeys.INDEX,    int,    True,    None), \
+                        ]
+    queryResponseData = [ \
+                        (configKeys.INDEX,             int,    False    ), \
+                        (configKeys.DDC_DGC_MODE,    int,    False,    ), \
+                        (configKeys.DDC_DGC_GAIN,    int,    False,    ), \
+                        ]
+
+
 # NBDDC component class for the NDR301PTT.
 class ndr301ptt_nbddc(ndr301_nbddc):
     _name = "NBDDC(NDR301PTT)"
@@ -81,7 +97,9 @@ class ndr301ptt_nbddc(ndr301_nbddc):
     cfgCmd = ddc301ptt
     frqCmd = None
     demodCmd = None
-    otherCmdList = [ ]
+    otherCmdList = [
+            dagc301ptt
+        ]
     rateSet = {  0: 60e3, 
                  1: 36e3, 
                  2: 24e3, 
@@ -99,64 +117,66 @@ class ndr301ptt_nbddc(ndr301_nbddc):
                                     configKeys.ENABLE, 
                                     configKeys.DDC_STREAM_ID, 
                                     configKeys.DDC_DATA_PORT, 
+                                    configKeys.DDC_DGC_MODE, 
+                                    configKeys.DDC_DGC_GAIN, 
                                   ]
-    # # OVERRIDE
-    # ##
-    # # \protected
-    # # Queries hardware to determine the object's current configuration.  
-    # def _queryConfiguration(self):
-    #     for cmdObj in [self.nbssCmd,self.dportCmd,self.cfgCmd,self.demodCmd]+self.otherCmdList:
-    #         if cmdObj is not None:
-    #             cmd = cmdObj(**{ "parent": self, 
-    #                                configKeys.INDEX: self.index,
-    #                                "query": True,
-    #                                 "verbose": self.verbose, 
-    #                                 "logFile": self.logFile })
-    #             cmd.send( self.callback, )
-    #             self._addLastCommandErrorInfo(cmd)
-    #             rspInfo = cmd.getResponseInfo()
-    #             keys = [i[0] for i in cmdObj.queryResponseData if \
-    #                     i[0] != configKeys.INDEX]
-    #             if rspInfo is not None:
-    #                 for key in keys:
-    #                     self.configuration[key] = rspInfo.get(key, None)
-    #     pass
+    # OVERRIDE
+    ##
+    # \protected
+    # Queries hardware to determine the object's current configuration.  
+    def _queryConfiguration(self):
+        for cmdObj in [self.nbssCmd,self.dportCmd,self.cfgCmd,self.demodCmd]+self.otherCmdList:
+            if cmdObj is not None:
+                cmd = cmdObj(**{ "parent": self, 
+                                   configKeys.INDEX: self.index,
+                                   "query": True,
+                                    "verbose": self.verbose, 
+                                    "logFile": self.logFile })
+                cmd.send( self.callback, )
+                self._addLastCommandErrorInfo(cmd)
+                rspInfo = cmd.getResponseInfo()
+                keys = [i[0] for i in cmdObj.queryResponseData if \
+                        i[0] != configKeys.INDEX]
+                if rspInfo is not None:
+                    for key in keys:
+                        self.configuration[key] = rspInfo.get(key, None)
+        pass
     
-    # # OVERRIDE
-    # ##
-    # # \protected
-    # # Sets the component's current configuration.  
-    # def _setConfiguration(self, confDict):
-    #     ret = True
-    #     if confDict.has_key(configKeys.DDC_FREQUENCY_OFFSET):
-    #         confDict[configKeys.DDC_FREQUENCY_OFFSET] = adjustFrequency(
-    #                               float(confDict[configKeys.DDC_FREQUENCY_OFFSET]), 
-    #                               self.frqRange, 
-    #                               self.frqRes, 
-    #                               self.frqUnits)
-    #     for cmdObj in [self.nbssCmd, 
-    #                     self.dportCmd, 
-    #                     self.cfgCmd, 
-    #                     self.demodCmd, f
-    #                     ]+self.otherCmdList:
-    #         if cmdObj is not None:
-    #             keys = [ i[0] for i in cmdObj.setParameters ]
-    #             if any([q in confDict for q in keys]):
-    #                 cDict = {}
-    #                 self._dictUpdate(cDict, confDict, self.configuration, keys)
-    #                 cDict.update({ "parent": self, 
-    #                                 configKeys.INDEX: self.index,
-    #                                  "verbose": self.verbose, 
-    #                                  "logFile": self.logFile })
-    #                 cmd = cmdObj(**cDict)
-    #                 ret &= cmd.send( self.callback, )
-    #                 ret &= cmd.success
-    #                 self._addLastCommandErrorInfo(cmd)
-    #                 if ret:
-    #                     for key in keys:
-    #                         self.configuration[key] = getattr(cmd, key)
-    #                 pass
-    #     return ret
+    # OVERRIDE
+    ##
+    # \protected
+    # Sets the component's current configuration.  
+    def _setConfiguration(self, confDict):
+        ret = True
+        if confDict.has_key(configKeys.DDC_FREQUENCY_OFFSET):
+            confDict[configKeys.DDC_FREQUENCY_OFFSET] = adjustFrequency(
+                                  float(confDict[configKeys.DDC_FREQUENCY_OFFSET]), 
+                                  self.frqRange, 
+                                  self.frqRes, 
+                                  self.frqUnits)
+        for cmdObj in [self.nbssCmd, 
+                        self.dportCmd, 
+                        self.cfgCmd, 
+                        self.demodCmd,
+                        ]+self.otherCmdList:
+            if cmdObj is not None:
+                keys = [ i[0] for i in cmdObj.setParameters ]
+                if any([q in confDict for q in keys]):
+                    cDict = {}
+                    self._dictUpdate(cDict, confDict, self.configuration, keys)
+                    cDict.update({ "parent": self, 
+                                    configKeys.INDEX: self.index,
+                                     "verbose": self.verbose, 
+                                     "logFile": self.logFile })
+                    cmd = cmdObj(**cDict)
+                    ret &= cmd.send( self.callback, )
+                    ret &= cmd.success
+                    self._addLastCommandErrorInfo(cmd)
+                    if ret:
+                        for key in keys:
+                            self.configuration[key] = getattr(cmd, key)
+                    pass
+        return ret
 
     ##
     # \brief Update sets for this component, based on ADC sample rate.
@@ -317,7 +337,7 @@ class ndr301ptt_wbddc(ndr301_wbddc):
                                 configKeys.INDEX: self.index,
                                  "verbose": self.verbose, 
                                  "logFile": self.logFile })
-                print "[DBG][WBSC set] cDict =", cDict
+                print("[DBG][WBSC set] cDict =", cDict)
                 cmd = self.cfgCmd(**cDict)
                 ret &= cmd.send( self.callback, )
                 ret &= cmd.success

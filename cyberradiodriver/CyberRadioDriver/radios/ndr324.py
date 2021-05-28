@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 ##################################################################
-# \package CyberRadioDriver.radios.ndr364 
-# \brief NDR364 Support
+# \package CyberRadioDriver.radios.ndr324 
+# \brief NDR324 Support
 # \author NH
 # \author DA
 # \author MN
@@ -18,93 +18,61 @@ from CyberRadioDriver.radio import _ifSpec, _radio
 
 
 ##
-# Status Query command specific to the NDR364.
+# Status Query command specific to the NDR324.
 #
-class status364(_jsonCommandBase):
+class status324(_jsonCommandBase):
     mnemonic = "status"
     settable = False
     queryParamMap = {
                 configKeys.VERINFO_MODEL: "model",
-                configKeys.VERINFO_SN: "unitserial",
+                configKeys.VERINFO_SN: "sn",
                 configKeys.VERINFO_UNITREV: "unit",
                 configKeys.VERINFO_SW: "sw",
                 configKeys.VERINFO_FW: "fw",
-                configKeys.VERINFO_HW: "hw",
                 configKeys.STATUS_TUNERS: "tuners",
-                configKeys.STATUS_DIGBRD_SN: "digserial",
-                configKeys.STATUS_TUNERBRD1_SN: "tb1serial",
-                configKeys.STATUS_TUNERBRD2_SN: "tb2serial",
+                configKeys.STATUS_WBDDCS: "wbddcs",
                 configKeys.STATUS_ERROR: "error",
+                configKeys.STATUS_CTL_MAC: "pmac",
+                configKeys.STATUS_TEMP: "temp",
                 configKeys.STATUS_10MHZ_REF: "cfg10m",
-                configKeys.STATUS_10MHZ_REF_STATUS: "status10m",
                 configKeys.STATUS_PPS_SOURCE: "cfg1pps",
-                configKeys.STATUS_NTP: "ntp",
+                configKeys.STATUS_10MHZ_REF_STATUS: "status10m",
+                configKeys.STATUS_PPS: "statuspps",
                 configKeys.STATUS_ONTIME: "ontime",
+                configKeys.STATUS_MEM: "mem",
                 configKeys.STATUS_LINK0: "link0up",
                 configKeys.STATUS_LINK1: "link1up",
-                configKeys.STATUS_CLOCK_TIME: "clktime",
-                configKeys.STATUS_FAN: "fan",
-                configKeys.STATUS_AVG_POWER: "avgpwr",
-                configKeys.STATUS_BATTERY_LEVEL: "battery",
-                configKeys.STATUS_HOSTNAME: "hostname",
-                configKeys.STATUS_WBDDCS: "wbddcs",
-                # Keys that should be present according to ICD, but aren't yet
-                #configKeys.STATUS_CTL_MAC: "ctlmac",
-                #configKeys.STATUS_DATA0_MAC: "data0mac",
-                #configKeys.STATUS_DATA1_MAC: "data1mac",
-                #configKeys.STATUS_PPS: "status1pps",
-                #configKeys.STATUS_VOLTS: "volts",
-                #configKeys.STATUS_LOCKS: "locks",
-                #configKeys.STATUS_TEMPS: "temps",
-                # Keys that are present but should not be according to ICD
-                configKeys.STATUS_CTL_MAC: "pmac",
-                configKeys.STATUS_DATA0_MAC: "e10g0mac",
-                configKeys.STATUS_DATA1_MAC: "e10g1mac",
-                configKeys.STATUS_PPS: "statuspps",
-                configKeys.STATUS_ADC_CLOCK1: "adcclk1",
-                configKeys.STATUS_ADC_CLOCK2: "adcclk2",
-                configKeys.STATUS_DIGBRD_TEMP: "digtemp",
+                configKeys.STATUS_LINK2: "link2up",
+                configKeys.STATUS_LINK3: "link3up",
+                configKeys.STATUS_TUNER0_LO1: "tuner0lo1",
+                configKeys.STATUS_TUNER0_LO2: "tuner0lo2",
+                configKeys.STATUS_TUNER1_LO1: "tuner1lo1",
+                configKeys.STATUS_TUNER1_LO2: "tuner1lo2",
+                configKeys.STATUS_TUNER2_LO1: "tuner2lo1",
+                configKeys.STATUS_TUNER2_LO2: "tuner2lo2",
+                configKeys.STATUS_TUNER3_LO1: "tuner3lo1",
+                configKeys.STATUS_TUNER3_LO2: "tuner3lo2",
+                configKeys.STATUS_ADC_CLOCK_REF: "adcrefclk",
+                configKeys.STATUS_ADC_CLOCK_INT: "internaladcclk",
                 configKeys.STATUS_FPGA_TEMP: "fpgatemp",
-                configKeys.STATUS_LO11: "lo11",
-                configKeys.STATUS_LO12: "lo12",
-                configKeys.STATUS_LO13: "lo13",
-                configKeys.STATUS_LO12: "lo14",
-                configKeys.STATUS_LO21: "lo21",
-                configKeys.STATUS_LO22: "lo22",
-                configKeys.STATUS_LO23: "lo23",
-                configKeys.STATUS_LO22: "lo24",
-                configKeys.STATUS_MEM: "mem",
-                configKeys.STATUS_MODE: "mode",
-                configKeys.STATUS_TUNERBRD1_JESD: "tb1jesd",
-                configKeys.STATUS_TUNERBRD2_JESD: "tb2jesd",
-                configKeys.STATUS_TUNERBRD1_TEMP: "tb1temp",
-                configKeys.STATUS_TUNERBRD2_TEMP: "tb2temp",
-                configKeys.STATUS_TUNER_POWER: "tunerpower",
-                configKeys.STATUS_VOLTS1: "volts1",
-                configKeys.STATUS_VOLTS2: "volts2",
-                configKeys.STATUS_VOLTS3: "volts3",
-                configKeys.STATUS_VOLTS4: "volts4",
-                configKeys.STATUS_VOLTS5: "volts5",
                 }
     
 
 ##
-# Tuner configuration command specific to the NDR364.
+# Tuner configuration command specific to the NDR324.
 #
-class tuner364(_jsonCommandBase):
+class tuner324(_jsonCommandBase):
     mnemonic = "tuner"
     queryParamMap = {
                 configKeys.TUNER_INDEX: "id",
                 configKeys.TUNER_FREQUENCY: "freq",
-                configKeys.TUNER_ATTENUATION: "atten",
-                configKeys.TUNER_RF_ATTENUATION: "rfatten",
-                configKeys.TUNER_IF_ATTENUATION: "ifatten",
-                configKeys.TUNER_FNR: "fnr",
-                configKeys.TUNER_GAIN_MODE: "mode",
                 configKeys.ENABLE: "enable",
+                configKeys.TUNER_FNR: "fnr",
+                configKeys.TUNER_ATTENUATION: "atten",
+                configKeys.TUNER_GAIN_MODE: "mode",
+                configKeys.TUNER_PRESELECTOR_MODE: "psmode",
                 configKeys.TUNER_AGC_SET_POINT: "asp",
                 configKeys.TUNER_AGC_UPPER_LIMIT: "aul",
-                configKeys.TUNER_AGC_LOWER_LIMIT: "aul",
                 configKeys.TUNER_AGC_LOWER_LIMIT: "all",
                 configKeys.TUNER_AGC_ATTACK_TIME: "aat",
                 configKeys.TUNER_AGC_DECAY_TIME: "adt",
@@ -112,23 +80,17 @@ class tuner364(_jsonCommandBase):
                 configKeys.TUNER_AGC_DECAY_STEP: "ads",
                 configKeys.TUNER_AGC_ATTACK_LIMIT: "aal",
                 configKeys.TUNER_AGC_DECAY_LIMIT: "adl",
-                configKeys.TUNER_RF_INPUT_POWER: "inppwr",
-                configKeys.TUNER_ADC_OVERLOAD: "ovrld",
-                configKeys.TUNER_PRESELECT_BYPASS: "prebypass",
-                configKeys.TUNER_COHERENT_GROUP: "cgroup",
                 }
     setParamMap = {
                 configKeys.TUNER_INDEX: "id",
                 configKeys.TUNER_FREQUENCY: "freq",
-                configKeys.TUNER_ATTENUATION: "atten",
-                configKeys.TUNER_RF_ATTENUATION: "rfatten",
-                configKeys.TUNER_IF_ATTENUATION: "ifatten",
-                configKeys.TUNER_FNR: "fnr",
-                configKeys.TUNER_GAIN_MODE: "mode",
                 configKeys.ENABLE: "enable",
+                configKeys.TUNER_FNR: "fnr",
+                configKeys.TUNER_ATTENUATION: "atten",
+                configKeys.TUNER_GAIN_MODE: "mode",
+                configKeys.TUNER_PRESELECTOR_MODE: "psmode",
                 configKeys.TUNER_AGC_SET_POINT: "asp",
                 configKeys.TUNER_AGC_UPPER_LIMIT: "aul",
-                configKeys.TUNER_AGC_LOWER_LIMIT: "aul",
                 configKeys.TUNER_AGC_LOWER_LIMIT: "all",
                 configKeys.TUNER_AGC_ATTACK_TIME: "aat",
                 configKeys.TUNER_AGC_DECAY_TIME: "adt",
@@ -136,50 +98,56 @@ class tuner364(_jsonCommandBase):
                 configKeys.TUNER_AGC_DECAY_STEP: "ads",
                 configKeys.TUNER_AGC_ATTACK_LIMIT: "aal",
                 configKeys.TUNER_AGC_DECAY_LIMIT: "adl",
-                configKeys.TUNER_PRESELECT_BYPASS: "prebypass",
-                configKeys.TUNER_COHERENT_GROUP: "cgroup",
                 }
     
 
 ##
-# WBDDC configuration command specific to the NDR364.
+# DGS configuration command specific to the NDR324.
 #
-class wbddc364(_jsonCommandBase):
+class dgs324(_jsonCommandBase):
+    mnemonic = "dgs"
+    queryParamMap = {
+                configKeys.DGS_INDEX: "dgsid",
+                configKeys.DGS_RF_INDEX: "rfch",
+                configKeys.DGS_STREAM_ID: "vita",
+                configKeys.DGS_LINK: "link",
+                }
+    setParamMap = {
+                configKeys.DGS_INDEX: "id",
+                configKeys.DGS_RF_INDEX: "rfch",
+                configKeys.DGS_STREAM_ID: "vita",
+                configKeys.DGS_LINK: "link",
+                }
+    
+##
+# WBDDC configuration command specific to the NDR324.
+#
+class wbddc324(_jsonCommandBase):
     mnemonic = "wbddc"
     queryParamMap = {
                 configKeys.INDEX: "id",
-                configKeys.DDC_RATE_INDEX: "decimation",
-                configKeys.DDC_STREAM_ID: "vita",
-                configKeys.DDC_UDP_DESTINATION: "dest",
+                configKeys.DGS_INDEX: "dgsid",
                 configKeys.DDC_FREQUENCY_OFFSET: "offset",
-                configKeys.DDC_RF_INDEX: "rfch",
-                configKeys.DDC_CLASS_ID: "cid",
-                configKeys.DDC_PHASE_OFFSET: "poffset",
+                configKeys.DDC_RATE_INDEX: "filter",
                 configKeys.ENABLE: "enable",
-                configKeys.DDC_TOTAL_REPEAT_PACKETS: "total",
-                configKeys.DDC_ACTIVE_REPEAT_PACKETS: "active",
-                configKeys.DDC_GROUP_ENABLE: "groupenable",
-                configKeys.DDC_DATA_PORT: "link",
+                configKeys.DDC_GROUP_ID: "gddcid",
+                configKeys.DDC_UDP_DESTINATION: "dest",
                 }
     setParamMap = {
                 configKeys.INDEX: "id",
-                configKeys.DDC_RATE_INDEX: "decimation",
-                configKeys.DDC_STREAM_ID: "vita",
-                configKeys.DDC_UDP_DESTINATION: "dest",
+                configKeys.DGS_INDEX: "dgsid",
                 configKeys.DDC_FREQUENCY_OFFSET: "offset",
-                configKeys.DDC_RF_INDEX: "rfch",
-                configKeys.DDC_CLASS_ID: "cid",
-                configKeys.DDC_PHASE_OFFSET: "poffset",
+                configKeys.DDC_RATE_INDEX: "filter",
                 configKeys.ENABLE: "enable",
-                configKeys.DDC_TOTAL_REPEAT_PACKETS: "total",
-                configKeys.DDC_ACTIVE_REPEAT_PACKETS: "active",
+                configKeys.DDC_GROUP_ID: "gddcid",
+                configKeys.DDC_UDP_DESTINATION: "dest",
                 }
     
 
 ##
-# Gigabit Ethernet configuration command specific to the NDR364.
+# Gigabit Ethernet configuration command specific to the NDR324.
 #
-class e10g364(_jsonCommandBase):
+class e10g324(_jsonCommandBase):
     mnemonic = "e10g"
     queryParamMap = {
                 configKeys.GIGE_PORT_INDEX: "link",
@@ -187,6 +155,7 @@ class e10g364(_jsonCommandBase):
                 configKeys.GIGE_IP_ADDR: "ip",
                 configKeys.GIGE_MAC_ADDR: "mac",
                 configKeys.GIGE_DEST_PORT: "port",
+                configKeys.GIGE_ARP: "arp",
                 }
     setParamMap = {
                 configKeys.GIGE_PORT_INDEX: "link",
@@ -194,16 +163,17 @@ class e10g364(_jsonCommandBase):
                 configKeys.GIGE_IP_ADDR: "ip",
                 configKeys.GIGE_MAC_ADDR: "mac",
                 configKeys.GIGE_DEST_PORT: "port",
+                configKeys.GIGE_ARP: "arp",
                 }
 
 
 ##
-# Data IP configuration command specific to the NDR364.
+# Data IP configuration command specific to the NDR324.
 #
 # \note Used to configure IP information with respect to the 
 #    source.
 #
-class cfge10g364(_jsonCommandBase):
+class cfge10g324(_jsonCommandBase):
     mnemonic = "cfge10g"
     queryParamMap = {
                 configKeys.GIGE_PORT_INDEX: "link",
@@ -221,94 +191,108 @@ class cfge10g364(_jsonCommandBase):
     
                         
 ##
-# WBDDC group configuration command specific to the NDR364.
+# WBDDC group configuration command specific to the NDR324.
 #
-class gddc364(_jsonCommandBase):
+class gddc324(_jsonCommandBase):
     mnemonic = "gddc"
     queryParamMap = {
-                configKeys.INDEX: "group",
+                configKeys.INDEX: "gddcid",
                 configKeys.ENABLE: "enable",
-                configKeys.DDC_GROUP_MEMBERS: "wbddc", 
-                configKeys.FFT_GROUP_MEMBERS: "fft", 
+                configKeys.DDC_FREQUENCY_OFFSET: "offset", 
+                configKeys.DDC_STREAM_ID: "vita", 
                  }
     setParamMap = {
-                configKeys.INDEX: "group",
+                configKeys.INDEX: "gddcid",
                 configKeys.ENABLE: "enable",
-                configKeys.DDC_GROUP_MEMBERS: "wbddc", 
-                configKeys.FFT_GROUP_MEMBERS: "fft", 
+                configKeys.DDC_FREQUENCY_OFFSET: "offset", 
+                configKeys.DDC_STREAM_ID: "vita", 
                  }
 
 
 ##
-# FFT streaming configuration command specific to the NDR364.
+# FFT streaming configuration command specific to the NDR324.
 #
-class strmfftctl364(_jsonCommandBase):
-    mnemonic = "strmfftctl"
+class fft324(_jsonCommandBase):
+    mnemonic = "fft"
     queryParamMap = {
                 configKeys.INDEX: "id",
+                configKeys.DGS_INDEX: "dgsid",
                 configKeys.ENABLE: "enable",
-                configKeys.DDC_STREAM_ID: "vita",
                 configKeys.DDC_UDP_DESTINATION: "dest",
-                configKeys.FFT_RATE: "rate",
-                configKeys.FFT_WINDOW: "window",
-                configKeys.FFT_SIZE: "size",
-                configKeys.DDC_CLASS_ID: "cid",
-                configKeys.DDC_TOTAL_REPEAT_PACKETS: "total",
-                configKeys.DDC_ACTIVE_REPEAT_PACKETS: "active",
                  }
     setParamMap = {
                 configKeys.INDEX: "id",
+                configKeys.DGS_INDEX: "dgsid",
                 configKeys.ENABLE: "enable",
-                configKeys.DDC_STREAM_ID: "vita",
                 configKeys.DDC_UDP_DESTINATION: "dest",
-                configKeys.FFT_RATE: "rate",
-                configKeys.FFT_WINDOW: "window",
-                configKeys.FFT_SIZE: "size",
-                configKeys.DDC_CLASS_ID: "cid",
-                configKeys.DDC_TOTAL_REPEAT_PACKETS: "total",
-                configKeys.DDC_ACTIVE_REPEAT_PACKETS: "active",
                  }
 
 
 ##
-# Coherent tuning command specific to the NDR364.
+# Digital Link configuration command specific to the NDR324.
 #
-class ctune364(_jsonCommandBase):
-    mnemonic = "ctune"
-    queryable = False
+class dglink324(_jsonCommandBase):
+    mnemonic = "dglink"
+    queryParamMap = {
+                configKeys.LINK: "link",
+                configKeys.DGLINK_TYPE: "type",
+                 }
     setParamMap = {
-                configKeys.TUNER_COHERENT_GROUP: "cgroup",
-                configKeys.TUNER_FREQUENCY: "freq",
+                configKeys.LINK: "link",
+                configKeys.DGLINK_TYPE: "type",
                  }
 
-
 ##
-# Reference configuration command specific to the NDR364.
+# Reference configuration command specific to the NDR324.
 #
-class cfg10m364(_jsonCommandBase):
+class ref324(_jsonCommandBase):
     mnemonic = "ref"
     queryable = True
     queryParamMap = {
                 configKeys.REFERENCE_MODE: "cfg10m",
+                configKeys.STATUS_PPS_SOURCE: "cfg1pps",
+                configKeys.TIME_UTC: "timeset",
+                configKeys.NOISE_GENERATOR: "noise",
+                configKeys.NOISE_STATE: "nstate",
                  }
     setParamMap = {
                 configKeys.REFERENCE_MODE: "cfg10m",
+                configKeys.STATUS_PPS_SOURCE: "cfg1pps",
+                configKeys.TIME_UTC: "timeset",
+                configKeys.NOISE_GENERATOR: "noise",
+                configKeys.NOISE_STATE: "nstate",
                  }
 
+##
+# \internal
+# \brief Cli command class specific to the NDR324.
+#
+#
+# \note The cli command on the NDR324 is intended for internal
+# diagnostic purposes.  It is not part of the publicly available
+# ICD.
+#
+class cli324(_jsonCommandBase):
+    mnemonic = "cli"
+    queryable = False
+    setParamMap = {
+                "input": "input",
+                 }
 
 ##
-# Tuner component class for the NDR364.
+# Tuner component class for the NDR324.
 #
-class ndr364_tuner(_tuner):
-    _name = "Tuner(NDR364)"
+class ndr324_tuner(_tuner):
+    _name = "Tuner(NDR324)"
     frqRange = (20e6,6e9)
-    frqRes = 1e6
+    frqRes = 10e6
     frqUnits = 1
-    attRange = (0.0,20.0)
+    attRange = (0.0,40.0)
     attRes = 1.0
     agc = False
-    # The NDR364 has one tuner command that sets all tuner parameters.
-    frqCmd = tuner364
+    # The NDR324 has one tuner command that sets all tuner parameters.
+    frqCmd = tuner324
+    attCmd = tuner324
     attCmd = None
     tpwrCmd = None
     # OVERRIDE
@@ -318,11 +302,10 @@ class ndr364_tuner(_tuner):
     validConfigurationKeywords = [
                                   configKeys.TUNER_FREQUENCY, 
                                   configKeys.TUNER_ATTENUATION,
-                                  configKeys.TUNER_RF_ATTENUATION, 
-                                  configKeys.TUNER_IF_ATTENUATION, 
                                   configKeys.ENABLE, 
                                   configKeys.TUNER_FNR,
                                   configKeys.TUNER_GAIN_MODE,
+                                  configKeys.TUNER_PRESELECTOR_MODE,
                                   configKeys.TUNER_AGC_SET_POINT,
                                   configKeys.TUNER_AGC_UPPER_LIMIT,
                                   configKeys.TUNER_AGC_LOWER_LIMIT,
@@ -332,10 +315,6 @@ class ndr364_tuner(_tuner):
                                   configKeys.TUNER_AGC_DECAY_STEP,
                                   configKeys.TUNER_AGC_ATTACK_LIMIT,
                                   configKeys.TUNER_AGC_DECAY_LIMIT,
-                                  configKeys.TUNER_PRESELECT_BYPASS,
-                                  configKeys.TUNER_COHERENT_GROUP,
-                                  configKeys.TUNER_RF_INPUT_POWER,
-                                  configKeys.TUNER_ADC_OVERLOAD
                                   ]
     
     def __init__(self,*args,**kwargs):
@@ -393,41 +372,38 @@ class ndr364_tuner(_tuner):
 
         
 ##
-# WBDDC component class for the NDR364.
-class ndr364_wbddc(_wbddc):
-    _name = "WBDDC(NDR364)"
+# WBDDC component class for the NDR324.
+class ndr324_wbddc(_wbddc):
+    _name = "WBDDC(NDR324)"
     tunable = True
-    frqRange = (-62.5e6,62.5e6,)
+    selectableSource = True
+    frqRange = (-250e6,250e6,)
     frqRes = 1e3
-    rateSet = { 1: 147.2e6, \
-                2: 73.6e6, \
-                4: 36.8e6, \
-                8: 18.4e6, \
-                 }
-    bwSet = { 1: 125e6, \
-                2: 62.5e3, \
-                4: 31.25e6, \
-                8: 15.625e6, \
-                 }
+    rateSet = { 0: 225.28e6, \
+                1: 168.96e6, \
+                2: 42.24e6, \
+                3: 21.12e6, \
+                4: 10.56e6, \
+              }
+    bwSet = { 0: 200e6, \
+                1: 125e6, \
+                2: 20e6, \
+                3: 10e6, \
+                4: 5e6, \
+            }
+
     dataFormat = { 1:"iq" }
-    cfgCmd = wbddc364
+    cfgCmd = wbddc324
     frqCmd = None
     nbssCmd = None
     # OVERRIDE
     validConfigurationKeywords = [
-                                 configKeys.DDC_RF_INDEX,
+                                 configKeys.DGS_INDEX,
                                  configKeys.DDC_FREQUENCY_OFFSET,
                                  configKeys.DDC_RATE_INDEX,
                                  configKeys.ENABLE,
-                                 configKeys.DDC_STREAM_ID,
+                                 configKeys.DDC_GROUP_ID,
                                  configKeys.DDC_UDP_DESTINATION,
-                                 configKeys.DDC_CLASS_ID,
-                                 configKeys.DDC_PHASE_OFFSET, 
-                                 configKeys.ENABLE,
-                                 configKeys.DDC_GROUP_ENABLE,
-                                 configKeys.DDC_TOTAL_REPEAT_PACKETS,
-                                 configKeys.DDC_ACTIVE_REPEAT_PACKETS,
-                                 configKeys.DDC_DATA_PORT,
                                   ]
     
     # OVERRIDE
@@ -482,52 +458,32 @@ class ndr364_wbddc(_wbddc):
 
 
 ##
-# FFT stream component for the NDR364.
+# FFT stream component for the NDR324.
 #
-class ndr364_fftStream(ndr364_wbddc):
-    _name = "FFTStream(NDR364)"
+class ndr324_fftStream(ndr324_wbddc):
+    _name = "FFTStream(NDR324)"
     dataFormat = { 1:"iq" }
-    cfgCmd = strmfftctl364
+    cfgCmd = fft324
     frqCmd = None
     nbssCmd = None
-    rateSet = { 500: 500, 
-                1000: 1000, 
-                1600: 1600, 
-                2000: 2000, 
-                 }
-    windowSet = { "gaussian": "Gaussian", 
-                    "flat": "Flattop", 
-                    "hann": "Hann", 
-                    "hamming": "Hamming", 
-                     }
-    sizeSet = {128:128, 256:256, 512:512, 1024:1024, 2048:2048,}
+    rateSet = { }
+    bwSet = { }
     
     validConfigurationKeywords = [
+                                configKeys.DGS_INDEX, 
                                 configKeys.ENABLE, 
-                                configKeys.DDC_STREAM_ID, 
                                 configKeys.DDC_UDP_DESTINATION, 
-                                configKeys.FFT_RATE, 
-                                configKeys.FFT_SIZE, 
-                                configKeys.FFT_WINDOW, 
-                                configKeys.DDC_TOTAL_REPEAT_PACKETS,
-                                configKeys.DDC_ACTIVE_REPEAT_PACKETS
                                   ]
     
-    def getWindowSet(self,):
-        return self.windowSet()
-    
-    def getSizeSet(self,):
-        return self.sizeSet()
-
 ##
-# WBDDC group component for the NDR364.
+# WBDDC group component for the NDR324.
 #
-class ndr364_wbddc_group(wbddc_group):
-    _name = "WBDDCGroup(NDR364)"
+class ndr324_wbddc_group(wbddc_group):
+    _name = "WBDDCGroup(NDR324)"
     groupMemberIndexBase = 0
     numGroupMembers = 4
-    groupMemberCmd = gddc364
-    groupEnableCmd = gddc364
+    groupMemberCmd = gddc324
+    groupEnableCmd = gddc324
     
     validConfigurationKeywords = [
                                   configKeys.ENABLE, 
@@ -540,7 +496,7 @@ class ndr364_wbddc_group(wbddc_group):
     # \protected
     # Queries hardware to determine the object's current configuration.  
     #
-    # Overrides the base-class method because the 364 uses a single command to 
+    # Overrides the base-class method because the 324 uses a single command to 
     # query all group members and whether the group is enabled. 
     def _queryConfiguration(self):
         # Call the base-class implementation
@@ -566,7 +522,7 @@ class ndr364_wbddc_group(wbddc_group):
     # \protected
     # Issues hardware commands to set the object's current configuration.  
     #
-    # Overrides the base-class method because the 364 uses a single command to 
+    # Overrides the base-class method because the 324 uses a single command to 
     # set all group members and enable/disable the group. 
     def _setConfiguration(self, confDict):
         ret = True
@@ -613,32 +569,30 @@ class ndr364_wbddc_group(wbddc_group):
 
 ##
 # \internal
-# \brief VITA 49 interface specification class for the NDR364.
-class ndr364_ifSpec(_ifSpec):
-    vita49_1 = False
-    vita49_0 = True
-    headerSizeWords = 5
-    payloadSizeWords = 1024
+# \brief VITA 49 interface specification class for the NDR324.
+class ndr324_ifSpec(_ifSpec):
+    headerSizeWords = 7
+    payloadSizeWords = 2048
     tailSizeWords = 1
     byteOrder = "big"
 
 ##
 # \internal
-# \brief VITA 49 interface specification class for the NDR364.
-class ndr364_ccf_ifSpec(ndr364_ifSpec):
-    payloadSizeWords = 2048
+# \brief VITA 49 interface specification class for the NDR324.
+class ndr324_fft_ifSpec(ndr324_ifSpec):
+    headerSizeWords = 9
 
 
 ##
-# \brief Radio handler for the NDR364.
+# \brief Radio handler for the NDR324.
 #
 # This class implements the CyberRadioDriver.IRadio interface.
 #
-# \section ConnectionModes_NDR364 Connection Modes
+# \section ConnectionModes_NDR324 Connection Modes
 #
 # "https"
 #
-# \section RadioConfig_NDR364 Radio Configuration Options
+# \section RadioConfig_NDR324 Radio Configuration Options
 #
 # \code
 # configDict = {
@@ -737,51 +691,51 @@ class ndr364_ccf_ifSpec(ndr364_ifSpec):
 #    handler object.
 #
 # \implements CyberRadioDriver.IRadio    
-class ndr364(_radio):
-    _name = "NDR364"
-    ifSpec = ndr364_ifSpec
+class ndr324(_radio):
+    _name = "NDR324"
+    ifSpec = ndr324_ifSpec
     json = True
     numTuner = 4
     numWbddc = 4
-    tunerType = ndr364_tuner
+    tunerType = ndr324_tuner
     tunerIndexBase = 0
-    wbddcType = ndr364_wbddc
+    wbddcType = ndr324_wbddc
     wbddcIndexBase = 0
     numNbddc = 0
     nbddcType = None
     nbddcIndexBase = 0
     numFftStream = 4
-    fftStreamType = ndr364_fftStream
+    fftStreamType = ndr324_fftStream
     fftStreamIndexBase = 0
     numWbddcGroups = 4
     wbddcGroupIndexBase = 0
-    wbddcGroupType = ndr364_wbddc_group
-    numGigE = 2
+    wbddcGroupType = ndr324_wbddc_group
+    numGigE = 4
     gigEIndexBase = 0
-    numGigEDipEntries = 16
+    numGigEDipEntries = 64
     gigEDipEntryIndexBase = 0
-    idnQry = status364
+    idnQry = None
     verQry = None
     hrevQry = None
-    statQry = status364
+    statQry = status324
     cfgCmd = None
-    refCmd = cfg10m364
+    refCmd = ref324
     rbypCmd = None
-    sipCmd = cfge10g364
-    dipCmd = e10g364
+    sipCmd = cfge10g324
+    dipCmd = e10g324
     smacCmd = None
     dmacCmd = None
     calfCmd = None
     resetCmd = None
-    cohTuneCmd = ctune364
+    cohTuneCmd = None
     fpgaStateCmd = fun
     refModes = {0:"Internal 10MHz",1:"External 10MHz"}
     rbypModes = {}
-    connectionModes = ["https"]
-    defaultPort = 443
+    connectionModes = ["udp"]
+    defaultPort = 19091
     udpDestInfo = "Destination index"
     tunerBandwithSettable = False
-    tunerBandwidthConstant = 125e6
+    tunerBandwidthConstant = 1351.68e6
     ##
     # \brief The list of valid configuration keywords supported by this
     # object.  Override in derived classes as needed.
@@ -802,7 +756,7 @@ class ndr364(_radio):
                 configKeys.VERINFO_HW]
         rspInfo = None
         if not all([key in self.versionInfo for key in keys]):
-            cmd = self.idnQry(parent=self, 
+            cmd = self.statQry(parent=self, 
                                query=True,
                                verbose=self.verbose, logFile=self.logFile)
             cmd.send( self.sendCommand, )
@@ -813,17 +767,6 @@ class ndr364(_radio):
         for key in keys:
             if key not in self.versionInfo:
                 self.versionInfo[key] = "N/A"
-        # Since the 364 does not produce a single key with all hardware info,
-        # construct hardware info from other response keys
-        if rspInfo is not None:
-            hwInfo = []
-            if configKeys.STATUS_DIGBRD_SN in rspInfo:
-                hwInfo.append("Digital Board S/N: %s" % rspInfo[configKeys.STATUS_DIGBRD_SN])
-            if configKeys.STATUS_TUNERBRD1_SN in rspInfo:
-                hwInfo.append("Tuner Board 1 S/N: %s" % rspInfo[configKeys.STATUS_TUNERBRD1_SN])
-            if configKeys.STATUS_TUNERBRD2_SN in rspInfo:
-                hwInfo.append("Tuner Board 2 S/N: %s" % rspInfo[configKeys.STATUS_TUNERBRD2_SN])
-            self.versionInfo[configKeys.VERINFO_HW] = ", ".join(hwInfo)
         return self.versionInfo
     
     # OVERRIDE
@@ -850,15 +793,5 @@ class ndr364(_radio):
             self.log("No status query available.")
             return None
     
-
-
-class ndr364_wbddc_radio(ndr364):
-    _name = "NDR364-WBDDC"
-
-class ndr364_nbddc_radio(ndr364):
-    _name = "NDR364-NBDDC"
-
-class ndr364_ccf(ndr364):
-    _name = "NDR364-CCF"
-    ifSpec = ndr364_ccf_ifSpec
-
+if __name__ == '__main__':
+	pass

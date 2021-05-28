@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 ###############################################################
-# \package CyberRadioDriver.radios
+# \package CyberRadioDriver.radios.internal
 # 
 # \brief Meta-package that provides handler classes for all 
-#     supported radios.
+#     supported radios intended for internal consumption.
 #
 # \author NH
 # \author DA
