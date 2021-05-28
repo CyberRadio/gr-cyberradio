@@ -2498,30 +2498,44 @@ namespace LibCyberRadio
 
         std::string RadioHandler::getSimpleSourceMACAddress() const
         {
+            std::string ret = "";
+            return ret;
         }
 
         std::string RadioHandler::getSimpleSourceIPAddress() const
         {
+            std::string ret = "";
+            return ret;
         }
 
         bool RadioHandler::setSimpleSourceIPAddress(const std::string& ipAddr)
         {
+            bool ret = true;
+            return ret;
         }
 
         std::string RadioHandler::getSimpleDestMACAddress() const
         {
+            std::string ret = "";
+            return ret;
         }
 
         bool RadioHandler::setSimpleDestMACAddress(const std::string& macAddr)
         {
+            bool ret = true;
+            return ret;
         }
 
         std::string RadioHandler::getSimpleDestIPAddress() const
         {
+            std::string ret = "";
+            return ret;
         }
 
         bool RadioHandler::setSimpleDestIPAddress(const std::string& ipAddr)
         {
+            bool ret = true;
+            return ret;
         }
 
         int RadioHandler::getDefaultDeviceInfo() const

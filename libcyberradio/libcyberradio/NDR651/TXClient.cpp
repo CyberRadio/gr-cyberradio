@@ -142,6 +142,8 @@ namespace LibCyberRadio
         {
             std::cout << "setDUCPaused( " << this->DUCPaused << " -> " << paused << " )" << std::endl;
             this->DUCPaused = paused;
+            bool ret = true;
+            return ret;
         }
 
         bool TXClient::isDUCReady()

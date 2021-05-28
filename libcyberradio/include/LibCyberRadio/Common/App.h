@@ -4,7 +4,7 @@
  * \brief Defines basic application-level constructs.
  *
  * \author DA
- * \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.
+ * \copyright Copyright (c) 2015-2021 CyberRadio Solutions, Inc.
  *
  */
 

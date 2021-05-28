@@ -2,7 +2,7 @@
 //// Name        : ndr651_tx_test.cpp
 //// Author      : NH
 //// Version     :
-//// Copyright   : Your copyright notice
+//// Copyright   : Copyright (c) 2015-2021 CyberRadio Solutions, Inc.  All rights reserved.
 //// Description : Hello World in C++, Ansi-style
 ////============================================================================
 

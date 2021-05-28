@@ -4,7 +4,7 @@
  * \brief Defines data structures for handling VITA 49-formatted data packets.
  *
  * \author NH
- * \copyright Copyright (c) 2015 CyberRadio Solutions, Inc.
+ * \copyright Copyright (c) 2015-2021 CyberRadio Solutions, Inc.
  *
  */
 

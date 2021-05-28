@@ -194,6 +194,8 @@ namespace LibCyberRadio
                     return (std::fabs(setAttenuation - attenuation) < epsilon);
                 }
             }
+            bool ret = true;
+            return ret;
         }
 
         bool RadioController::setTXP(unsigned int channel, bool enable)
@@ -298,6 +300,8 @@ namespace LibCyberRadio
                 bool setEnable = (bool)(atoi(this->rspVec.at(5).c_str()));
                 return (setEnable == enable);
             }
+            bool ret = true;
+            return ret;
         }
 
         bool RadioController::setDUCGE(unsigned ducGroup, bool enable)
@@ -309,6 +313,8 @@ namespace LibCyberRadio
                 bool setEnable = (bool)(atoi(this->rspVec.at(3).c_str()));
                 return (setEnable == enable);
             }
+            bool ret = true;
+            return ret;
         }
 
         bool RadioController::setSHF(unsigned int rfTxChannel, bool enable)

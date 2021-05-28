@@ -1,7 +1,7 @@
 ########################################################################
 # Project Setup
 ########################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.8)
 
 # Import package version if specified externally
 # NOTE: Update this default package version string when there is a 
@@ -84,6 +84,7 @@ IF(PCAP_FOUND)
 ELSE()
     MESSAGE(FATAL_ERROR "libpcap required to build ${PROJECT_NAME}")
 ENDIF()
+INCLUDE(FindPCAP.cmake)
 # -- CURL: This package is required
 FIND_PACKAGE(CURL)
 IF(NOT CURL_FOUND)
@@ -102,11 +103,15 @@ FIND_PACKAGE(Doxygen)
 ########################################################################
 SET(LIBCYBERRADIO_INC_SUBDIR       LibCyberRadio)
 SET(LIBCYBERRADIO_INCLUDE_DIR      include/${LIBCYBERRADIO_INC_SUBDIR})
-IF(UNIX AND EXISTS "/usr/lib64")
+
+IF(UNIX AND EXISTS "/usr/lib/x86_64-linux-gnu")
+    SET(LIBCYBERRADIO_LIBRARY_DIR      lib/x86_64-linux-gnu) # new for linux with multiarch support
+ELSEIF(UNIX AND EXISTS "/usr/lib64")
     SET(LIBCYBERRADIO_LIBRARY_DIR      lib64) # CentOS 64-bit fix
 ELSE()
     SET(LIBCYBERRADIO_LIBRARY_DIR      lib)
-ENDIF(UNIX AND EXISTS "/usr/lib64")
+ENDIF()
+
 SET(LIBCYBERRADIO_BINARY_DIR       bin)
 SET(LIBCYBERRADIO_DATA_DIR         share)
 SET(LIBCYBERRADIO_PKG_DATA_DIR     ${LIBCYBERRADIO_DATA_DIR}/${PROJECT_NAME})

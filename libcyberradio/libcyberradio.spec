@@ -19,7 +19,7 @@ Source: RPM_PKG_NAME-RPM_PKG_VERSION.tar.gz
 URL: http://www.cyberradiosolutions.com
 Vendor: CyberRadio Solutions, Inc.
 Packager: CyberRadio Solutions, Inc. <sales@cyberradiosolutions.com>
-BuildRequires: boost160-devel
+BuildRequires: boost-devel >= 1.60
 BuildRequires: jsoncpp-devel
 BuildRequires: libpcap-devel
 BuildRequires: doxygen
@@ -38,6 +38,12 @@ CyberRadio Solutions radios.
 %setup
 
 %build
+# FEDORA 28 HACK -- jsoncpp-devel on Fedora 28 puts its include files
+# in /usr/include/json rather than /usr/include/jsoncpp/json, so look
+# for jsoncpp paths and replace them accordingly. -- DA
+%if "RPM_PKG_OS" == "fedora"
+grep -rlZ "jsoncpp/json" . | xargs -r -0 sed -i -e 's|jsoncpp/json|json|g'
+%endif
 # Uncomment the build steps necessary for the project you are building.
 # -- Makefile project: Just the "%{__make}" step
 # -- CMake project: Both the "%cmake" and "%{__make}" steps

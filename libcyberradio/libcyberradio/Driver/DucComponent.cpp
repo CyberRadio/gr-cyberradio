@@ -226,6 +226,8 @@ namespace LibCyberRadio
                 updateConfigurationDict();
             }
             this->debug("[DucComponent::setConfiguration] Returning\n");
+
+            return ret;
         }
 
         void DucComponent::queryConfiguration()
