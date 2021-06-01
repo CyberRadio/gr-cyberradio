@@ -559,7 +559,7 @@ class NDR304_source(gr.hier_block2):
         if not isinstance(b, dict):
             return b
         result = copy.deepcopy(a)
-        for k, v in b.iteritems():
+        for k, v in b.items():
             if k in result and isinstance(result[k], dict):
                     result[k] = self._merge_dicts(result[k], v)
             else:

@@ -4,7 +4,7 @@
  * \brief Serial port connection manager.
  *
  * \author DA
- * \copyright Copyright (c) 2018 CyberRadio Solutions, Inc.
+ * \copyright Copyright (c) 2015-2021 CyberRadio Solutions, Inc.
  *
  */
 

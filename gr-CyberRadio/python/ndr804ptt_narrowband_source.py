@@ -25,7 +25,7 @@ from gnuradio import gr
 from gnuradio.filter import firdes
 
 import CyberRadio # using gr-cyberradio vita source v2
-from generic_ddc_control_block import generic_ddc_control_block
+from .generic_ddc_control_block import generic_ddc_control_block
 
 class ndr804ptt_narrowband_source(gr.hier_block2):
     """
@@ -131,7 +131,7 @@ class ndr804ptt_narrowband_source(gr.hier_block2):
             self.connect((self.vitaIqSource, 1), (self.vecToStream, 0)) 
     
     def stop(self):
-        print self,"STOP"
+        print(self,"STOP")
         self.disconnect_all()
 #       self.set_enable(False)
 
@@ -160,7 +160,7 @@ class ndr804ptt_narrowband_source(gr.hier_block2):
         return self.enable
 
     def set_enable(self, enable):
-        print self,"set_enable(self, %r)"%enable
+        print(self,"set_enable(self, %r)"%enable)
         self.enable = enable
         self.ddcControl.set_enable(self.enable)
 

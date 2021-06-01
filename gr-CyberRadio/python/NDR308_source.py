@@ -281,14 +281,14 @@ class NDR308_source(gr.hier_block2):
         self.udp_dest_dip_entries = {}
         self.udp_dest_dip_entry_range = self.CyberRadio_NDR_driver_interface_0.getGigEDipEntryIndexRange()
         self._set_udp_dest_info()
-        for tuner_index in xrange(1, self.num_tuners + 1, 1):
+        for tuner_index in range(1, self.num_tuners + 1, 1):
             self._set_tuner_param_list(tuner_index, self.tuner_param_lists[tuner_index])
-        for wbddc_index in xrange(1, self.num_wbddcs + 1, 1):
+        for wbddc_index in range(1, self.num_wbddcs + 1, 1):
             self.wbddc_sources[wbddc_index] = self._get_configured_wbddc(
                                                     wbddc_index, 
                                                     self.wbddc_param_lists[wbddc_index])
             self.connect((self.wbddc_sources[wbddc_index], 0), (self, wbddc_index))
-        for nbddc_index in xrange(1, self.num_nbddcs + 1, 1):
+        for nbddc_index in range(1, self.num_nbddcs + 1, 1):
             self.nbddc_sources[nbddc_index] = self._get_configured_nbddc(
                                                     nbddc_index, 
                                                     self.nbddc_param_lists[nbddc_index])
@@ -1090,8 +1090,8 @@ class NDR308_source(gr.hier_block2):
             return 0
         
     def _get_tengig_iface_index(self, tengig_iface_to_use):
-        tengig_iface_dict = dict(zip(self.tengig_iface_list, 
-                                     self.CyberRadio_NDR_driver_interface_0.getGigEIndexRange()))
+        tengig_iface_dict = dict(list(zip(self.tengig_iface_list, 
+                                     self.CyberRadio_NDR_driver_interface_0.getGigEIndexRange())))
         return tengig_iface_dict.get(tengig_iface_to_use, 0)
     
     def _get_tengig_iface_info(self):
@@ -1358,7 +1358,7 @@ class NDR308_source(gr.hier_block2):
         if not isinstance(b, dict):
             return b
         result = copy.deepcopy(a)
-        for k, v in b.iteritems():
+        for k, v in b.items():
             if k in result and isinstance(result[k], dict):
                     result[k] = self._merge_dicts(result[k], v)
             else:

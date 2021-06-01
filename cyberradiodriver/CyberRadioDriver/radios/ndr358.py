@@ -5,7 +5,7 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.  
 #     All rights reserved.
 ##################################################################
 
@@ -665,7 +665,7 @@ class ndr358_recorder_fftStream(ndr358_wbddc):
                         configKeys.FFT_SOURCE_PORT,
                         configKeys.FFT_SOURCE_NETMASK,
                     ]:
-                    if rspInfo.has_key(key):
+                    if key in rspInfo:
                         self.configuration[key] = rspInfo.get(key, None)
         if self.cfgCmd is not None:
             cmd = self.cfgCmd(**{ "parent": self,
@@ -685,7 +685,7 @@ class ndr358_recorder_fftStream(ndr358_wbddc):
                         configKeys.FFT_DEST_IP_ADDR,
                         configKeys.FFT_DEST_PORT,
                     ]:
-                    if rspInfo.has_key(key):
+                    if key in rspInfo:
                         self.configuration[key] = rspInfo.get(key, None)
         pass
 
@@ -1353,7 +1353,7 @@ class ndr358_altrx1_nbddc_ifSpec(ndr358_ddc_ifSpec):
 
 ##
 #
-# \section VITA_Notes_NDR358Rec VITA 49 Notes
+# \section VITA_Notes_NDR358Rec_2 VITA 49 Notes
 #
 # When dealing with VITA 49 payloads, we have historically relied on the 
 # following convention:

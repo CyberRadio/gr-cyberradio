@@ -4,7 +4,7 @@
  * \brief Defines data structures for handling VITA 49-formatted data packets.
  *
  * \author NH
- * \copyright Copyright (c) 2015 CyberRadio Solutions, Inc.
+ * \copyright Copyright (c) 2015-2021 CyberRadio Solutions, Inc.
  *
  */
 
@@ -91,7 +91,7 @@ namespace LibCyberRadio
                 struct Vita49Header v49;    //!< VITA 49 frame header
                 struct Payload payload;     //!< VITA 49 payload
                 struct Vita49Trailer vend;  //!< VITA 49 frame trailer
-        } __attribute__((packed));
+        } __attribute__((aligned));
 
         /*!
          * \brief Transmit status information.

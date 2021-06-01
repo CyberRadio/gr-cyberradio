@@ -5,7 +5,7 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.  
 #    All rights reserved.
 ##################################################################
 
@@ -677,7 +677,7 @@ class ndr551_wbddc(_wbddc):
             #self.logIfVerbose("rspInfo =", rspInfo)
             if rspInfo is not None:
                 for key in self.validConfigurationKeywords:
-                    if rspInfo.has_key(key):
+                    if key in rspInfo:
                         self.configuration[key] = rspInfo.get(key, None)
         pass
 
@@ -811,7 +811,7 @@ class ndr551_nbddc(_nbddc):
             #self.logIfVerbose("rspInfo =", rspInfo)
             if rspInfo is not None:
                 for key in self.validConfigurationKeywords:
-                    if rspInfo.has_key(key):
+                    if key in rspInfo:
                         self.configuration[key] = rspInfo.get(key, None)
         pass
 
@@ -1285,7 +1285,7 @@ class ndr551(_radio):
                 configKeys.VERINFO_SW, configKeys.VERINFO_FW, 
                 configKeys.VERINFO_REF, configKeys.VERINFO_UNITREV, 
                 configKeys.VERINFO_HW]
-        if not all([self.versionInfo.has_key(key) for key in keys]):
+        if not all([key in self.versionInfo for key in keys]):
             cmd = self.statQry(parent=self, 
                                query=True,
                                verbose=self.verbose, logFile=self.logFile)
@@ -1295,7 +1295,7 @@ class ndr551(_radio):
             if rspInfo is not None:
                 self._dictUpdate(self.versionInfo, rspInfo, {}, keys)
         for key in keys:
-            if not self.versionInfo.has_key(key):
+            if key not in self.versionInfo:
                 self.versionInfo[key] = "N/A"
         return self.versionInfo
 

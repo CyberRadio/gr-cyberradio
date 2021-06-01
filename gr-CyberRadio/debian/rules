@@ -20,7 +20,7 @@
 export DH_UBUNTU_REL=$(shell lsb_release -cs)
 
 %:
-	dh $@ --with python2
+	dh $@ --with python3
 
 # Override configure step to pass package version to CMake
 # -- And pass a prefix path to CMake that points to the temporary directory that

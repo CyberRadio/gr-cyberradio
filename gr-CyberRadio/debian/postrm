@@ -1,0 +1,6 @@
+#!/bin/bash
+echo "running postrm"
+
+# make sure cache files are cleared so gnuradio is forced to read new modules
+rm -f $(find /home/*/.cache/grc_gnuradio/ -name '*.json')
+

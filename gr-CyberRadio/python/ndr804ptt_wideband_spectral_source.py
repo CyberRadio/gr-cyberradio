@@ -24,8 +24,8 @@ from gnuradio import filter
 from gnuradio import gr
 from gnuradio.filter import firdes
 
-from generic_ddc_control_block import generic_ddc_control_block
-from generic_tuner_control_block import generic_tuner_control_block
+from .generic_ddc_control_block import generic_ddc_control_block
+from .generic_tuner_control_block import generic_tuner_control_block
 
 
 class ndr804ptt_wideband_spectral_source(gr.hier_block2):
@@ -126,7 +126,7 @@ class ndr804ptt_wideband_spectral_source(gr.hier_block2):
         self.connect((self.streamToVec, 0), (self.charToFloat, 0))      
     
     def stop(self):
-        print self,"STOP"
+        print(self,"STOP")
         self.set_enable(False)
         self.disconnect_all()
 

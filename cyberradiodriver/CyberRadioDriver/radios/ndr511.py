@@ -2,7 +2,7 @@
 # \package CyberRadioDriver.radios.ndr511
 # \brief NDR511 Support
 # \author BS
-# \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.  
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.  
 #     All rights reserved.
 ##################################################################
 
@@ -172,11 +172,11 @@ class ndr511_tuner(_tuner):
 #
 # This class implements the CyberRadioDriver.IRadio interface.
 #
-# \section ConnectionModes_NDR562 Connection Modes
+# \section ConnectionModes_NDR562_2 Connection Modes
 #
 # "udp"
 #
-# \section RadioConfig_NDR562 Radio Configuration Options
+# \section RadioConfig_NDR562_2 Radio Configuration Options
 #
 # \code
 # configDict = {
@@ -247,7 +247,7 @@ class ndr511(_radio):
                 configKeys.VERINFO_SW, configKeys.VERINFO_FW, 
                 configKeys.VERINFO_REF, configKeys.VERINFO_UNITREV, 
                 configKeys.VERINFO_HW]
-        if not all([self.versionInfo.has_key(key) for key in keys]):
+        if not all([key in self.versionInfo for key in keys]):
             cmd = self.statQry(parent=self, 
                                query=True,
                                verbose=self.verbose, logFile=self.logFile)
@@ -257,7 +257,7 @@ class ndr511(_radio):
             if rspInfo is not None:
                 self._dictUpdate(self.versionInfo, rspInfo, {}, keys)
         for key in keys:
-            if not self.versionInfo.has_key(key):
+            if key not in self.versionInfo:
                 self.versionInfo[key] = "N/A"
         return self.versionInfo
 

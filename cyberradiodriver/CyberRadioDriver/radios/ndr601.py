@@ -5,7 +5,7 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.  
 #    All rights reserved.
 ##################################################################
 
@@ -404,7 +404,7 @@ class ndr601_wbddc(ndr308_wbddc):
     def updateSets(self):
         adc_rate = self.parent.getAdcRate()
         self.rateSet[1] = adc_rate / 2
-        for rindex in xrange(2, 7, 1):
+        for rindex in range(2, 7, 1):
             self.rateSet[rindex] = adc_rate / (2**rindex)
             self.bwSet[rindex] = 0.65 * self.rateSet[rindex]
 
@@ -714,7 +714,7 @@ class ndr601_nbddc(ndr308_nbddc):
         # Frequency range
         self.frqRange = (-adc_rate / 4.0, adc_rate / 4.0)
         # Rate set and BW set
-        for rindex in xrange(1, 129, 1):
+        for rindex in range(1, 129, 1):
             self.rateSet[rindex] = adc_rate / (rindex * 64)
             self.bwSet[rindex] = 0.8 * self.rateSet[rindex]
 
@@ -854,9 +854,9 @@ class ndr601(_radio):
         # Set DDC rate/data format sets based on ADC rate mode
         if len(self.cmdErrorInfo) == 0:
             self.adcRate = self.adcRateModes.get(self.configuration[configKeys.ADC_RATE_MODE], 0)
-            for wbddc in self.wbddcDict.values():
+            for wbddc in list(self.wbddcDict.values()):
                 wbddc.updateSets()
-            for nbddc in self.nbddcDict.values():
+            for nbddc in list(self.nbddcDict.values()):
                 nbddc.updateSets()
 
     ##
@@ -886,9 +886,9 @@ class ndr601(_radio):
         # Set DDC rate/data format sets based on new ADC rate mode
         if ret and configKeys.ADC_RATE_MODE in confDict:
             self.adcRate = self.adcRateModes.get(self.configuration[configKeys.ADC_RATE_MODE], 0)
-            for wbddc in self.wbddcDict.values():
+            for wbddc in list(self.wbddcDict.values()):
                 wbddc.updateSets()
-            for nbddc in self.nbddcDict.values():
+            for nbddc in list(self.nbddcDict.values()):
                 nbddc.updateSets()
         return ret
 
@@ -901,13 +901,12 @@ class ndr601(_radio):
 #      
 #     # OVERRIDE
 #     def getWbddcRateSet(self, index=None):
-#         ret = []
-#         if self.numWbddc > 0:
-#             wbddcIndices = sorted(self.wbddcDict.keys())
-#             if index is None:
-#                 ret = self.wbddcDict[wbddcIndices[0]].rateSet
-#             elif index in wbddcIndices:
-#                 ret = self.wbddcDict[wbddcIndices[index]].rateSet
+#         ret = {}
+#         try:
+#             firstIndex = self.getWbddcIndexRange()[0]
+#             ret = self.wbddcDict[firstIndex if index is None else index].rateSet
+#         except:
+#             pass
 #         return ret
 #      
 #     # OVERRIDE
@@ -917,13 +916,12 @@ class ndr601(_radio):
 #      
 #     # OVERRIDE
 #     def getNbddcRateSet(self, index=None):
-#         ret = []
-#         if self.numNbddc > 0:
-#             nbddcIndices = sorted(self.nbddcDict.keys())
-#             if index is None:
-#                 ret = self.nbddcDict[nbddcIndices[0]].rateSet
-#             elif index in nbddcIndices:
-#                 ret = self.nbddcDict[nbddcIndices[index]].rateSet
+#         ret = {}
+#         try:
+#             firstIndex = self.getNbddcIndexRange()[0]
+#             ret = self.nbddcDict[firstIndex if index is None else index].rateSet
+#         except:
+#             pass
 #         return ret
 #      
 #     # OVERRIDE

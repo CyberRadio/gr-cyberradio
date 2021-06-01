@@ -7,15 +7,15 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.  
 #    All rights reserved.
 #
 ###############################################################
 
 # Imports from other modules in this package
-import command
-import log
-import ndrcert
+from . import command
+from . import log
+from . import ndrcert
 # Imports from external modules
 import requests
 import requests.packages
@@ -30,6 +30,34 @@ import sys
 import time
 import traceback
 #from time import gmtime, strftime
+
+##
+# \brief Helper function that formats outgoing data for a socket send
+#     operation.
+# \note This function is effectively a no-op on Python 2, but does a 
+#     conversion to a bytes object on Python 3.
+# \param data: The data to send, as a string.
+# \returns The converted data (str on Python 2, bytes on Python 3).
+#
+def SEND_DATA(data):
+    if sys.version_info >= (3,):
+        return bytes(data, "ascii")
+    else:
+        return data
+
+##
+# \brief Helper function that formats incoming data for a socket
+#     receive operation.
+# \note This function is effectively a no-op on Python 2, but does a 
+#     conversion to a string object on Python 3.
+# \param data: The data to receive (str on Python 2, bytes on Python 3).
+# \returns The converted data, as a string.
+#
+def RECV_DATA(data):
+    if sys.version_info >= (3,):
+        return data.decode("ascii")
+    else:
+        return data
 
 ##
 # Radio transport class.
@@ -355,11 +383,11 @@ class radio_transport(log._logger):
                                                      ))
             logCmd = str(cmd)
             if self.tcp is not None:
-                self.tcp.send( str(cmd) )
+                self.tcp.send( SEND_DATA(str(cmd)) )
             elif self.tty is not None:
-                self.tty.write( str(cmd) )
+                self.tty.write( SEND_DATA(str(cmd)) )
             elif self.udp is not None:
-                self.udp.send(cmd)
+                self.udp.send( SEND_DATA(str(cmd)) )
             elif self.https is not None:
                 if isinstance(cmd, str):
                     jsonCmd = json.loads(cmd)
@@ -489,6 +517,7 @@ class radio_transport(log._logger):
                     raise
             if ins and self.udp is not None:
                 rxString,address = self.udp.recvfrom(32768)
+                rxString = RECV_DATA( rxString )
                 if len(rxString)>0:
                     self.logIfVerbose("**  Rx(UDP)%s delta %s.%s: %s" % ( \
                                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), \
@@ -532,7 +561,7 @@ class radio_transport(log._logger):
                 else:
                     raise
             if ins and self.tcp is not None:
-                rxString,address = self.tcp.recvfrom(32768)
+                rxString,address = RECV_DATA( self.tcp.recvfrom(32768) )
                 if len(rxString)>0:
                     self.logIfVerbose("**  Rx(TCP)%s delta %s.%s: %s" % ( \
                                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), \
@@ -584,11 +613,11 @@ class radio_transport(log._logger):
                 if ins:
                     #self.log("[DBG] receiveCli -- data found")
                     if self.tcp is not None:
-                        inString = self.tcp.recv(8192)
+                        inString = RECV_DATA( self.tcp.recv(8192) )
                     elif self.tty is not None:
-                        inString = self.tty.read(self.tty.inWaiting())
+                        inString = RECV_DATA( self.tty.read(self.tty.inWaiting()) )
                     elif self.udp is not None:
-                        inString = self.udp.recv(8192)
+                        inString = RECV_DATA( self.udp.recv(8192) )
                     else:
                         inString = ""
                     if len(inString)>0:
@@ -713,12 +742,13 @@ class radio_transport(log._logger):
 
 
 if __name__=="__main__":
-    import sys
-    x = radio_transport(None)
-    tick = time.time()
-    if x.connect("tty" if "/dev/" in sys.argv[1] else "tcp",*sys.argv[1:]):
-        for i in range(1):
-            for cmd in ("*IDN?","VER?","FRQ?","ATT?","WBDDC?","WBFRQ?","NBDDC?","NBFRQ?",):
-                print repr( x.sendCommandAndReceive("%s\r\n"%cmd, 1.0) )
-            tock = time.time()
-            print "%0.3f -> %0.3f = %0.3f" % (tick,tock,tock-tick,)
+    pass
+#     import sys
+#     x = radio_transport(None)
+#     tick = time.time()
+#     if x.connect("tty" if "/dev/" in sys.argv[1] else "tcp",*sys.argv[1:]):
+#         for i in range(1):
+#             for cmd in ("*IDN?","VER?","FRQ?","ATT?","WBDDC?","WBFRQ?","NBDDC?","NBFRQ?",):
+#                 print repr( x.sendCommandAndReceive("%s\r\n"%cmd, 1.0) )
+#             tock = time.time()
+#             print "%0.3f -> %0.3f = %0.3f" % (tick,tock,tock-tick,)

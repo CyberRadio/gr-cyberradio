@@ -17,7 +17,7 @@
 # along with this software; see the file COPYING.  If not, write to
 # the Free Software Foundation, Inc., 51 Franklin Street,
 # Boston, MA 02110-1301, USA.
-# 
+#
 from gnuradio import gr
 from gnuradio.gr import pmt
 import json
@@ -25,7 +25,7 @@ import logging
 import numpy
 
 import CyberRadioDriver as crd
-from generic_radio_control_block import generic_radio_control_block
+from .generic_radio_control_block import generic_radio_control_block
 
 
 class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
@@ -42,26 +42,23 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 	_portEnable_udpRx = True
 	_portEnable_udpTx = True
 	
-	def __init__(self, 
-					radioObj, 
-					index=1, 
-					enable=True, 
-					wideband=True, 
-					rate=0, 
-					mode=0, 
-					freq=0, 
-					rfSource=1, 
+	def __init__(self,
+					radioObj,
+					index=1,
+					enable=True,
+					wideband=True,
+					rate=0,
+					mode=0,
+					freq=0,
+					rfSource=1,
 					rfFreq=0,
-					radioInterface=1, 
-					dipIndex=None, 
-					localInterface=None, 
-					udpPort=12345, 
-					otherArgs={}, 
+					radioInterface=1,
+					dipIndex=None,
+					localInterface=None,
+					udpPort=12345,
+					otherArgs={},
 					debug=False,
-					# totalRepeatPackets=1,
-					# activeRepeatPackets=1,
-					autoStart=True, 
-					 ):
+					autoStart=True):
 		self._configParams = {"enable":self.set_enable, 
 						"rate": self.set_rate, 
                         "index":self.set_index,
@@ -153,7 +150,7 @@ class generic_ddc_control_block(generic_radio_control_block, gr.basic_block):
 				dipConfDict[radioInterface][crd.configKeys.IP_SOURCE][crd.configKeys.GIGE_IP_ADDR] = sip	
 				dipConfDict[radioInterface][crd.configKeys.IP_SOURCE][crd.configKeys.GIGE_SOURCE_PORT] = self.udpPort
 		else:
-			if any(i in self.radioObj.name.lower() for i in ("562","358","551","357")):
+			if any(i in self.radioObj.name.lower() for i in ("562","358","551","357","324")):
 				self.log.debug("self.arp: {0}".format(self.arp))
 				if self.arp == True:
 					# since an interface was not provided, try to ARP it for the destination.

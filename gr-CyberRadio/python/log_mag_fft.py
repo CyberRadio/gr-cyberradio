@@ -93,23 +93,23 @@ class log_mag_fft(gr.hier_block2):
 		##################################################
 		# Blocks
 		##################################################
-		self.nLog10=[CyberRadio.vector_nlog10_ff(self.nLog10_n, fftSize, 0) for i in xrange(numInputs)]
+		self.nLog10=[CyberRadio.vector_nlog10_ff(self.nLog10_n, fftSize, 0) for i in range(numInputs)]
 		if connectLogMagUnfiltered:
-			self.nLog10 += [CyberRadio.vector_nlog10_ff(self.nLog10_n, fftSize, 0) for i in xrange(numInputs)]
+			self.nLog10 += [CyberRadio.vector_nlog10_ff(self.nLog10_n, fftSize, 0) for i in range(numInputs)]
 		if iirAlpha is not None:
-			self.singlePoleIIR=[CyberRadio.single_pole_iir_filter_ff(iirAlpha, fftSize, resetOnAlphaChange) for i in xrange(numInputs)]
+			self.singlePoleIIR=[CyberRadio.single_pole_iir_filter_ff(iirAlpha, fftSize, resetOnAlphaChange) for i in range(numInputs)]
 		else:
 			self.singlePoleIIR = None
 		if self.magSquared:
-			self.compToMag=[blocks.complex_to_mag_squared(fftSize) for i in xrange(numInputs)]
+			self.compToMag=[blocks.complex_to_mag_squared(fftSize) for i in range(numInputs)]
 		else:
-			self.compToMag=[blocks.complex_to_mag(fftSize) for i in xrange(numInputs)]
-		self.fwdFFT=[fft.fft_vcc(fftSize, True, (fftWindow/numpy.sum(fftWindow)), True, 1) for i in xrange(numInputs)]
+			self.compToMag=[blocks.complex_to_mag(fftSize) for i in range(numInputs)]
+		self.fwdFFT=[fft.fft_vcc(fftSize, True, (fftWindow/numpy.sum(fftWindow)), True, 1) for i in range(numInputs)]
 
 		##################################################
 		# Connections
 		##################################################
-		for i in xrange(numInputs):
+		for i in range(numInputs):
 			self.connect((self, i), (self.fwdFFT[i], 0))
 			self.connect((self.fwdFFT[i], 0), (self.compToMag[i], 0))
 			if self.singlePoleIIR is not None:

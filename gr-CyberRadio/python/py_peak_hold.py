@@ -44,7 +44,7 @@ class py_peak_hold(gr.sync_block):
 		return True
 	
 	def clearMax(self, clearEnable=True):
-		print("clearMax( %r )"%(clearEnable,))
+		print(("clearMax( %r )"%(clearEnable,)))
 		if clearEnable:
 			with self._lock:
 				self.maxVec = -numpy.inf*numpy.ones(self.vecLen)
@@ -53,7 +53,7 @@ class py_peak_hold(gr.sync_block):
 	def work(self, input_items, output_items):
 		numOut = 0
 		with self._lock:
-			for i in xrange(len(input_items[0])):
+			for i in range(len(input_items[0])):
 				numOut += 1
 				self.maxVec = numpy.maximum(input_items[0][i], self.maxVec)
 				output_items[0][i] = self.maxVec.copy()

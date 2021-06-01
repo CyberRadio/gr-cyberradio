@@ -22,9 +22,9 @@ class generic_radio_interface_block():
             self.radioObj = crd.getRadioObject(self.radioParam["type"])
         if not self.radioObj.isConnected():
             self.log.debug("Connecting to radio...")
-            if all( self.radioParam.has_key(i) for i in ("host","port") ):
+            if all( i in self.radioParam for i in ("host","port") ):
                 self.radioObj.connect( "tcp", self.radioParam["host"], self.radioParam["port"] )
-            elif all( self.radioParam.has_key(i) for i in ("device","baudrate") ):
+            elif all( i in self.radioParam for i in ("device","baudrate") ):
                 self.radioObj.connect( "tty", self.radioParam["device"], self.radioParam["baudrate"] )
             else:
                 raise Exception("%s :: Can't connect to radio"%(self._name))
@@ -42,9 +42,9 @@ class generic_radio_interface_block():
         if self._init or not hasattr(self, "radioParam"):
             self.radioParam = radioParam
             self.radioType = self.radioParam.get("type")
-            print("%s.set_radioParam: %s -> %s"%(self._name, repr(self.radioParam), repr(radioParam),))
+            print(("%s.set_radioParam: %s -> %s"%(self._name, repr(self.radioParam), repr(radioParam),)))
         elif radioParam!=self.radioParam:
-            print("%s.set_radioParam: %s -> %s"%(self._name, repr(self.radioParam), repr(radioParam),))
+            print(("%s.set_radioParam: %s -> %s"%(self._name, repr(self.radioParam), repr(radioParam),)))
             self.radioParam = radioParam
             self.updateConfig("radioParam")
 

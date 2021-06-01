@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=NDR Demo Launcher
-Comment=NDR Radio Demo GUI Configuration Utility & Launcher
-Exec=kdesu ndrGuiLauncher
-Type=Application
-Terminal=false
-Categories=Other
-Icon=/usr/share/icons/oxygen/128x128/categories/applications-internet.png
-

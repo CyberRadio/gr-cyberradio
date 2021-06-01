@@ -4,7 +4,7 @@
  * \brief Defines what types we want for all basic lists.
  *
  * \author DA
- * \copyright Copyright (c) 2015 CyberRadio Solutions, Inc.
+ * \copyright Copyright (c) 2015-2021 CyberRadio Solutions, Inc.
  *
  */
 

@@ -93,13 +93,17 @@ namespace gr {
       if (this->sock_fd < 0) {
           perror("Could not create socket.  Check that /proc/sys/net/core/rmem_max is set to 268435456");
           throw "Socket Creation Error";
-      }  
+      }
+      bool ret = true;
+      return ret;  
     }
 
     bool vita_udp_rx_impl::stop()
     {
       std::cout << "Socket closing" << std::endl;
       close(this->sock_fd);
+      bool ret = true;
+      return ret;
     }
 
     void vita_udp_rx_impl::tag_packet()

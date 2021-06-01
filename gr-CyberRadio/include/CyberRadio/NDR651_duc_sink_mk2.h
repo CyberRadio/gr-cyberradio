@@ -57,8 +57,7 @@ namespace gr
 				 * \param radio_host_name The radio host name.  If this is an empty
 				 *    string, then the block will not connect to a radio.
 				 * \param radio_tcp_port The radio TCP port.
-				 * \param tengig_iface_list The list of 10GigE interfaces used by
-				 *    the radio.
+				 * \param tengig_iface_index The index of the 10 gig interface
 				 * \param iq_scale_factor Scale factor for coverting I/Q data from
 				 *    complex input to native sample format.
 				 * \param duc_channel The channel number for the DUC in use.
@@ -70,8 +69,14 @@ namespace gr
 				 * \param duc_tx_frequency The transmit center frequency for the DUC in use.
 				 * \param duc_tx_attenuation The transmit attenuation for the DUC in use.
 				 * \param duc_stream_id The stream ID/UDP port for the DUC in use.
+				 * \param config_tx The configured tx device
 				 * \param debug Whether the block should produce debug output.  Defaults to
 				 *    False.
+				 * \param duchsPfThresh Pf Threshold
+				 * \param duchsPeThresh Pe Threshold
+				 * \param duchsPeriod period
+				 * \param updatePE PE update flag
+				 * \param txinv_mode transmitter mode
 				 *
 				 * \return A boost::shared_ptr<NDR651_duc_sink_mk2> representing the
 				 *    new block.

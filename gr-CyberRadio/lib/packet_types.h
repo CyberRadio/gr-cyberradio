@@ -91,7 +91,7 @@ namespace gr
 		 */
 		struct IqPayload {
 			int16_t samples[2*SAMPLES_PER_FRAME];  //!< Interleaved I and Q samples
-		} __attribute__((packed));
+		} __attribute__((aligned));
 
 		/*!
 		 * \brief VITA 49 frame trailer information.
@@ -107,7 +107,7 @@ namespace gr
 			struct Vita49Header v49;    //!< VITA 49 frame header
 			struct IqPayload IQ;     //!< VITA 49 payload
 			struct Vita49Trailer vend;  //!< VITA 49 frame trailer
-		} __attribute__((packed));
+		} __attribute__((aligned));
 
 	}
 

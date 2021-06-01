@@ -5,7 +5,7 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.  
 #    All rights reserved.
 ##################################################################
 
@@ -450,7 +450,7 @@ class ndr354_wbddc(_wbddc):
             #self.logIfVerbose("rspInfo =", rspInfo)
             if rspInfo is not None:
                 for key in self.validConfigurationKeywords:
-                    if rspInfo.has_key(key):
+                    if key in rspInfo:
                         self.configuration[key] = rspInfo.get(key, None)
         pass
 
@@ -802,7 +802,7 @@ class ndr354(_radio):
                 configKeys.VERINFO_REF, configKeys.VERINFO_UNITREV,
                 configKeys.VERINFO_HW]
         rspInfo = None
-        if not all([self.versionInfo.has_key(key) for key in keys]):
+        if not all([key in self.versionInfo for key in keys]):
             cmd = self.idnQry(parent=self,
                                query=True,
                                verbose=self.verbose, logFile=self.logFile)
@@ -812,17 +812,17 @@ class ndr354(_radio):
             if rspInfo is not None:
                 self._dictUpdate(self.versionInfo, rspInfo, {}, keys)
         for key in keys:
-            if not self.versionInfo.has_key(key):
+            if key not in self.versionInfo:
                 self.versionInfo[key] = "N/A"
         # Since the 354 does not produce a single key with all hardware info,
         # construct hardware info from other response keys
         if rspInfo is not None:
             hwInfo = []
-            if rspInfo.has_key(configKeys.STATUS_DIGBRD_SN):
+            if configKeys.STATUS_DIGBRD_SN in rspInfo:
                 hwInfo.append("Digital Board S/N: %s" % rspInfo[configKeys.STATUS_DIGBRD_SN])
-            if rspInfo.has_key(configKeys.STATUS_TUNERBRD1_SN):
+            if configKeys.STATUS_TUNERBRD1_SN in rspInfo:
                 hwInfo.append("Tuner Board 1 S/N: %s" % rspInfo[configKeys.STATUS_TUNERBRD1_SN])
-            if rspInfo.has_key(configKeys.STATUS_TUNERBRD2_SN):
+            if configKeys.STATUS_TUNERBRD2_SN in rspInfo:
                 hwInfo.append("Tuner Board 2 S/N: %s" % rspInfo[configKeys.STATUS_TUNERBRD2_SN])
             self.versionInfo[configKeys.VERINFO_HW] = ", ".join(hwInfo)
         return self.versionInfo
@@ -840,7 +840,7 @@ class ndr354(_radio):
             # Parse response info from the command and return a dictionary
             # that mirrors the returns from NDR308-class STAT commands
             errMsg = ""
-            if cmd.getResponseInfo().has_key(configKeys.STATUS_ERROR):
+            if configKeys.STATUS_ERROR in cmd.getResponseInfo():
                 errMsg = cmd.getResponseInfo()[configKeys.STATUS_ERROR]
             return {
                     "int": 0x0001 if errMsg != "" else 0x0000,

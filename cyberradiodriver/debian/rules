@@ -1,16 +1,19 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
-# Sample debian/rules that uses debhelper.
-# This file was originally written by Joey Hess and Craig Small.
-# As a special exception, when this file is copied by dh-make into a
-# dh-make output file, you may use that output file without restriction.
-# This special exception was added by Craig Small in version 0.37 of dh-make.
+# Debian package-building rules file
+# Use placeholders for makedeb script:
+# * DEB_PYTHON_DHPY to specify what dh_python option to use
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+# PyBuild requires us to give it the package name using an environment
+# variable.
+export PYBUILD_NAME=CyberRadioDriver
+
+# Tell the Debian build scripts that we want to use the dh_python[2/3]
+# tool for our Python stuff.
 %:
-	dh $@ --with python2
+	dh $@ --with DEB_PYTHON_DHPY --buildsystem=pybuild
 
 # Squash auto-build step, since Python distutils installs using setup.py 
 # automatically build during the "install" command, anyway.

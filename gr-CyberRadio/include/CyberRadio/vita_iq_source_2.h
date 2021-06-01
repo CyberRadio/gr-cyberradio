@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /***************************************************************************
- * \file vita_iq_source.h
+ * \file vita_iq_source_2.h
  *
  * \brief Generic VITA 49-compatible I/Q data source block.
  *
@@ -140,5 +140,5 @@ namespace gr
   } // namespace CyberRadio
 } // namespace gr
 
-#endif /* INCLUDED_CYBERRADIO_VITA_IQ_SOURCE_H */
+#endif /* INCLUDED_CYBERRADIO_VITA_IQ_SOURCE_2_H */
 

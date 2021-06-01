@@ -23,7 +23,7 @@ import numpy
 from gnuradio import gr
 from gnuradio.gr import pmt
 
-from generic_radio_control_block import generic_radio_control_block
+from .generic_radio_control_block import generic_radio_control_block
 
 class freq_msg_converter(generic_radio_control_block, gr.basic_block):
 	"""

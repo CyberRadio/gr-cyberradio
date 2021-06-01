@@ -371,6 +371,8 @@ namespace LibCyberRadio
                 bool clearRx
             )
         {
+            bool ret = true;
+            return ret;
         }
 
         bool RadioTransport::sendCommandHttps(
@@ -593,7 +595,7 @@ namespace LibCyberRadio
         {
             char buf[256];
             memset(buf, 0, sizeof(buf));
-            strerror_r(errno, buf, sizeof(buf));
+            this->debug(strerror_r(errno, buf, sizeof(buf)));
             _lastCmdErrInfo = buf;
         }
 

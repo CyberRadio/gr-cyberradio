@@ -4,7 +4,7 @@
  * \brief UDP port for handling incoming VITA 49 or I/Q data.
  *
  * \author DA
- * \copyright 2016 CyberRadio Solutions, Inc.
+ * \copyright 2016-2021 CyberRadio Solutions, Inc.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -100,7 +100,7 @@ namespace LibCyberRadio
         timeout.tv_sec  = 0;
         timeout.tv_usec = 100;
 
-        socket_fd = socket->native();
+        socket_fd = socket->native_handle();
         /* Socket has been created and connected to the other party */
         do
         {

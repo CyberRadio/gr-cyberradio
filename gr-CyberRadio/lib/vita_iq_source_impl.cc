@@ -96,7 +96,7 @@ namespace gr
       timeout.tv_sec  = 0;
       timeout.tv_usec = 0; //100000;
 
-      socket_fd = socket->native();
+      socket_fd = socket->native_handle();
       /* Socket has been created and connected to the other party */
       do
       {

@@ -22,20 +22,21 @@
 ########################################################################
 install(FILES
     api.h
-    NDR651_duc_sink_mk2.h
-    vita_iq_source.h
+    vita_udp_rx.h
+    single_pole_iir_filter_ff.h
+    single_pole_iir.h
+    snapshot_fft_vector_source.h
+    snapshot_source_c.h
+    snapshot_vector_source.h
+    snapshot_vector_source_mk2.h
+    vector_keep_m_in_n.h
+    vector_mag_squared_log10_cf.h
+    vector_nlog10_ff.h
     vita_iq_source_2.h
+    vita_iq_source.h
     vita_iq_source_mk3.h
     vita_multifile_iq_source.h
-    snapshot_source_c.h
-    vector_keep_m_in_n.h
-    vector_nlog10_ff.h
-    vita_udp_rx.h
     ndr651_sink.h
-    snapshot_vector_source.h
-    NDR651_sync_sink.h
-    vector_mag_squared_log10_cf.h
-    single_pole_iir_filter_ff.h
-    snapshot_vector_source_mk2.h
-    snapshot_fft_vector_source.h DESTINATION include/CyberRadio
+    NDR651_duc_sink_mk2.h
+    NDR651_sync_sink.h DESTINATION include/CyberRadio
 )

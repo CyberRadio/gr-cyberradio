@@ -114,5 +114,5 @@ namespace gr
   } // namespace CyberRadio
 } // namespace gr
 
-#endif /* INCLUDED_CYBERRADIO_VITA_IQ_SOURCE_IMPL_H */
+#endif /* INCLUDED_CYBERRADIO_VITA_IQ_SOURCE_2_IMPL_H */
 

@@ -4,7 +4,7 @@
  * \brief NDR651 UDP status receiver.
  *
  * \author NH
- * \copyright Copyright (c) 2015 CyberRadio Solutions, Inc.
+ * \copyright Copyright (c) 2015-2021 CyberRadio Solutions, Inc.
  *
  */
 

@@ -2,7 +2,7 @@
  * \file ndr651_driver.cpp
  * \brief NDR651 test app using the CyberRadio Driver (C++)
  * \author DA
- * \copyright Copyright (c) 2018 CyberRadio Solutions, Inc.  All rights
+ * \copyright Copyright (c) 2015-2021 CyberRadio Solutions, Inc.  All rights
  *    reserved.
  */
 

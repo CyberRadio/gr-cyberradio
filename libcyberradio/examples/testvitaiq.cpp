@@ -3,7 +3,7 @@
  Name        : testvitaiq.cpp
  Author      : CyberRadio Solutions
  Version     :
- Copyright   : (c) 2016 CyberRadio Solutions, Inc.  All rights reserved.
+ Copyright   : (c) 2015-2021 CyberRadio Solutions, Inc.  All rights reserved.
  Description : Uses shared library to print greeting
                To run the resulting executable the LD_LIBRARY_PATH must be
                set to ${project_loc}/libcyberradio/.libs

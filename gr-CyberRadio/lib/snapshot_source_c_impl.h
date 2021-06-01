@@ -67,7 +67,7 @@ namespace gr {
      bool program_starting;
      int sock_fd;
      //~ uint8_t * rxbuff;
-     struct Ndr308Frame * rxbuff;
+     struct Ndr308Frame* rxbuff;
      int32_t thisCount,lastCount,countDiff;
      bool d_iq_swap, d_byte_swap;
      //~ struct Ndr308Frame * frame;

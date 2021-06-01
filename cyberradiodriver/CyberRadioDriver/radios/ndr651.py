@@ -5,7 +5,7 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.  
 #    All rights reserved.
 ##################################################################
 

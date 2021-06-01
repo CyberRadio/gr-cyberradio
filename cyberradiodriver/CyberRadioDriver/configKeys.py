@@ -8,7 +8,7 @@
 # \author NH
 # \author DA
 # \author MN
-# \copyright Copyright (c) 2017-2020 CyberRadio Solutions, Inc.  
+# \copyright Copyright (c) 2014-2021 CyberRadio Solutions, Inc.  
 #    All rights reserved.
 #
 ###############################################################
@@ -495,6 +495,18 @@ STATUS_BATTERY_LEVEL = "batteryLevel"
 STATUS_ADC_CLOCK1 = "adcClock1"
 ## ADC clock 1
 STATUS_ADC_CLOCK2 = "adcClock2"
+
+## NDR324
+STATUS_ADC_CLOCK_REF = "adcrefclk"
+STATUS_ADC_CLOCK_INT = "internaladcclk"
+TUNER_PRESELECTOR_MODE = "psmode"
+DGS_INDEX = "dgsid"
+DGS_RF_INDEX = "rfch"
+DGS_STREAM_ID = "vita"
+DGS_LINK = "link"
+LINK = "link"
+DGLINK_TYPE = "type"
+
 ## Digital board temperature
 STATUS_DIGBRD_TEMP = "digitalBoardTemp"
 ## FPGA temperature
@@ -656,7 +668,7 @@ class Configurable(object):
     #
     # \return The object's configuration, as a dictionary.
     def getConfiguration(self):
-        if len(self.configuration.keys()) == 0:
+        if len(list(self.configuration.keys())) == 0:
             self._queryConfiguration()
         return self.configuration
     
@@ -680,7 +692,7 @@ class Configurable(object):
     def setConfiguration(self, *args, **kwargs):
         self.cmdErrorInfo = []
         confDict = {}
-        confKeys = [q for q in kwargs.keys() if q in self.validConfigurationKeywords]
+        confKeys = [q for q in list(kwargs.keys()) if q in self.validConfigurationKeywords]
         for key in confKeys:
             confDict[key] = kwargs[key]
         return self._setConfiguration(confDict)

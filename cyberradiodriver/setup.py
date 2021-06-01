@@ -6,27 +6,25 @@
 #
 # Author: DA
 # Company: CyberRadio Solutions, Inc.
-# Copyright: Copyright (c) 2015 CyberRadio Solutions, Inc.  All 
-#    rights reserved.
+# Copyright: Copyright (c) 2014-2021 CyberRadio Solutions, Inc.
+#    All rights reserved.
 #
-# NOTES
-# -----
-# Under Win32, we can use the py2exe package to create a Windows 
-# executable from the Python code.  To do this, specify "py2exe" 
-# as an argument to the script.  We can also build an MSI installer
-# using the built-in "bdist_msi" argument.
-#
-# Under Linux, use the script argument to determine how to package 
-# it (tarball using "bdist_dumb" or RPM using "bdist_rpm").  RPM 
-# packages can be made into Debian (Ubuntu) installers using the 
-# third-party "alien" utility.  Alternatively, if the source 
-# folder contains a "debian" sub-directory, the Debian package-
-# building tools can be used to build a package that installs all 
-# of the files that this script would if it was executed as
-# "python setup.py install".
+# \note On RedHat-based systems, our "makerpm" script can build an
+#    RPM package from the instructions here.  Alternatively, you can
+#    execute this script as "python setup.py bdist_rpm" to use Python's
+#    native RPM packaging capability. 
+# \note On Debian-based systems, our "makedeb" script can build a
+#    Debian installation package from the instructions here, if there 
+#    is a "debian" subdirectory. 
+# \note On Windows-based systems, you can execute this script as 
+#    "python setup.py bdist_msi" to create an MSI installation package.
+#    Alternatively, for Python projects that create an executable 
+#    program, you can use py2exe to create a standalone executable.  
+#    To do this, execute this script as "python setup.py py2exe".
 #
 ###############################################################
 
+from __future__ import print_function
 import CyberRadioDriver
 from distutils.core import setup
 from distutils.sysconfig import get_python_lib
@@ -49,6 +47,7 @@ MODULE_LIST=[ ]
 PACKAGE_LIST=[ \
                'CyberRadioDriver', \
                'CyberRadioDriver.radios', \
+               'CyberRadioDriver.radios.internal', \
               ]
 # SCRIPT_LIST: List of script files to install
 SCRIPT_LIST=['apps/ndr_dataport_config']
@@ -155,7 +154,7 @@ if sys.platform == 'win32':
     if len(WINDOWS_ZIPPKG_LIST) > 0:
         import zipfile, os, shutil
         ziptarget = os.path.join("dist", "%s-%s.zip" % (NAME, VERSION))
-        print "Packaging archive:", ziptarget
+        print("Packaging archive:", ziptarget)
         for fname in README_LIST:
             shutil.copy(fname, os.path.join("dist", fname))
         zfs = zipfile.ZipFile(ziptarget, "w", zipfile.ZIP_DEFLATED)
@@ -245,7 +244,7 @@ else:
             ifs = open(doxy_file, "r")
             lines = ifs.readlines()
             ifs.close()
-            for i in xrange(0, len(lines), 1):
+            for i in range(0, len(lines), 1):
                 if "PROJECT_NAME = " in lines[i]:
                     lines[i] = "PROJECT_NAME = " + self.distribution.get_name() + "\n"
                 if "PROJECT_NUMBER = " in lines[i]:
@@ -424,7 +423,7 @@ else:
                     self.copy_file(init_file, dst)
                     # Make the destination file executable
                     self.distribution.announce("changing mode of %s to 755" % dst)
-                    os.chmod(dst, 0755)
+                    os.chmod(dst, 0o755)
             # Install docs
             if os.access("docs", os.F_OK):
                 for docs_file in self.fileListFromSpecs("docs/*"):
@@ -474,5 +473,5 @@ else:
          )
     
       
-print "PLATFORM: ", sys.platform
+print("PLATFORM: ", sys.platform)
 

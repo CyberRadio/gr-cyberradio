@@ -4,7 +4,7 @@
  * \brief Basic threading using Boost Threads.
  *
  * \author DA
- * \copyright Copyright (c) 2015 CyberRadio Solutions, Inc.
+ * \copyright Copyright (c) 2015-2021 CyberRadio Solutions, Inc.
  *
  */
 

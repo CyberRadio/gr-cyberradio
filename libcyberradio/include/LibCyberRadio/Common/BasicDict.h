@@ -4,7 +4,7 @@
  * \brief Defines what types we want for all basic dictionary types.
  *
  * \author DA
- * \copyright Copyright (c) 2017 CyberRadio Solutions, Inc.
+ * \copyright Copyright (c) 2015-2021 CyberRadio Solutions, Inc.
  *
  * \note The basic dictionary type supports very simple key-value mappings.
  *    Nested dictionaries (such as available in Python) are beyond the scope
