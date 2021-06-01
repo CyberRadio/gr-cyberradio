@@ -64,7 +64,9 @@ namespace gr {
           perror("Could not create socket.  Check that /proc/sys/net/core/rmem_max is set to 268435456");
           throw "Socket Creation Error";
       }
-      rxbuff = (struct Ndr308Frame *)malloc(sizeof(Ndr308Frame));
+      size_t test = volk_get_alignment();
+      rxbuff = (struct Ndr308Frame*) volk_malloc(sizeof(Ndr308Frame), test);
+      //rxbuff = (struct Ndr308Frame*)malloc(sizeof(Ndr308Frame));
   }
 
   /*
@@ -72,7 +74,8 @@ namespace gr {
    */
   snapshot_source_c_impl::~snapshot_source_c_impl()
   {
-    free(rxbuff);
+    //free(rxbuff);
+    volk_free(rxbuff);
   }
 
   int
@@ -98,6 +101,7 @@ namespace gr {
     //    For the NDR308, we need IQ swap before we can use this
     if (d_byte_swap) {
     if (d_iq_swap) {
+
       volk_32u_byteswap((uint32_t *)rxbuff->IQ.samples, 1024);
     } else {
       volk_16u_byteswap((uint16_t *)rxbuff->IQ.samples, 2048);

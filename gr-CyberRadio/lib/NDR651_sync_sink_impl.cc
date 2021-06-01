@@ -109,6 +109,8 @@ bool NDR651_sync_sink_impl::stop() {
 	syncTXClient->stop();
 	// Cleanup (SyncTX Constructor deletes TXClients)
 	delete syncTXClient;
+	bool ret = true;
+	return ret;
 }
 
 
@@ -127,6 +129,8 @@ DEBUG_PRINT_FUNC
 THIS_ASSIGN(frequencyOffsetMHz);
 	for(int i = 0; i < NUM_CH; i++)
 		this->txClients[i]->setDUCFreq(frequencyOffsetMHz[i]);
+bool ret = true;
+return ret;
 }
 
 
@@ -135,6 +139,8 @@ DEBUG_PRINT_FUNC
 THIS_ASSIGN(digital_attenuationDB);
 		for(int i = 0; i < NUM_CH; i++)
 		this->txClients[i]->setDUCAtten(digital_attenuationDB[i]);
+bool ret = true;
+return ret;
 }
 
 bool NDR651_sync_sink_impl::setTxFreq_callback(double centerFreqMHz1, double centerFreqMHz2) {
@@ -142,6 +148,8 @@ DEBUG_PRINT_FUNC
 THIS_ASSIGN(centerFreqMHz);
 	for(int i = 0; i < NUM_CH; i++)
 		this->txClients[i]->setTxFreq(centerFreqMHz[i]);
+bool ret = true;
+return ret;
 }
 
 
@@ -150,6 +158,8 @@ DEBUG_PRINT_FUNC
 THIS_ASSIGN(rf_attenuationDB);
 	for(int i = 0; i < NUM_CH; i++)
 		this->txClients[i]->setTxAtten(rf_attenuationDB[i]);
+bool ret = true;
+return ret;
 }
 
 
@@ -160,6 +170,8 @@ THIS_ASSIGN(txChannel);
 this->channelRate = channelRate;
 	for(int i = 0; i < NUM_CH; i++)
 		this->txClients[i]->setDUCParameters(ducChannel[i], channelRate, txChannel[i]);
+bool ret = true;
+return ret;
 }
 
 bool NDR651_sync_sink_impl::setEthernetInterface(unsigned int tenGbeIndex, const char *eth_index1, const char *eth_index2, long upd_port1, long upd_port2) {
@@ -169,6 +181,8 @@ this->tenGbeIndex = tenGbeIndex;
 THIS_ASSIGN(upd_port);
 	for(int i = 0; i < NUM_CH; i++)
 		this->txClients[i]->setEthernetInterface(tenGbeIndex + i, eth_index[i], upd_port[i]);
+bool ret = true;
+return ret;
 }
 
 #if 0

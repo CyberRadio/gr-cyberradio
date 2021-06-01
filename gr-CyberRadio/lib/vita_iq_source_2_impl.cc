@@ -408,6 +408,8 @@ namespace gr
                 pmt::intern("dropped_total"),
                 pmt::mp(d_dropped));
         }
+        int ret = 1;
+        return ret;
     }
 
     int 
