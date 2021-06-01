@@ -91,7 +91,7 @@ namespace LibCyberRadio
                 struct Vita49Header v49;    //!< VITA 49 frame header
                 struct Payload payload;     //!< VITA 49 payload
                 struct Vita49Trailer vend;  //!< VITA 49 frame trailer
-        } __attribute__((packed));
+        } __attribute__((aligned));
 
         /*!
          * \brief Transmit status information.
