@@ -64,9 +64,7 @@ namespace gr {
           perror("Could not create socket.  Check that /proc/sys/net/core/rmem_max is set to 268435456");
           throw "Socket Creation Error";
       }
-      size_t test = volk_get_alignment();
-      rxbuff = (struct Ndr308Frame*) volk_malloc(sizeof(Ndr308Frame), test);
-      //rxbuff = (struct Ndr308Frame*)malloc(sizeof(Ndr308Frame));
+      rxbuff = (struct Ndr308Frame*) volk_malloc(sizeof(Ndr308Frame), volk_get_alignment());
   }
 
   /*
@@ -74,7 +72,6 @@ namespace gr {
    */
   snapshot_source_c_impl::~snapshot_source_c_impl()
   {
-    //free(rxbuff);
     volk_free(rxbuff);
   }
 
