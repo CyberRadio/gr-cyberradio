@@ -24,15 +24,15 @@ int main(void)
 {
     /* Set up a VITA-I/Q source for an NDR304 radio */
     LibCyberRadio::VitaIqSource wbddc1(
-            /* const std::string& name */ "NDR304 WBDDC 1",
-            /* int vita_type */ 1,
-            /* size_t payload_size */ 1536,
-            /* size_t vita_header_size */ 28,
-            /* size_t vita_tail_size */ 4,
-            /* bool byte_swapped */ false,
-            /* bool iq_swapped */ true,
+            /* const std::string& name */ "NDR358 WBDDC 1",
+            /* int vita_type */ 551,
+            /* size_t payload_size */ 4096,
+            /* size_t vita_header_size */ 48,
+            /* size_t vita_tail_size */ 8,
+            /* bool byte_swapped */ true,
+            /* bool iq_swapped */ false,
             /* const std::string& host */ "0.0.0.0",
-            /* unsigned short port */ 41000,
+            /* unsigned short port */ 49600,
             /* bool debug */ true);
     /* Delay for looping over data coming from the radio */
     struct timespec ts_delay = {0, 100};

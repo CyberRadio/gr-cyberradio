@@ -144,6 +144,18 @@ namespace LibCyberRadio
             uint32_t frameTrailerWord;
             int16_t* sampleData;
 
+            int source;
+            int tunerBw;
+            int atten;
+            int tunedFreq;
+            int32_t ddcFreqOffset;
+            int filter;
+            int delayTime;
+            int demod;
+            int ovs;
+            int agcGain;
+            int validDataCount;
+
         protected:
             uint32_t rawDataWord(int index);
             std::string rawDataBufferHex(unsigned char* buf, int length);

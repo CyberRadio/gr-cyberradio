@@ -48,6 +48,17 @@ namespace LibCyberRadio
         packetClassCode(0),
         timestampInt(0),
         timestampFrac(0),
+        source(0),
+        tunerBw(0),
+        atten(0),
+        tunedFreq(0),
+        ddcFreqOffset(0),
+        filter(0),
+        delayTime(0),
+        demod(0),
+        ovs(0),
+        agcGain(0),
+        validDataCount(0),
         frameTrailerWord(0)
     {
         // Calculate packet size
@@ -96,11 +107,52 @@ namespace LibCyberRadio
             // Decode fractional-seconds timestamp if the type indicates that one is present
             if (timestampFracType > 0)
             {
-                timestampFrac = (uint64_t)(rawDataWord(currentWord))
-                                << 32 + rawDataWord(currentWord + 1);
+                // timestampFrac = (uint64_t)(rawDataWord(currentWord))
+                //                << 32 + rawDataWord(currentWord + 1);
+                uint64_t timestampFracTmp;
+                timestampFracTmp = (uint64_t)(rawDataWord(currentWord));
+                timestampFracTmp = timestampFracTmp << 32;
+                timestampFracTmp = timestampFracTmp + rawDataWord(currentWord + 1);
+                timestampFrac = timestampFracTmp;
+                std::cout << "TFRAC "
+                << " msw=" << rawDataWord(currentWord)
+                << " lsw=" << rawDataWord(currentWord + 1)
+                << " comb=" << timestampFrac
+                << std::endl;
                 currentWord += 2;
             }
             //Skip context, for now
+            std::cout << "DDC Payload Header "
+            << " Word1=" << rawDataWord(currentWord)
+            << " Word2=" << rawDataWord(currentWord + 1)
+            << " Word3=" << rawDataWord(currentWord + 2)
+            << " Word4=" << rawDataWord(currentWord + 3)
+            << " Word5=" << rawDataWord(currentWord + 4)
+            << std::endl;
+            source = (int) ((rawDataWord(currentWord) & 0xF0000000) >> 28);
+            tunerBw = (int) ((rawDataWord(currentWord) & 0x03000000) >> 24);
+            atten = (int) ((rawDataWord(currentWord) & 0x003F0000) >> 16);
+            tunedFreq = (int) (rawDataWord(currentWord) & 0x0000FFFF);
+            ddcFreqOffset = (rawDataWord(currentWord + 1));
+            filter = (int) ((rawDataWord(currentWord + 2) & 0xFFF00000) >> 20);
+            demod = (int) ((rawDataWord(currentWord + 3) & 0xF0000000) >> 28);
+            ovs = (int) ((rawDataWord(currentWord + 4) & 0xF0000000) >> 28);
+            agcGain = (int) ((rawDataWord(currentWord + 4) & 0x0FFF0000) >> 16);
+            validDataCount = (int) (rawDataWord(currentWord + 4) & 0x000007FF);
+
+            std::cout << "DDC Payload Header Values"
+            << " source =" << source
+            << " TunerBw =" << tunerBw
+            << " atten =" << atten
+            << " TunedFreq =" << tunedFreq
+            << " ddcFreqOffset =" << ddcFreqOffset
+            << " filter =" << filter
+            << " demod =" << demod
+            << " ovs =" << ovs
+            << " agcGain =" << agcGain
+            << " validDataCount =" << validDataCount
+            << std::endl;
+
             currentWord += 5;
         } else if (vitaType > 0)
         {
@@ -214,6 +266,17 @@ namespace LibCyberRadio
         packetClassCode = src.packetClassCode;
         timestampInt = src.timestampInt;
         timestampFrac = src.timestampFrac;
+        source = src.source;
+        tunerBw = src.tunerBw;
+        atten = src.atten;
+        tunedFreq = src.tunedFreq;
+        ddcFreqOffset = src.ddcFreqOffset;
+        filter = src.filter;
+        delayTime = src.delayTime;
+        demod = src.demod;
+        ovs = src.ovs;
+        agcGain = src.agcGain;
+        validDataCount = src.validDataCount;
         frameTrailerWord = src.frameTrailerWord;
         _totalPacketSize = src._totalPacketSize;
         _rawData = new uint8_t[_totalPacketSize];
@@ -320,6 +383,24 @@ namespace LibCyberRadio
             oss << "I/Q PACKET\n";
         } else if ( vitaType == 551 ) {
             oss << "NDR551 Packet\n";
+            oss << "    Packet Details\n"
+                    << "        type=" << VALUE_DEC_HEX(packetType, 32) << "\n"
+                    << "        count=" << VALUE_DEC_HEX(packetCount, 32) << "\n"
+                    << "        size=" << VALUE_DEC_HEX(packetSize, 32) << "\n"
+            		<< "    	stream ID=" << VALUE_DEC_HEX(streamId, 32) << "\n"
+                    << "        timestamp types: int=" << VALUE_DEC_HEX(timestampInt, 32)
+                    << " 		frac=" << VALUE_DEC_HEX(timestampFrac, 64) << "\n";
+            oss << "    DDC Header Details\n"
+                    << "        source=" << VALUE_DEC_HEX(source, 32) << "\n"
+                    << "        tunerBw=" << VALUE_DEC_HEX(tunerBw, 32) << "\n"
+                    << "        atten=" << VALUE_DEC_HEX(atten, 32) << "\n"
+                    << "        tunedFrequency=" << VALUE_DEC_HEX(tunedFreq, 32) << "\n"
+                    << "        ddcFreqOffset=" << VALUE_DEC_HEX(ddcFreqOffset, 32) << "\n"
+                    << "        filter=" << VALUE_DEC_HEX(filter, 32) << "\n"
+                    << "        demod=" << VALUE_DEC_HEX(demod, 32) << "\n"
+                    << "        ovs=" << VALUE_DEC_HEX(ovs, 32) << "\n"
+                    << "        agcGain=" << VALUE_DEC_HEX(agcGain, 32) << "\n"
+                    << "        validDataCount=" << VALUE_DEC_HEX(validDataCount, 32) << "\n";
         } else {
             oss << "VITA 49 PACKET\n"
                     // << "    raw=" << rawDataHex() << "\n"
