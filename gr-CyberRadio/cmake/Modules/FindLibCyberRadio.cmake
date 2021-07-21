@@ -37,7 +37,6 @@ FIND_PATH(
           /usr/include
           "/usr/include"
           "/usr/include"
-    NO_DEFAULT_PATH
 )
 
 # look for library
@@ -62,7 +61,6 @@ FIND_LIBRARY(
           "/usr/lib"
           "/usr/lib64"
           "/usr/lib/x86_64-linux-gnu" # multiarch support
-    NO_DEFAULT_PATH
 )
 GET_FILENAME_COMPONENT(LIBCYBERRADIO_LIB_DIR ${LIBCYBERRADIO_LIB} PATH)
 
