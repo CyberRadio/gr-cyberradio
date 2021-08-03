@@ -77,6 +77,16 @@ typedef struct {
   unsigned int frac_timestamp_lsw;
 } V49_No491_Header;
 
+typedef struct {
+  unsigned int packet_info;
+  unsigned int stream_id;
+  unsigned int class_0;
+  unsigned int class_1;
+  unsigned int int_timestamp;
+  unsigned int frac_timestamp_msw;
+  unsigned int frac_timestamp_lsw;
+} V49_0_Header;
+
 namespace gr {
   namespace CyberRadio {
 

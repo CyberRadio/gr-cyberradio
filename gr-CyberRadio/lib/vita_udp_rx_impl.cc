@@ -122,12 +122,21 @@ namespace gr {
       }
       else
       {
-          V49_No491_Header *hdr = (V49_No491_Header *)(this->buffer);
-//          std::cout << "****    vita_udp_rx_impl::tag_packet packet_info = "
-//                    << std::hex << std::setw(8) << std::setfill('0')
-//                    << hdr->packet_info << "    ****" << std::endl;
+          V49_0_Header *hdr = (V49_0_Header *)(this->buffer);
+          if (this->swap_bytes)
+          {
+              volk_32u_byteswap((uint32_t*)(this->buffer), this->header_byte_offset / 4);
+          }
+          uint64_t fractionalTs = 0;
+          fractionalTs |= ((uint64_t)hdr->frac_timestamp_msw) << 32;
+          fractionalTs |= ((uint64_t)hdr->frac_timestamp_lsw) & 0x00000000FFFFFFFFLL;
+          //if(this->debug){
+          //  printf("MSW: %08X LSW: %08X\n", hdr->frac_timestamp_msw, hdr->frac_timestamp_lsw);
+          //  printf("FRAC: %llu FRAC: 0x%" PRIx64 "\n", fractionalTs, fractionalTs);
+          //}
           // Create polymorphic type for timestamp
-          timestamp = pmt::cons(pmt::from_long(hdr->int_timestamp),pmt::from_long(hdr->frac_timestamp_lsw));
+          //timestamp = pmt::cons(pmt::from_long(hdr->int_timestamp),pmt::from_long(hdr->frac_timestamp_lsw));
+          timestamp = pmt::cons(pmt::from_long(hdr->int_timestamp),pmt::from_uint64(fractionalTs));
           // Create polymorphic type for stream id
           stream_id = pmt::from_long(hdr->stream_id);
       }
