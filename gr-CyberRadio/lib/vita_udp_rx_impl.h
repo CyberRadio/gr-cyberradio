@@ -78,13 +78,18 @@ typedef struct {
 } V49_No491_Header;
 
 typedef struct {
-  unsigned int packet_info;
-  unsigned int stream_id;
-  unsigned int class_0;
-  unsigned int class_1;
-  unsigned int int_timestamp;
-  unsigned int frac_timestamp_msw;
-  unsigned int frac_timestamp_lsw;
+  uint32_t packet_info;
+  uint32_t stream_id;
+  uint32_t class_0;
+  uint32_t class_1;
+  uint32_t int_timestamp;
+  uint32_t frac_timestamp_msw;
+  uint32_t frac_timestamp_lsw;
+  uint32_t ddc_info_0;
+  uint32_t ddc_info_1;
+  uint32_t ddc_info_2;
+  uint32_t ddc_info_3;
+  uint32_t ddc_info_4;
 } V49_0_Header;
 
 namespace gr {
