@@ -123,10 +123,7 @@ namespace gr {
       else
       {
           V49_0_Header *hdr = (V49_0_Header *)(this->buffer);
-          if (this->swap_bytes)
-          {
-              volk_32u_byteswap((uint32_t*)(this->buffer), this->header_byte_offset / 4);
-          }
+          // Note if we setup byte swap, it's already been done in place in work()	      
           uint64_t fractionalTs = 0;
           fractionalTs |= ((uint64_t)hdr->frac_timestamp_msw) << 32;
           fractionalTs |= ((uint64_t)hdr->frac_timestamp_lsw) & 0x00000000FFFFFFFFLL;
