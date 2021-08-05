@@ -29,12 +29,12 @@
 #include <inttypes.h>
 #include <linux/if_ether.h>
 #include <linux/if_packet.h>
-#include <netinet/ip.h>
-#include <netinet/udp.h>
 #include <net/ethernet.h>
 #include <net/if.h>
-#include <netinet/in.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/udp.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdio.h>
@@ -48,70 +48,68 @@
 #include <unistd.h>
 
 #include <iostream>
+#include <poll.h>
 #include <vector>
 #include <volk/volk.h>
-#include <poll.h>
 
 #include "packet_types.h"
 
 namespace gr {
 namespace CyberRadio {
 
-class snapshot_fft_vector_source_impl : public snapshot_fft_vector_source
-{
+class snapshot_fft_vector_source_impl : public snapshot_fft_vector_source {
 private:
-    std::string d_radio_type;
-    std::string d_ip;
-    unsigned int d_port;
-    unsigned int d_block_rate;
-    unsigned int d_block_size;
-    bool d_tag_frame;
+  std::string d_radio_type;
+  std::string d_ip;
+  unsigned int d_port;
+  unsigned int d_block_rate;
+  unsigned int d_block_size;
+  bool d_tag_frame;
 
-    std::string ip;
-    unsigned int port;
-    unsigned int block_rate;
-    unsigned int block_size;
-    unsigned int packets_per_block;
+  std::string ip;
+  unsigned int port;
+  unsigned int block_rate;
+  unsigned int block_size;
+  unsigned int packets_per_block;
 
-    bool d_byteSwap, d_iqSwap;
-    bool d_bswap32, d_bswap16;
-    int d_samples_per_frame;
-    bool initializing, running;
+  bool d_byteSwap, d_iqSwap;
+  bool d_bswap32, d_bswap16;
+  int d_samples_per_frame;
+  bool initializing, running;
 
+  int stream_counter, sample_counter;
+  bool program_starting;
+  int sock_fd;
+  std::vector<int8_t> sampleVector;
+  struct iovec rxVec[3];
+  int expectedRxSize;
+  struct pollfd pfd;
 
-    int stream_counter, sample_counter;
-    bool program_starting;
-    int sock_fd;
-    std::vector<int8_t> sampleVector;
-    struct iovec rxVec[3];
-    int expectedRxSize;
-    struct pollfd pfd;
+  int32_t thisCount, lastCount, countDiff;
+  bool d_iq_swap, d_byte_swap;
 
-    int32_t thisCount,lastCount,countDiff;
-    bool d_iq_swap, d_byte_swap;
+  void (*_parseHeader)(char *, int);
+  static void _parseHeaderNull(char *hdr, int hdr_len) {
+    std::cout << "_parseHeaderNull" << std::endl;
+  };
 
-    void (*_parseHeader)(char *, int);
-    static void _parseHeaderNull(char * hdr, int hdr_len) {std::cout << "_parseHeaderNull" << std::endl;};
 public:
-    snapshot_fft_vector_source_impl(const std::string radio_type,
-                                    const std::string &ip,
-                                    unsigned int port,
-                                    unsigned int block_size,
-                                    unsigned int block_rate);
-    ~snapshot_fft_vector_source_impl();
-    int initSocket(const std::string ip, unsigned short port);
-    void pause();
-    
-    bool start(void);
-    bool stop(void);
-    // Where all the action really happens
-    int work(int noutput_items,
-             gr_vector_const_void_star &input_items,
-             gr_vector_void_star &output_items);
+  snapshot_fft_vector_source_impl(const std::string radio_type,
+                                  const std::string &ip, unsigned int port,
+                                  unsigned int block_size,
+                                  unsigned int block_rate);
+  ~snapshot_fft_vector_source_impl();
+  int initSocket(const std::string ip, unsigned short port);
+  void pause();
+
+  bool start(void);
+  bool stop(void);
+  // Where all the action really happens
+  int work(int noutput_items, gr_vector_const_void_star &input_items,
+           gr_vector_void_star &output_items);
 };
 
 } // namespace CyberRadio
 } // namespace gr
 
 #endif /* INCLUDED_CYBERRADIO_SNAPSHOT_FFT_VECTOR_SOURCE_IMPL_H */
-

@@ -1,17 +1,17 @@
 /* -*- c++ -*- */
-/* 
+/*
  * Copyright 2017 <+YOU OR YOUR COMPANY+>.
- * 
+ *
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3, or (at your option)
  * any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street,
@@ -28,12 +28,12 @@
 #include <inttypes.h>
 #include <linux/if_ether.h>
 #include <linux/if_packet.h>
-#include <netinet/ip.h>
-#include <netinet/udp.h>
 #include <net/ethernet.h>
 #include <net/if.h>
-#include <netinet/in.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/udp.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdio.h>
@@ -46,8 +46,8 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#include <volk/volk.h>
 #include <CyberRadio/vita_udp_rx.h>
+#include <volk/volk.h>
 
 #define RECV_TIMEOUT 100
 
@@ -93,58 +93,48 @@ typedef struct {
 } V49_0_Header;
 
 namespace gr {
-  namespace CyberRadio {
+namespace CyberRadio {
 
-    class vita_udp_rx_impl : public vita_udp_rx
-    {
-     private:
-        // Variables
-        int samples_per_packet;
-        bool swap_bytes, swap_iq;
-        bool vector_output;
-        std::string src_ip;  
-        unsigned short port;
-        unsigned int header_byte_offset;   
-        unsigned int bytes_per_packet;
-        bool uses_v491, is_narrowband;
-        int sock_fd;
-        bool tag_packets;
-        bool debug;
-        uint8_t *buffer;
-        struct pollfd pfd;
+class vita_udp_rx_impl : public vita_udp_rx {
+private:
+  // Variables
+  int samples_per_packet;
+  bool swap_bytes, swap_iq;
+  bool vector_output;
+  std::string src_ip;
+  unsigned short port;
+  unsigned int header_byte_offset;
+  unsigned int bytes_per_packet;
+  bool uses_v491, is_narrowband;
+  int sock_fd;
+  bool tag_packets;
+  bool debug;
+  uint8_t *buffer;
+  struct pollfd pfd;
 
-        // Methods
-        void tag_packet();
-        int initSocket();
+  // Methods
+  void tag_packet(int index);
+  int initSocket();
 
-     public:
-      vita_udp_rx_impl(const std::string &src_ip,
-    		  	  	  	  unsigned short port,
-						  unsigned int header_byte_offset,
-						  int samples_per_packet,
-						  int bytes_per_packet,
-						  bool swap_bytes,
-						  bool swap_iq,
-						  bool tag_packets,
-						  bool vector_output,
-	                      bool uses_v491 = true,
-                        bool narrowband = false,
-	                      bool debug = false);
-      ~vita_udp_rx_impl();
+public:
+  vita_udp_rx_impl(const std::string &src_ip, unsigned short port,
+                   unsigned int header_byte_offset, int samples_per_packet,
+                   int bytes_per_packet, bool swap_bytes, bool swap_iq,
+                   bool tag_packets, bool vector_output, bool uses_v491 = true,
+                   bool narrowband = false, bool debug = false);
+  ~vita_udp_rx_impl();
 
-      void rxControlMsg(pmt::pmt_t msg);
+  void rxControlMsg(pmt::pmt_t msg);
 
-      bool start();
-      bool stop();
+  bool start();
+  bool stop();
 
-      // Where all the action really happens
-      int work(int noutput_items,
-         gr_vector_const_void_star &input_items,
-         gr_vector_void_star &output_items);
-    };
+  // Where all the action really happens
+  int work(int noutput_items, gr_vector_const_void_star &input_items,
+           gr_vector_void_star &output_items);
+};
 
-  } // namespace CyberRadio
+} // namespace CyberRadio
 } // namespace gr
 
 #endif /* INCLUDED_CYBERRADIO_VITA_UDP_RX_IMPL_H */
-
