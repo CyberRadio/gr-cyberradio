@@ -51,6 +51,35 @@
 
 #define RECV_TIMEOUT 100
 
+std::map<int, float> ndr358_551_ddc_map = {
+  { 0, 0.2e3},
+  { 1, 0.4e3},
+  { 2, 0.8e3},
+  { 3, 1.6e3},
+  { 4, 3.2e3},
+  { 5, 6.4e3},
+  { 6, 12.5e3},
+  { 7, 25e3},
+  { 8, 50e3},
+  { 9, 100e3},
+  {10, 150e3},
+  {11, 200e3},
+  {12, 300e3},
+  {13, 1.0e6},
+  {14, 2.5e6},
+  {15, 3.2e6},
+  {16, 1.5e6},
+  {32, 4e6},
+  {33, 5e6},
+  {34, 8e6},
+  {35, 10e6},
+  {36, 12.5e6},
+  {37, 20e6},
+  {38, 25e6},
+  {39, 40e6},
+  {40, 80e6}
+};
+
 // V49 Struct Info
 typedef struct {
   char p;
@@ -85,11 +114,11 @@ typedef struct {
   uint32_t int_timestamp;
   uint32_t frac_timestamp_msw;
   uint32_t frac_timestamp_lsw;
-  uint32_t ddc_info_0;
-  uint32_t ddc_info_1;
-  uint32_t ddc_info_2;
-  uint32_t ddc_info_3;
-  uint32_t ddc_info_4;
+  uint32_t ddc_0;
+  uint32_t ddc_1;
+  uint32_t ddc_2;
+  uint32_t ddc_3;
+  uint32_t ddc_4;
 } V49_0_Header;
 
 namespace gr {
@@ -111,6 +140,7 @@ private:
   bool debug;
   uint8_t *buffer;
   struct pollfd pfd;
+  int d_packetCounter;
 
   // Methods
   void tag_packet(int index);
@@ -125,6 +155,7 @@ public:
   ~vita_udp_rx_impl();
 
   void rxControlMsg(pmt::pmt_t msg);
+  void txStatusMsg(void);
 
   bool start();
   bool stop();
