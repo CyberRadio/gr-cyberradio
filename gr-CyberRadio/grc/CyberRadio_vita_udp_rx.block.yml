@@ -65,12 +65,6 @@ parameters:
     default: 'False'
     options: ['True', 'False']
     hide: part
--   id: coherent
-    label: Coherent?
-    dtype: enum
-    default: 'False'
-    options: ['True', 'False']
-    hide: part
 -   id: debug
     label: Debug
     dtype: enum
@@ -96,6 +90,6 @@ templates:
     imports: import CyberRadio
     make: CyberRadio.vita_udp_rx(${src_ip}, ${port}, ${header_byte_offset}, ${samples_per_packet},
         ${bytes_per_packet}, ${swap_bytes}, ${swap_iq}, ${tag_packets}, ${vector_output},
-        ${uses_v491}, ${narrowband}, ${debug}, ${coherent})
+        ${uses_v491}, ${narrowband}, ${debug})
 
 file_format: 1
