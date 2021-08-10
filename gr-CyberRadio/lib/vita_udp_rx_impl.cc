@@ -194,7 +194,7 @@ void vita_udp_rx_impl::tag_packet(int index) {
     // get the extra DDC Tags.
     tuned_freq = pmt::from_long(hdr->ddc_0 & (0xFFFF));
     uint32_t ddc_filter = ((hdr->ddc_2 & 0xFFF00000) >> 20);
-    ddc_rate =   pmt::from_float( ndr358_551_ddc_map.at(ddc_filter) );
+    ddc_rate = pmt::from_float( ndr358_551_ddc_map.at(ddc_filter) );
     tuner_id = pmt::from_long(((hdr->ddc_0 & 0xF0000000) >> 28));
     ddc_offset_freq = pmt::from_long(hdr->ddc_1);
     delay_time = pmt::from_long( (hdr->ddc_2 & 0x0001FFFF) );
@@ -210,7 +210,7 @@ void vita_udp_rx_impl::tag_packet(int index) {
   add_item_tag(0, tag_offset, pmt::intern("stream_id"), stream_id);
   if( extra_tags ){
     add_item_tag(0, tag_offset, pmt::intern("rx_freq"), tuned_freq);
-    add_item_tag(0, tag_offset, pmt::intern("rx_rate"), ddc_rate);
+    add_item_tag(0, tag_offset, pmt::intern("ddc_rate"), ddc_rate);
     add_item_tag(0, tag_offset, pmt::intern("rx_channel"), tuner_id);
     add_item_tag(0, tag_offset, pmt::intern("rx_atten"), tuner_atten);
     add_item_tag(0, tag_offset, pmt::intern("ddc_offset"), ddc_offset_freq);
