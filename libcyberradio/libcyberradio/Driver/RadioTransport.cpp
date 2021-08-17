@@ -108,6 +108,7 @@ namespace LibCyberRadio
             }
             else if (mode == "udp")
             {
+                printf("?\n");
                 ret = connectUdp(host_or_dev, port_or_baudrate);
             }
             else if (mode == "tcp")
@@ -256,7 +257,35 @@ namespace LibCyberRadio
                 int port
             )
         {
-            bool ret = false;
+            _debug = true;
+            this->debug("[connectUdp] Called; host=\"%s\", port=%d\n", host.c_str(), port);
+            
+            _udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
+            this->debug("[connectUdp] Socket created; FD=%d\n", _udpSocket);
+            if (_udpSocket > 0)
+            {
+                struct hostent *hent = gethostbyname(host.c_str());
+                char buf[128];
+                memset(buf, 0, sizeof(buf));
+                inet_ntop(AF_INET, hent->h_addr_list[0], buf, sizeof(buf));
+                this->debug("[connectUdp] Host IP address: %s\n", buf);
+                struct sockaddr_in addr;
+                memset(&addr, 0, sizeof(struct sockaddr_in));
+                addr.sin_family = AF_INET;
+                memcpy(&(addr.sin_addr.s_addr), hent->h_addr_list[0], hent->h_length);
+                addr.sin_port = htons(port);
+                this->debug("[connectUdp] Connecting\n");
+                int ok = ::connect(_udpSocket, (const sockaddr*)&addr, sizeof(struct sockaddr_in));
+                this->debug("[connectUdp] -- ok = %d\n", ok);
+                if (ok != 0)
+                    _udpSocket = 0;
+            }
+            if (_udpSocket <= 0)
+            {
+                _udpSocket = 0;
+                translateErrno();
+            }
+            bool ret = (_udpSocket > 0);
             return ret;
         }
 

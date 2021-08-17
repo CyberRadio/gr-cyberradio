@@ -14,6 +14,7 @@
 #include "LibCyberRadio/Driver/NDR472/RadioHandler.h"
 #include "LibCyberRadio/Driver/NDR651/RadioHandler.h"
 #include "LibCyberRadio/Driver/NDR810/RadioHandler.h"
+#include "LibCyberRadio/Driver/NDR551/RadioHandler.h"
 #include "LibCyberRadio/Common/Pythonesque.h"
 #include "LibCyberRadio/Common/BasicList.h"
 #include "LibCyberRadio/Common/Debuggable.h"
@@ -96,6 +97,13 @@ namespace LibCyberRadio
                 dbg.debug("-- FOUND ndr472\n");
                 sptr = std::shared_ptr<RadioHandler>(
                         (RadioHandler*)new NDR472::RadioHandler(debug)
+                       );
+            }
+            else if ( adjNameString == "ndr551" )
+            {
+                dbg.debug("-- FOUND ndr551\n");
+                sptr = std::shared_ptr<RadioHandler>(
+                        (RadioHandler*)new NDR551::RadioHandler(debug)
                        );
             }
             else

@@ -61,6 +61,10 @@ LIST(APPEND libcyberradio_sources
        Driver/NDR810/VitaIfSpec.cpp
        Driver/NDR810/WbddcComponent.cpp
        Driver/NDR810/WbddcGroupComponent.cpp
+
+       Driver/NDR551/RadioHandler.cpp
+       Driver/NDR551/VitaIfSpec.cpp
+       
        Driver/ConfigString.cpp
        Driver/Configurable.cpp
        Driver/CWToneGenComponent.cpp

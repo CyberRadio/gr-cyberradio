@@ -124,3 +124,31 @@ INSTALL(FILES ${SyncTXClientDriver_sources}
         DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
         )
 
+########################################################################
+# NDR551 Example
+#
+# NOTE: Only the source code is installed for this example. Building
+#    the example introduces a dependency on GNU Radio that we do not
+#    want, as nothing else in the library relies on it.
+#
+########################################################################
+LIST(APPEND ndr551example_sources
+     NDR551Example.cpp)
+SET(ndr551example_executable NDR551Example)
+ADD_EXECUTABLE(${ndr551example_executable} ${ndr551example_sources})
+TARGET_LINK_LIBRARIES(${ndr551example_executable}
+                      cyberradio 
+                      gnuradio-digital
+                      )
+LINK_DIRECTORIES(
+    ${CMAKE_BINARY_DIR}/libcyberradio}
+)
+INSTALL(TARGETS ${ndr551example_executable}
+        RUNTIME DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
+        )
+INSTALL(FILES ${ndr551example_sources}
+        DESTINATION ${LIBCYBERRADIO_EXAMPLES_DIR}
+        )
+
+
+
