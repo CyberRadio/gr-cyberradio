@@ -221,6 +221,10 @@ namespace LibCyberRadio
                 virtual BasicStringList receiveJsonHttps(
                         double timeout = -1
                 );
+
+                virtual BasicStringList receiveJsonUdp(
+                        double timeout = -1
+                );
                 /**
                  * \brief Receives a client (AT-command-style) command response from
                  *    the radio.

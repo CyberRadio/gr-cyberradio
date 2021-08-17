@@ -400,7 +400,19 @@ namespace LibCyberRadio
                 bool clearRx
             )
         {
-            bool ret = true;
+           this->debug("[sendCommandUdp] Called; cmd=%s",
+                    this->rawString(cmdString).c_str());
+            bool ret = false;
+            int bytes = send(_udpSocket, cmdString.c_str(), cmdString.length(), 0);
+            this->debug("[sendCommandUdp] -- Bytes sent: %d\n", bytes);
+            if (bytes > 0)
+            {
+                ret = true;
+            }
+            else
+            {
+                translateErrno();
+            }
             return ret;
         }
 
@@ -478,6 +490,26 @@ namespace LibCyberRadio
             std::deque<std::string> ret;
             if (_httpsSession != NULL)
                 ret = receiveJsonHttps(timeout);
+            return ret;
+        }
+
+        BasicStringList RadioTransport::receiveJsonUdp(
+                double timeout
+            )
+        {
+            this->debug("[receiveJsonUdp] Called; timeout=%0.1f\n", timeout);
+            BasicStringList ret;
+            // When receiving JSON over HTTPS, the session object gets the
+            // HTTPS response body while servicing the request, so all we have
+            // to do is retrieve it.
+            if ( _httpsSession != NULL )
+            {
+                this->debug("[receiveJsonUdp] HTTPS response body = \"%s\"\n",
+                        _httpsSession->getResponseBody().c_str());
+                ret = Pythonesque::Split(_httpsSession->getResponseBody(), "\n");
+            }
+            else
+                _lastCmdErrInfo = "Transport is not connected";
             return ret;
         }
 
