@@ -72,7 +72,11 @@ public:
     bool stop() override = 0;
 
 protected:
-    using gr::block::block; // "inherit" base class ctor
+    // To avoid a subtle bug, declare a protected ctor here to ensure the proper base
+    // class ctor is invoked
+    vita_udp_rx(std::string const& name,
+                gr::io_signature::sptr input,
+                gr::io_signature::sptr output);
 };
 
 } // namespace CyberRadio

@@ -111,6 +111,13 @@ auto vita_udp_rx::make(Cfg const& cfg) -> sptr
     return gnuradio::get_initial_sptr(new vita_udp_rx_impl(cfg));
 }
 
+vita_udp_rx::vita_udp_rx(std::string const& name,
+                         gr::io_signature::sptr input,
+                         gr::io_signature::sptr output)
+    : gr::block(name, input, output)
+{
+}
+
 auto vita_udp_rx_impl::receive_packet() -> bool
 {
     auto success = false;
@@ -421,9 +428,9 @@ vita_udp_rx_impl::vita_udp_rx_impl(Cfg const& cfg)
 
     // Create input port
     message_port_register_in(control_port);
-    set_msg_handler(control_port, boost::bind(&vita_udp_rx_impl::rxControlMsg, this, _1));
+    set_msg_handler(control_port, [this](pmt::pmt_t const& msg) { rxControlMsg(msg); });
 
-    // Create output ports
+    // Create output port
     message_port_register_out(status_port);
 }
 
