@@ -88,12 +88,17 @@ std::map<int, float> ndr358_551_ddc_map = {
 void raise_error(std::string tag, int sock)
 {
     // see http://www.club.cc.cmu.edu/~cmccabe/blog_strerror.html for problems with
-    // strerror
+    // strerror. However, syserr_list and sys_nerr are deprecated, so that approach can't
+    // be used
     tag.append(": ");
-    if (errno < sys_nerr)
-        tag.append(sys_errlist[errno]);
-    else
-        tag.append("Unknown error ").append(std::to_string(errno));
+    char buf[256]; // long enough for any sane message
+
+#if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && !_GNU_SOURCE
+    strerror_r(errno, buf, sizeof(buf));
+    tag.append(buf);
+#else
+    tag.append(strerror_r(errno, buf, sizeof(buf)));
+#endif
 
     // wait until after strerror to avoid polluting errno
     ::close(sock); // this might fail if the sock wasn't open
