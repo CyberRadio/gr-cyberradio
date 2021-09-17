@@ -116,13 +116,6 @@ auto vita_udp_rx::make(Cfg const& cfg) -> sptr
     return gnuradio::get_initial_sptr(new vita_udp_rx_impl(cfg));
 }
 
-vita_udp_rx::vita_udp_rx(std::string const& name,
-                         gr::io_signature::sptr input,
-                         gr::io_signature::sptr output)
-    : gr::block(name, input, output)
-{
-}
-
 auto vita_udp_rx_impl::receive_packet() -> bool
 {
     auto success = false;
@@ -426,8 +419,11 @@ vita_udp_rx_impl::vita_udp_rx_impl(Cfg const& cfg)
       d_debug(cfg.debug),
       d_first_packet(true),
       d_packetCounter(0),
-      d_buffer(cfg.bytes_per_packet)
+      d_buffer()
 {
+    // pre-allocate the memory
+    d_buffer.reserve(cfg.bytes_per_packet);
+
     // don't call work() until there is enough space for a whole packet
     set_output_multiple(d_samples_per_packet);
 

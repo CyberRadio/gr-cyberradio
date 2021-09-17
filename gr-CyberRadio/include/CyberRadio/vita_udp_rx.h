@@ -36,9 +36,10 @@ namespace CyberRadio {
 
 // Note: the recommendation from GNU Radio developers is the sources and sinks should
 // always inherit from gr::block, not one of the more derived types
-class CYBERRADIO_API vita_udp_rx : virtual public gr::block
+class CYBERRADIO_API vita_udp_rx : public gr::block
 {
 public:
+    using BaseBlock = gr::block;
     using sptr = boost::shared_ptr<vita_udp_rx>;
 
     // Because this class takes a number of optional configuration items, and because the
@@ -72,11 +73,7 @@ public:
     bool stop() override = 0;
 
 protected:
-    // To avoid a subtle bug, declare a protected ctor here to ensure the proper base
-    // class ctor is invoked
-    vita_udp_rx(std::string const& name,
-                gr::io_signature::sptr input,
-                gr::io_signature::sptr output);
+    using BaseBlock::block;
 };
 
 } // namespace CyberRadio
