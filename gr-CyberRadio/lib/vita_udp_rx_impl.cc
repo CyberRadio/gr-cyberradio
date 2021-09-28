@@ -217,8 +217,9 @@ auto vita_udp_rx_impl::handle_dropped_packet(unsigned packet_counter,
             while (d_packetCounter != packet_counter and
                    samples_produced < samples_needed) {
                 std::fill_n(outP, d_samples_per_packet, gr_complex(0));
-                samples_produced += d_samples_per_packet;
                 outP += d_samples_per_packet;
+		produce(0, d_samples_per_packet);
+                samples_produced += d_samples_per_packet;
                 ++d_packetCounter;
             }
         }
@@ -252,6 +253,7 @@ auto vita_udp_rx_impl::process_IQ(gr_complex*& outP) -> int
         reinterpret_cast<float*>(outP), IQ, 32768.0, 2 * d_samples_per_packet);
 
     outP += d_samples_per_packet;
+    produce(0, d_samples_per_packet);
     d_buffer.resize(0); // consume the buffer
     samples_produced += d_samples_per_packet;
 
@@ -580,7 +582,7 @@ int vita_udp_rx_impl::general_work(int noutput_items,
         }
     }
 
-    return noutput_items;
+    return WORK_CALLED_PRODUCE;
 }
 } // namespace CyberRadio
 } // namespace gr
