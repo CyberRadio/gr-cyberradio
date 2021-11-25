@@ -106,6 +106,13 @@ namespace LibCyberRadio
                         (RadioHandler*)new NDR551::RadioHandler(debug)
                        );
             }
+            else if ( adjNameString == "ndr358" )
+            {
+                dbg.debug("-- FOUND ndr358\n");
+                sptr = std::shared_ptr<RadioHandler>(
+                        (RadioHandler*)new NDR551::RadioHandler(debug)
+                       );
+            }
             else
             {
                 dbg.debug("-- CANNOT FIND %s\n", adjNameString.c_str());
