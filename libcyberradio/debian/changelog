@@ -1,5 +1,0 @@
-DEB_PKG_NAME (DEB_PKG_VERSION) unstable; urgency=low
-
-  * Initial release (Closes: #0001)  <0001 is the bug number of your ITP>
-
- -- CyberRadio Solutions, Inc. <sales@cyberradiosolutions.com>  Mon, 23 May 2016 13:00:00 -0400
