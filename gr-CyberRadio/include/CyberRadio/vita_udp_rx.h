@@ -67,6 +67,18 @@ public:
      * is the public interface for creating new instances.
      */
     static auto make(Cfg const& cfg) -> sptr;
+    static auto make(const std::string &src_ip, 
+                       unsigned short port, 
+                       unsigned int header_byte_offset, 
+                       int samples_per_packet, 
+                       int bytes_per_packet, 
+                       bool swap_bytes, 
+                       bool swap_iq, bool 
+                       tag_packets, bool 
+                       vector_output, 
+                       bool uses_v491, 
+                       bool narrowband, 
+                       bool debug) -> sptr;
 
     // these are already virtual ... do we need the pure virtual?
     bool start() override = 0;

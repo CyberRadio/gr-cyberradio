@@ -115,6 +115,34 @@ auto vita_udp_rx::make(Cfg const& cfg) -> sptr
 {
     return gnuradio::get_initial_sptr(new vita_udp_rx_impl(cfg));
 }
+auto vita_udp_rx::make(const std::string &src_ip, 
+                       unsigned short port, 
+                       unsigned int header_byte_offset, 
+                       int samples_per_packet, 
+                       int bytes_per_packet, 
+                       bool swap_bytes, 
+                       bool swap_iq, bool 
+                       tag_packets, bool 
+                       vector_output, 
+                       bool uses_v491, 
+                       bool narrowband, 
+                       bool debug) -> sptr
+{
+    struct Cfg cfg;
+    cfg.src_ip = src_ip;
+    cfg.port = port;
+    cfg.header_byte_offset = header_byte_offset;
+    cfg.samples_per_packet = samples_per_packet;
+    cfg.bytes_per_packet = bytes_per_packet;
+    cfg.swap_bytes = swap_bytes;
+    cfg.tag_packets = tag_packets;
+    cfg.uses_v49_1 = uses_v491;
+    cfg.narrowband = narrowband;
+    cfg.debug = debug;
+
+    return gnuradio::get_initial_sptr(new vita_udp_rx_impl(cfg));
+}
+
 
 auto vita_udp_rx_impl::receive_packet() -> bool
 {
