@@ -23,7 +23,6 @@ parameters:
     label: Block Size
     dtype: int
     default: '131072'
-    hide: ${ 'part' if vlen == 1 else 'none' }
 -   id: block_rate
     label: Block Rate
     dtype: int
@@ -44,9 +43,6 @@ outputs:
 
 templates:
     imports: import CyberRadio
-    make: "CyberRadio.snapshot_vector_source(${radioObj}.name.lower(), ${ip}, ${port},\
-        \ ${block_size}, ${block_rate})\nprint(\"%s = CyberRadio.snapshot_vector_source(%r,\
-        \ %r, %r, %r, %r)\"%(\"$(id)\", ${ip}, ${port}, ${block_size}, ${block_rate},\
-        \ ${radioObj}.name.lower()))\n  "
+    make: CyberRadio.snapshot_vector_source(${radioObj}.name.lower(), ${ip}, ${port}, ${block_size}, ${block_rate})
 
 file_format: 1

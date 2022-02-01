@@ -256,6 +256,9 @@ snapshot_vector_source_impl::snapshot_vector_source_impl(
 
   // Create output ports
   message_port_register_out(pmt::mp("status"));
+
+  this->set_min_noutput_items(1);
+  this->set_max_noutput_items(1);
 }
 
 void snapshot_vector_source_impl::rxControlMsg(pmt::pmt_t msg) {
@@ -390,85 +393,71 @@ int snapshot_vector_source_impl::work(int noutput_items,
   // Declare complex output buffer
   gr_complex *out = (gr_complex *)output_items[0];
 
-  int samps2use;
-  // Recv a packet
-  //~ recv(this->sock_fd, rxbuff, sizeof(Ndr308Frame), 0);
-  int rxSize = readv(this->sock_fd, this->rxVec, 3);
+  
 
   uint16_t data_to_print;
 
-  // make sure the packet was big enough to be a data packet.
-  // Ignore Context Packets
-  if (rxSize > 1000) {
-    volk_16u_byteswap((uint16_t *)(this->rxVec[2].iov_base), 4);
-    uint16_t *data_pointer_print = (uint16_t *)(this->rxVec[2].iov_base);
-    data_to_print = *data_pointer_print;
-    data_pointer_print += 3;
-    data_to_print = *data_pointer_print;
-    // check if the Over-Range Indicator is set
-    if (data_to_print == 0x2000) {
-      // printf ("%2x\n", data_to_print);
-      // if status message was already sent, do not send it again
-      if (this->program_starting == true) {
-        this->program_starting = false;
-        printf("%2x\n", data_to_print);
-        txStatusMsg();
+  do {
+    int samps2use;
+    // Recv a packet
+    //~ recv(this->sock_fd, rxbuff, sizeof(Ndr308Frame), 0);
+    int rxSize = readv(this->sock_fd, this->rxVec, 3);
+    // make sure the packet was big enough to be a data packet.
+    // Ignore Context Packets
+    if (rxSize > 1000) {
+      volk_16u_byteswap((uint16_t *)(this->rxVec[2].iov_base), 4);
+      uint16_t *data_pointer_print = (uint16_t *)(this->rxVec[2].iov_base);
+      data_to_print = *data_pointer_print;
+      data_pointer_print += 3;
+      data_to_print = *data_pointer_print;
+      // Copy IQ data to output
+      if (this->d_bswap32) {
+        volk_32u_byteswap((uint32_t *)(this->rxVec[1].iov_base),
+                          this->d_samples_per_frame);
+      }
+      if (this->d_bswap16) {
+        volk_16u_byteswap((uint16_t *)(this->rxVec[1].iov_base),
+                          2 * this->d_samples_per_frame);
+      }
+
+      samps2use =
+          std::min((const int)this->d_samples_per_frame,
+                  (const int)(this->d_block_size - this->sample_counter));
+      volk_16i_s32f_convert_32f(
+          (float *)((uint8_t *)this->sampleVector.data() +
+                    this->sample_counter * sizeof(gr_complex)),
+          (int16_t *)(this->rxVec[1].iov_base), 32768.0, 2 * samps2use);
+
+      if (this->d_tag_frame) {
+        // Decode the Vita49 header
+        _parseHeader((char *)(this->rxVec[0].iov_base), this->rxVec[0].iov_len);
+      }
+
+      // Increment our counter of packets received
+      this->stream_counter++;
+      this->sample_counter += this->d_samples_per_frame;
+
+      // Check to see if it's time to sleep
+      if (this->stream_counter >= this->packets_per_block) {
+        this->stream_counter = 0;
+        this->sample_counter = 0;
+        if (this->block_rate > 0) {
+          this->pause();
+        }
+
+        // Copy Sample Vector to output vector
+        memcpy(out, this->sampleVector.data(),
+              this->block_size * sizeof(gr_complex));
+        break;
+        //return 1;
+
       }
     } else {
-      // if Over-Range Condition does not exist anymore, setup flags
-      // appropriately
-      this->program_starting = true;
+      GR_LOG_INFO(d_logger, "RXd Context Packet");
     }
+  } while ( this->stream_counter < this->packets_per_block );
 
-    // Copy IQ data to output
-    if (this->d_bswap32) {
-      volk_32u_byteswap((uint32_t *)(this->rxVec[1].iov_base),
-                        this->d_samples_per_frame);
-    }
-    if (this->d_bswap16) {
-      volk_16u_byteswap((uint16_t *)(this->rxVec[1].iov_base),
-                        2 * this->d_samples_per_frame);
-    }
-
-    samps2use =
-        std::min((const int)this->d_samples_per_frame,
-                 (const int)(this->d_block_size - this->sample_counter));
-    volk_16i_s32f_convert_32f(
-        (float *)((uint8_t *)this->sampleVector.data() +
-                  this->sample_counter * sizeof(gr_complex)),
-        (int16_t *)(this->rxVec[1].iov_base), 32768.0, 2 * samps2use);
-
-    if (this->d_tag_frame) {
-      // Decode the Vita49 header
-      _parseHeader((char *)(this->rxVec[0].iov_base), this->rxVec[0].iov_len);
-    }
-
-    // Increment our counter of packets received
-    this->stream_counter++;
-    this->sample_counter += this->d_samples_per_frame;
-
-    // Check to see if it's time to sleep
-    if (this->stream_counter >= this->packets_per_block) {
-      this->stream_counter = 0;
-      this->sample_counter = 0;
-      if (this->block_rate > 0) {
-        this->pause();
-      }
-
-      // Copy Sample Vector to output vector
-      memcpy(out, this->sampleVector.data(),
-             this->block_size * sizeof(gr_complex));
-
-      return 1;
-    }
-  }
-  // else
-  //{
-  //    std::cout << "Detected smaller packet!" << std::endl;
-  //}
-
-  // We need more samples
-  return 0;
+  return 1;
 }
 
 void snapshot_vector_source_impl::set_iqSwap(bool iqSwap) {

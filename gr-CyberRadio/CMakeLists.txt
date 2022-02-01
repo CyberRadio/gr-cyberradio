@@ -85,10 +85,12 @@ ENDIF()
 ########################################################################
 # Install directories
 ########################################################################
-find_package(Gnuradio "3.8" REQUIRED)
+find_package(Gnuradio "3.8" REQUIRED COMPONENTS blocks fft filter)
 include(GrVersion)
-
 include(GrPlatform) #define LIB_SUFFIX
+include(GrComponent)
+
+GR_PRINT_COMPONENT_SUMMARY()
 
 if(NOT CMAKE_MODULES_DIR)
   set(CMAKE_MODULES_DIR lib${LIB_SUFFIX}/cmake)
