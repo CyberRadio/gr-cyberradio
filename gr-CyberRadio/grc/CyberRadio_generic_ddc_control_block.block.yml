@@ -2,6 +2,7 @@
 
 id: CyberRadio_generic_ddc_control_block
 label: '[CyberRadio] NDR DDC Control'
+flags: show_id
 category: '[CyberRadio]/Radio Element Control'
 
 parameters:
@@ -15,8 +16,10 @@ parameters:
     default: '1'
 -   id: enable
     label: DDC Enable
-    dtype: bool
-    default: 'True'
+    dtype: int
+    options: [0, 1]
+    option_labels: ["OFF", "ON"]
+    default: '0'
 -   id: wideband
     label: Wideband Flag
     dtype: bool
@@ -125,20 +128,44 @@ outputs:
 
 templates:
     imports: import CyberRadio
-    make: "CyberRadio.generic_ddc_control_block(${radioObj},${index},${enable},${wideband},${rate},${mode},${freq},${rfSource},${rfFreq},${radioInterface},${dipIndex},${localInterface},${udpPort},${otherArgs},${debug})"
+    make: |-
+        CyberRadio.generic_ddc_control_block(
+            ${radioObj}, 
+            ${index}, 
+            bool(${enable}), 
+            ${wideband}, 
+            ${rate}, 
+            ${mode}, 
+            ${freq}, 
+            ${rfSource}, 
+            ${rfFreq}, 
+            ${radioInterface},
+            ${dipIndex}, 
+            ${localInterface}, 
+            ${udpPort}, 
+            ${otherArgs}, 
+            ${debug},
+        )
     callbacks:
     - set_index(${index})
-    - set_enable(${enable})
+    - set_enable(bool(${enable}))
     - set_wideband(${wideband})
     - set_rate_and_mode(${rate}, ${mode})
     - set_freq(${freq})
     - set_rfSource(${rfSource})
     - set_rfFreq(${rfFreq})
+    - set_phaseOffset(${phaseOffset})
+    - set_totalRepeatPackets(${totalRepeatPackets})
+    - set_activeRepeatPackets(${activeRepeatPackets})
     - set_udpPort(${udpPort})
     - set_otherArgs(${otherArgs})
 
 documentation: |-
     totalRepeatPackets and activeRepeatPackets:
-    The primary purpose of these variables is to reduce bandwidth and processing of unnessesary packets. The first $activeRepeatPackets of $totalRepeatPackets are sent to the client. For example, if $activeRepeatPackets is 2 and totalRepeatPackets is 5, then packets [0,1,5,6,10,11]... will be sent to the client.
+    The primary purpose of these variables is to reduce bandwidth and 
+    processing of unnecessary packets. The first $activeRepeatPackets 
+    of $totalRepeatPackets are sent to the client. For example, if 
+    $activeRepeatPackets is 2 and totalRepeatPackets is 5, then 
+    packets [0,1,5,6,10,11]... will be sent to the client.
 
 file_format: 1

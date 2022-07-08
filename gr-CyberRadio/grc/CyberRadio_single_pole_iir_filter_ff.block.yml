@@ -21,7 +21,7 @@ parameters:
     label: Vec Length
     dtype: int
     default: '1'
-    hide: ${ 'part' if vlen == 1 else 'none' }
+    hide: ${ ('part' if vlen == 1 else 'none') }
 
 inputs:
 -   domain: stream
@@ -40,7 +40,12 @@ asserts:
 
 templates:
     imports: import CyberRadio
-    make: CyberRadio.single_pole_iir_filter_ff(${alpha}, ${vlen}, ${resetOnAlphaChange})
+    make: |-
+        CyberRadio.single_pole_iir_filter_ff(
+            ${alpha}, 
+            ${vlen}, 
+            ${resetOnAlphaChange}
+        )
     callbacks:
     - set_taps(${alpha})
     - reset(${reset})
