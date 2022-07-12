@@ -38,7 +38,7 @@ namespace CyberRadio {
     set_taps(alpha);
     //Create input port
     message_port_register_in(pmt::mp("reset"));
-    set_msg_handler(pmt::mp("reset"), boost::bind(&single_pole_iir_filter_ff_impl::rxResetMsg, this, _1));
+    set_msg_handler(pmt::mp("reset"), boost::bind(&single_pole_iir_filter_ff_impl::rxResetMsg, this, boost::placeholders::_1));
   }
 
   void

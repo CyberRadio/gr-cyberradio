@@ -80,7 +80,7 @@ snapshot_vector_source_impl::snapshot_vector_source_impl(const std::string radio
     // Create input port
     message_port_register_in(pmt::mp("control"));
     set_msg_handler(pmt::mp("control"),
-                    boost::bind(&snapshot_vector_source_impl::rxControlMsg, this, _1));
+                    boost::bind(&snapshot_vector_source_impl::rxControlMsg, this, boost::placeholders::_1));
 
     // Create output ports
     message_port_register_out(pmt::mp("status"));

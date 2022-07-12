@@ -33,7 +33,7 @@
 #include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
-
+#include <boost/bind/bind.hpp>
 #include <iostream>
 #include <vector>
 #include <volk/volk.h>

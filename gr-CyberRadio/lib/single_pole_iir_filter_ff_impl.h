@@ -10,6 +10,7 @@
 
 #include <CyberRadio/single_pole_iir_filter_ff.h>
 #include <CyberRadio/single_pole_iir.h>
+#include <boost/bind/bind.hpp>
 
 namespace gr {
   namespace CyberRadio {
