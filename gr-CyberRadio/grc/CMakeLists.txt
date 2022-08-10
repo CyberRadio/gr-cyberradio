@@ -6,8 +6,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 install(FILES
-    CyberRadio_vita_rx.block.yml
-    #CyberRadio_vita_udp_rx.block.yml
+    CyberRadio_vita_udp_rx.block.yml
     CyberRadio_snapshot_vector_source.block.yml
     CyberRadio_generic_radio_control_block.block.yml
     CyberRadio_generic_tuner_control_block.block.yml

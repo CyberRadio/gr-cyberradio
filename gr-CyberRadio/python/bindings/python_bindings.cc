@@ -21,7 +21,6 @@ namespace py = pybind11;
 // Please do not delete
 /**************************************/
 // BINDING_FUNCTION_PROTOTYPES(
-    void bind_vita_rx(py::module& m);
     //void bind_vita_udp_rx(py::module& m);
     void bind_snapshot_vector_source(py::module& m);
     void bind_vector_nlog10_ff(py::module& m);
@@ -54,7 +53,6 @@ PYBIND11_MODULE(CyberRadio_python, m)
     // Please do not delete
     /**************************************/
     // BINDING_FUNCTION_CALLS(
-    bind_vita_rx(m);
     //bind_vita_udp_rx(m);
     bind_snapshot_vector_source(m);
     bind_vector_nlog10_ff(m);

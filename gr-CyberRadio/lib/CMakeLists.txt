@@ -11,7 +11,6 @@
 ########################################################################
 include(GrPlatform) #define LIB_SUFFIX
 list(APPEND CyberRadio_sources
-    vita_rx_impl.cc
     vita_udp_rx_impl.cc
     snapshot_vector_source_impl.cc
     vector_nlog10_ff_impl.cc

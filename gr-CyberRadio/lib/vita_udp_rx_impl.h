@@ -64,10 +64,20 @@ namespace gr {
       auto tag_packet(int stream, int offset) -> void;
       auto tag_v491_packet(int stream, int offset) -> void;
      public:
-      vita_udp_rx_impl();
       ~vita_udp_rx_impl();
 
-      vita_udp_rx_impl(Cfg const& cfg);
+      vita_udp_rx_impl(const char * src_ip, 
+                  unsigned short port, 
+                  unsigned int header_byte_offset, 
+                  int samples_per_packet, 
+                  int bytes_per_packet, 
+                  bool swap_bytes, 
+                  bool swap_iq, 
+                  bool tag_packets, 
+                  bool vector_output, 
+                  bool uses_v491, 
+                  bool narrowband, 
+                  bool debug);
 
       void rxControlMsg(pmt::pmt_t msg);
       void txStatusMsg();

@@ -11,7 +11,6 @@
 ########################################################################
 install(FILES
     api.h
-    vita_rx.h
     vita_udp_rx.h
     snapshot_vector_source.h
     vector_nlog10_ff.h

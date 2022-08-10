@@ -17,6 +17,8 @@
 namespace {
 auto const control_port = pmt::mp("control");
 auto const status_port = pmt::mp("status");
+auto const freq_port = pmt::mp("freq");
+auto const bw_port = pmt::mp("bw");
 
 // V49 Struct Info
 struct V49_308_Header {
@@ -32,6 +34,43 @@ struct V49_308_Header {
     unsigned int int_timestamp;
     unsigned int frac_timestamp_msw;
     unsigned int frac_timestamp_lsw;
+};
+
+struct V49_Packet_info_Header {
+    uint16_t packet_size;
+    uint8_t packet_count : 4;
+    uint8_t tsf : 2;
+    uint8_t tsi : 2;
+    uint8_t t : 1;
+    uint8_t r0 : 1;
+    uint8_t r1 : 1;
+    uint8_t c : 1;
+    uint8_t packet_type : 4;
+};
+
+struct V49_No491_wClass_Header {
+    uint32_t packet_info;
+    uint32_t stream_id;
+    uint32_t oui;
+    uint32_t class_codes;
+    uint32_t int_timestamp;
+    uint32_t frac_timestamp_msw;
+    uint32_t frac_timestamp_lsw;
+};
+
+struct V49_Ctx_WClass_Packet {
+    V49_No491_wClass_Header hdr;
+    uint32_t ctx_ind;
+    uint32_t bw_msw;
+    uint32_t bw_lsw;
+    uint32_t ref_freq_msw;
+    uint32_t ref_freq_lsw;
+    uint32_t ref_level;
+    uint32_t gain;
+    uint32_t sample_rate_msw;
+    uint32_t sample_rate_lsw;
+    uint32_t if_data_payload_fmt_0;
+    uint32_t if_data_payload_fmt_1;
 };
 
 // VITA 49 VRT IF data packet header, no class ID
@@ -85,36 +124,75 @@ namespace gr {
     **
     ***************************************************************************/
     using output_type = gr_complex;
-    vita_udp_rx::sptr vita_udp_rx::make(Cfg const& cfg)
+    vita_udp_rx::sptr vita_udp_rx::make(const char * src_ip, 
+                  unsigned short port, 
+                  unsigned int header_byte_offset, 
+                  int samples_per_packet, 
+                  int bytes_per_packet, 
+                  bool swap_bytes, 
+                  bool swap_iq, 
+                  bool tag_packets, 
+                  bool vector_output, 
+                  bool uses_v491, 
+                  bool narrowband, 
+                  bool debug)
     {
-      return gnuradio::make_block_sptr<vita_udp_rx_impl>( cfg );
+      return gnuradio::make_block_sptr<vita_udp_rx_impl>( 
+        src_ip, port, header_byte_offset, samples_per_packet, bytes_per_packet,
+        swap_bytes, swap_iq, tag_packets, vector_output, uses_v491, narrowband, debug );
     }
 
     /*!*************************************************************************
     **
     **
     ***************************************************************************/
-    vita_udp_rx_impl::vita_udp_rx_impl( Cfg const& cfg )
+    vita_udp_rx_impl::vita_udp_rx_impl( const char * src_ip, 
+                  unsigned short port, 
+                  unsigned int header_byte_offset, 
+                  int samples_per_packet, 
+                  int bytes_per_packet, 
+                  bool swap_bytes, 
+                  bool swap_iq, 
+                  bool tag_packets, 
+                  bool vector_output, 
+                  bool uses_v491, 
+                  bool narrowband, 
+                  bool debug)
       : gr::block("vita_udp_rx",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(1, 1, sizeof(output_type))),
-      d_src_ip(cfg.src_ip),
-      d_port(cfg.port),
+      d_src_ip(src_ip),
+      d_port(port),
       d_sock(-1),
-      d_samples_per_packet(cfg.samples_per_packet),
-      d_header_byte_offset(cfg.header_byte_offset),
-      d_bytes_per_packet(cfg.bytes_per_packet),
-      d_swap_bytes(cfg.swap_bytes),
-      d_swap_iq(cfg.swap_iq),
-      d_uses_v49_1(cfg.uses_v49_1),
-      d_is_narrowband(cfg.narrowband),
-      d_tag_packets(cfg.tag_packets),
-      d_debug(cfg.debug),
+      d_samples_per_packet(samples_per_packet),
+      d_header_byte_offset(header_byte_offset),
+      d_bytes_per_packet(bytes_per_packet),
+      d_swap_bytes(swap_bytes),
+      d_swap_iq(swap_iq),
+      d_uses_v49_1(uses_v491),
+      d_is_narrowband(narrowband),
+      d_tag_packets(tag_packets),
+      d_debug(debug),
       d_first_packet(true),
       d_packetCounter(0),
       d_buffer()
     {
+        // pre-allocate the memory
+      d_buffer.reserve(bytes_per_packet);
 
+      // don't call work() until there is enough space for a whole packet
+      set_output_multiple(d_samples_per_packet);
+
+      // Create input port
+      message_port_register_in(control_port);
+      set_msg_handler(control_port, [this](pmt::pmt_t const& msg) { rxControlMsg(msg); });
+
+      // Create output port
+      message_port_register_out(status_port);
+      // Create output port
+      message_port_register_out(freq_port);
+      // Create output port
+      message_port_register_out(bw_port);
     }
 
     /*******************************************************************************

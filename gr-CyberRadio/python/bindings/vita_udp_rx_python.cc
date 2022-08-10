@@ -37,7 +37,18 @@ void bind_vita_udp_rx(py::module& m)
         std::shared_ptr<vita_udp_rx>>(m, "vita_udp_rx", D(vita_udp_rx))
 
         .def(py::init(&vita_udp_rx::make),
-           py::arg("cfg"),
+           py::arg("src_ip"),
+           py::arg("port"),
+           py::arg("header_byte_offset"),
+           py::arg("samples_per_packet"),
+           py::arg("bytes_per_packet"),
+           py::arg("swap_bytes"),
+           py::arg("swap_iq"),
+           py::arg("tag_packets"),
+           py::arg("vector_output"),
+           py::arg("uses_v491"),
+           py::arg("narrowband"),
+           py::arg("debug"),
            D(vita_udp_rx,make)
         )
         
