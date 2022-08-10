@@ -9,20 +9,27 @@ This software has been built and tested against Ubuntu 16.04 and Ubuntu 18.04
 
 ### libcyberradio
     
-    cd gr-cyberradio && cd libcyberradio && mkdir build && cd build
-    cmake ../
+    git clone https://github.com/CyberRadio/libcyberradio.git
+    cd libcyberradio
+    cmake ../ -DCMAKE_INSTALL_PREFIX=/usr
     make && sudo make install
     cd ../
     
 ### cyberradiodriver
 
+    git clone https://github.com/CyberRadio/CyberRadioDriver.git
     cd cyberradiodriver
     sudo python setup.py install
     cd ../
     
 ### gr-CyberRadio
 
-    cd gr-CyberRadio && mkdir build && cd build
-    cmake ../
-    make && sudo make install
+    git clone https://github.com/CyberRadio/gr-cyberradio.git
+    cd gr-CyberRadio 
+    git checkout maint-3.10
+    mkdir build
+    cd build
+    cmake ../ -DCMAKE_INSTALL_PREFIX=/usr
+    make
+    sudo make install
     
