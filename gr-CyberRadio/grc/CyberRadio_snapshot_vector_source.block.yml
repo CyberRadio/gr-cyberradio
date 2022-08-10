@@ -1,6 +1,7 @@
 id: CyberRadio_snapshot_vector_source
-label: snapshot_vector_source
-category: '[CyberRadio]'
+label: '[CyberRadio] Snapshot Vector Source'
+category: '[CyberRadio]/Vita Sources'
+flags: [ python, cpp ]
 
 templates:
   imports: import CyberRadio
@@ -14,6 +15,15 @@ templates:
       )
       print("%s = CyberRadio.snapshot_vector_source(%r, %r, %r, %r, %r)"%("$(id)", ${ip}, ${port}, ${block_size}, ${block_rate}, ${radioObj}.name.lower()))
 
+cpp_templates:
+  includes: ['#include <CyberRadio/snapshot_vector_source.h>']
+  declarations: 'CyberRadio::snapshot_vector_source::sptr ${id};'
+  make: 'this->${id} = CyberRadio::snapshot_vector_source::make(static_cast<const char *>(${radioObj}),${ip},${port},${block_size},${block_rate});'
+  link: ['gnuradio-CyberRadio']
+  translations:
+    'True' : 'true'
+    'False' : 'false'
+
 parameters:
 -   id: radioObj
     label: Radio Object
@@ -21,7 +31,7 @@ parameters:
 -   id: ip
     label: IP
     dtype: string
-    default: 0.0.0.0
+    default: '"0.0.0.0"'
     hide: part
 -   id: port
     label: Port

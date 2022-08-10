@@ -3,6 +3,7 @@
 id: CyberRadio_single_pole_iir_filter_ff
 label: '[CyberRadio] Single Pole IIR'
 category: '[CyberRadio]/DSP Functions'
+flags: [ python, cpp ]
 
 parameters:
 -   id: alpha
@@ -49,5 +50,14 @@ templates:
     callbacks:
     - set_taps(${alpha})
     - reset(${reset})
+
+cpp_templates:
+    includes: ["#include <CyberRadio/single_pole_iir_filter_ff.h>"]
+    declarations: 'CyberRadio::single_pole_iir_filter_ff::sptr ${id};'
+    make: 'this->${id} = CyberRadio::single_pole_iir_filter_ff::make(${alpha}, ${vlen}, ${resetOnAlphaChange});'
+    link: ['gnuradio-CyberRadio']
+    translations:
+      'True' : 'true'
+      'False' : 'false'
 
 file_format: 1

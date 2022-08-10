@@ -1,6 +1,7 @@
 id: CyberRadio_vector_nlog10_ff
 label: '[CyberRadio] Vector N*Log10'
 category: '[CyberRadio]/DSP Functions'
+flags: [ python, cpp ]
 
 parameters:
 -   id: n
@@ -39,5 +40,13 @@ templates:
             ${vlen}, 
             ${k}
         )
+cpp_templates:
+    includes: ['#include <CyberRadio/vector_nlog10_ff.h>']
+    declarations: 'CyberRadio::vector_nlog10_ff::sptr ${id};'
+    make: 'this->${id} = CyberRadio::vector_nlog10_ff::make(${n},${vlen},${k});'
+    link: ['gnuradio-CyberRadio']
+    translations:
+        'True': 'true' 
+        'False': 'false'
 
 file_format: 1
