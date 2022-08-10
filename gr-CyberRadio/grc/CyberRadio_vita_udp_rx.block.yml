@@ -1,6 +1,7 @@
 id: CyberRadio_vita_udp_rx
 label: '[CyberRadio] Vita UDP RX'
 category: '[CyberRadio]/Vita Sources'
+flags: [ python, cpp, throttle ]
 
 templates:
   imports: import CyberRadio
