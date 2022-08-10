@@ -18,7 +18,7 @@ namespace gr {
      private:
       // Nothing to declare in this block.
       // Variables
-      std::string const d_src_ip;
+      const char * d_src_ip;
       unsigned short const d_port;
       int d_sock;
       int const d_samples_per_packet;
@@ -49,7 +49,7 @@ namespace gr {
       auto handle_context_packet( int rx_size ) -> int;
 
      public:
-      vita_rx_impl(std::string &src_ip, 
+      vita_rx_impl(const char * src_ip, 
                       unsigned short port, 
                       unsigned int header_byte_offset, 
                       int samples_per_packet, 

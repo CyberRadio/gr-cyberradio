@@ -33,7 +33,7 @@ namespace gr {
        * creating new instances.
        */
       static sptr make(
-                      std::string &src_ip, 
+                      const char * src_ip, 
                       unsigned short port, 
                       unsigned int header_byte_offset, 
                       int samples_per_packet, 

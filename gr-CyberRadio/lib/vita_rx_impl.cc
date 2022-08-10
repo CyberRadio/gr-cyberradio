@@ -122,7 +122,7 @@ namespace gr {
 
     using output_type = gr_complex;
     vita_rx::sptr
-    vita_rx::make(std::string &src_ip, 
+    vita_rx::make(const char * src_ip, 
                   unsigned short port, 
                   unsigned int header_byte_offset, 
                   int samples_per_packet, 
@@ -144,7 +144,7 @@ namespace gr {
     /*
      * The private constructor
      */
-    vita_rx_impl::vita_rx_impl(std::string &src_ip, 
+    vita_rx_impl::vita_rx_impl(const char * src_ip, 
                   unsigned short port, 
                   unsigned int header_byte_offset, 
                   int samples_per_packet, 
@@ -311,7 +311,7 @@ namespace gr {
         sockaddr_in myaddr;
         memset((char*)&myaddr, 0, sizeof(myaddr));
         myaddr.sin_family = AF_INET;
-        myaddr.sin_addr.s_addr = inet_addr(d_src_ip.c_str());
+        myaddr.sin_addr.s_addr = inet_addr(d_src_ip);
         myaddr.sin_port = htons(d_port);
 
         if (bind(sockfd, (struct sockaddr*)&myaddr, sizeof(myaddr)) < 0) {

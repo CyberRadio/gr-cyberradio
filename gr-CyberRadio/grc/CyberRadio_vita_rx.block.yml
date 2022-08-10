@@ -1,6 +1,7 @@
 id: CyberRadio_vita_rx
 label: '[CyberRadio] Vita Udp Rx'
 category: '[CyberRadio]/Vita Sources'
+flags: [ python, cpp ]
 
 templates:
   imports: import CyberRadio
@@ -20,11 +21,20 @@ templates:
             ${debug}
         )
 
+cpp_templates:
+  includes: ['#include <CyberRadio/vita_rx.h>']
+  declarations: 'CyberRadio::vita_rx::sptr ${id};'
+  make: 'this->${id} = CyberRadio::vita_rx::make(${src_ip}, ${port}, ${header_byte_offset},${samples_per_packet},${bytes_per_packet}, ${swap_bytes}, ${swap_iq}, ${tag_packets}, ${vector_output},${uses_v491}, ${narrowband}, ${debug});'
+  link: ['gnuradio-CyberRadio']
+  translations:
+    'True': 'true' 
+    'False': 'false'
+
 parameters:
 -   id: src_ip
     label: Src_ip
     dtype: string
-    default: 0.0.0.0
+    default: '"0.0.0.1"'
 -   id: port
     label: Port
     dtype: int
