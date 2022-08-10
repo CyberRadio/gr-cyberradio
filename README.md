@@ -1,11 +1,12 @@
 # GR-CYBERRADIO
 
 ## Compatibility
-This software has been built and tested against Ubuntu 16.04 and Ubuntu 18.04
+This software has been built and tested against: 
+- Ubuntu 16.04 (GNURadio 3.7.13.3) (maint-3.7)
+- Ubuntu 18.04 (GNURadio 3.8.1.0)  (maint-3.8)
+- Ubuntu 20.04 (GNURadio 3.10.3.0) (maint-3.10)
 
 ## Build and Install
-
-`git clone git@github.com:CyberRadio/gr-cyberradio.git`
 
 ### libcyberradio
     
