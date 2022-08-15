@@ -124,7 +124,7 @@ namespace gr {
     **
     ***************************************************************************/
     using output_type = gr_complex;
-    vita_udp_rx::sptr vita_udp_rx::make(const char * src_ip, 
+    vita_udp_rx::sptr vita_udp_rx::make(std::string src_ip, 
                   unsigned short port, 
                   unsigned int header_byte_offset, 
                   int samples_per_packet, 
@@ -146,7 +146,7 @@ namespace gr {
     **
     **
     ***************************************************************************/
-    vita_udp_rx_impl::vita_udp_rx_impl( const char * src_ip, 
+    vita_udp_rx_impl::vita_udp_rx_impl( std::string src_ip, 
                   unsigned short port, 
                   unsigned int header_byte_offset, 
                   int samples_per_packet, 

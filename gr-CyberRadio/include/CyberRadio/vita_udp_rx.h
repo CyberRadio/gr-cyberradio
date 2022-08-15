@@ -31,7 +31,7 @@ namespace gr {
        * class. CyberRadio::vita_udp_rx::make is the public interface for
        * creating new instances.
        */
-      static sptr make(const char * src_ip, 
+      static sptr make(std::string src_ip, 
                   unsigned short port, 
                   unsigned int header_byte_offset, 
                   int samples_per_packet, 

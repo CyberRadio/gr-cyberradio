@@ -66,7 +66,7 @@ namespace gr {
      public:
       ~vita_udp_rx_impl();
 
-      vita_udp_rx_impl(const char * src_ip, 
+      vita_udp_rx_impl(std::string src_ip, 
                   unsigned short port, 
                   unsigned int header_byte_offset, 
                   int samples_per_packet, 
