@@ -24,7 +24,8 @@ cpp_templates:
   includes: ['#include <CyberRadio/vita_udp_rx.h>']
   declarations: 'CyberRadio::vita_udp_rx::sptr ${id};'
   make: 'this->${id} = CyberRadio::vita_udp_rx::make(${src_ip}, ${port}, ${header_byte_offset},${samples_per_packet},${bytes_per_packet}, ${swap_bytes}, ${swap_iq}, ${tag_packets}, ${vector_output},${uses_v491}, ${narrowband}, ${debug});'
-  link: ['gnuradio-CyberRadio']
+  link: ['gnuradio::gnuradio-CyberRadio']
+  packages: ['gnuradio-CyberRadio']
   translations:
     'True': 'true' 
     'False': 'false'
