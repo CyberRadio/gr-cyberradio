@@ -28,7 +28,7 @@ include(GrPybind)
 # Python Bindings
 ########################################################################
 list(APPEND CyberRadio_python_files
-    #vita_udp_rx_python.cc
+    vita_udp_rx_python.cc
     snapshot_vector_source_python.cc
     vector_nlog10_ff_python.cc
     single_pole_iir_filter_ff_python.cc

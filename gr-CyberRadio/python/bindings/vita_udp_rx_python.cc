@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(vita_udp_rx.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(6a4c321362f0c6224782254b4afcc014)                     */
+/* BINDTOOL_HEADER_FILE_HASH(d6cdbbb15ce27345ed251370c5e835f6)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
