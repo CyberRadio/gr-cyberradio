@@ -1,5 +1,5 @@
 id: CyberRadio_generic_radio_control_block
-label: Generic Control Base Block
+label: [CyberRadio] Generic Control Base Block
 category: '[CyberRadio]/Radio Element Control'
 
 templates:
