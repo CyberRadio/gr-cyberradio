@@ -328,11 +328,11 @@ namespace gr {
                     outP += d_samples_per_packet;
                     if( d_use_vector_output )
                     {
-                        produce(0, 1);
+                        samples_produced += 1;
                     } else {
-                        produce(0, d_samples_per_packet);
+                        samples_produced += d_samples_per_packet;
                     }
-                    samples_produced += d_samples_per_packet;
+                    produce(0, samples_produced);
                     ++d_packetCounter;
                 }
             }
@@ -371,13 +371,14 @@ namespace gr {
             reinterpret_cast<float*>(outP), IQ, 32768.0, 2 * d_samples_per_packet);
 
         outP += d_samples_per_packet;
-        if( !d_use_vector_output) {
-            produce(0, d_samples_per_packet);
+        if( d_use_vector_output) {
+            samples_produced += 1;
         } else {
-            produce(0, 1);
+            samples_produced += d_samples_per_packet;            
         }
+        produce(0, samples_produced);
         d_buffer.resize(0); // consume the buffer
-        samples_produced += d_samples_per_packet;
+        
 
         return samples_produced;
     }
@@ -651,7 +652,7 @@ namespace gr {
                   return noutput_items - samples_needed;
               }
           }
-
+          printf("sample needed = %d\n", samples_needed);
           // one packet is in buffer. Process it
           if (d_uses_v49_1) {
               samples_needed -= process_v491_packet(outP);
