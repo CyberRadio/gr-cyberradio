@@ -78,7 +78,7 @@ parameters:
     default: 'False'
     options: ['True', 'False']
     option_attributes:
-        size: [$samples_per_packet, '1']
+        vlen: [2, 1]
     hide: part
 -   id: uses_v491
     label: Uses VITA 49.1
@@ -107,7 +107,7 @@ inputs:
 outputs:
 -   domain: stream
     dtype: complex
-    vlen: 1
+    vlen: ${ int(samples_per_packet) if vector_output.vlen > 1 else 1 }
 -   domain: message
     id: status
     optional: true

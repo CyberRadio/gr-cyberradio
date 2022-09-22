@@ -175,13 +175,22 @@ namespace gr {
       d_debug(debug),
       d_first_packet(true),
       d_packetCounter(0),
-      d_buffer()
+      d_buffer(),
+      d_use_vector_output( vector_output )
     {
+      if( this->d_use_vector_output )
+      {
+        this->set_output_signature(gr::io_signature::make( 1, 1, d_samples_per_packet * sizeof(output_type) ) );
+      }
         // pre-allocate the memory
       d_buffer.reserve(bytes_per_packet);
 
       // don't call work() until there is enough space for a whole packet
-      set_output_multiple(d_samples_per_packet);
+      if( !d_use_vector_output ) {
+        set_output_multiple(d_samples_per_packet);
+      } else {
+        set_output_multiple(1);
+      }
 
       // Create input port
       message_port_register_in(control_port);
@@ -357,7 +366,11 @@ namespace gr {
             reinterpret_cast<float*>(outP), IQ, 32768.0, 2 * d_samples_per_packet);
 
         outP += d_samples_per_packet;
-        produce(0, d_samples_per_packet);
+        if( !d_use_vector_output) {
+            produce(0, d_samples_per_packet);
+        } else {
+            produce(0, 1);
+        }
         d_buffer.resize(0); // consume the buffer
         samples_produced += d_samples_per_packet;
 

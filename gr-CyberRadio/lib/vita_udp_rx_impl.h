@@ -48,6 +48,7 @@ namespace gr {
       bool d_debug;
       bool d_first_packet;
       unsigned d_packetCounter : 4;
+      bool d_use_vector_output;
 
       std::vector<uint8_t> d_buffer;
      protected:
