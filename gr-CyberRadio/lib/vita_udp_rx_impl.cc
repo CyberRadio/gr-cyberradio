@@ -326,7 +326,12 @@ namespace gr {
                       samples_produced < samples_needed) {
                     std::fill_n(outP, d_samples_per_packet, gr_complex(0));
                     outP += d_samples_per_packet;
-        produce(0, d_samples_per_packet);
+                    if( d_use_vector_output )
+                    {
+                        produce(0, 1);
+                    } else {
+                        produce(0, d_samples_per_packet);
+                    }
                     samples_produced += d_samples_per_packet;
                     ++d_packetCounter;
                 }
