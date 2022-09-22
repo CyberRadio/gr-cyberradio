@@ -652,7 +652,6 @@ namespace gr {
                   return noutput_items - samples_needed;
               }
           }
-          printf("sample needed = %d\n", samples_needed);
           // one packet is in buffer. Process it
           if (d_uses_v49_1) {
               samples_needed -= process_v491_packet(outP);
