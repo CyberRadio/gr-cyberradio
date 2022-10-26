@@ -20,7 +20,7 @@ jobs:
     - name: Install Package Deps
       run: sudo apt-get install build-essential devscripts debhelper doxygen dh-python cmake
     - name: Build and Install libcyberradio
-      run: cd libcyberradio/libcyberradio && ./makedeb libcyberradio && sudo dpkg -i *.deb
+      run: cd libcyberradio && ./makedeb libcyberradio && sudo dpkg -i *.deb
     - name: Get gr-CyberRadio
       uses: actions/checkout@v2
     - name: Build Deps for gr-Cyberradio
