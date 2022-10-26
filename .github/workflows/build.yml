@@ -15,6 +15,8 @@ jobs:
         path: './libcyberradio'
     - name: Test
       run: ls -lah ./
+    - name: Install Build Deps
+      run: sudo apt-get install libcurl4-openssl-dev libpcap-dev libjsoncpp-dev libboost-all-dev libvolk2-dev libvolk2.5 cmake
     - name: Build and Install libcyberradio
       run: cd libcyberradio/libcyberradio && mkdir build && cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make -j && sudo make install
       
