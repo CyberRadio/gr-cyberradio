@@ -18,5 +18,14 @@ jobs:
     - name: Install Build Deps
       run: sudo apt-get install libcurl4-openssl-dev libpcap-dev libjsoncpp-dev libboost-all-dev libvolk2-dev libvolk2.5 cmake
     - name: Build and Install libcyberradio
-      run: cd libcyberradio/libcyberradio && mkdir build && cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make -j && sudo make install
-      
+      run: cd libcyberradio/libcyberradio && mkdir build && cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make -j4 && sudo make install && cd -
+    - name: Get gr-CyberRadio
+      uses: actions/checkout@v2
+    - name: Build and Package gr-CyberRadio
+      run: ./makedeb gr-CyberRadio
+    - name: Save Debian Archive
+      uses: actions/upload-artifact@v3
+      with:
+        name: gr-CyberRadio-Jammy
+        path: ./*.deb
+
