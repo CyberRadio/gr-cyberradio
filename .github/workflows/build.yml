@@ -23,6 +23,8 @@ jobs:
       uses: actions/checkout@v2
     - name: Build Deps for gr-Cyberradio
       run: sudo apt-get install gnuradio-dev
+    - name: Install Package Deps
+      run: sudo apt-get install build-essential devscripts debhelper doxygen dh-python cmake
     - name: Build and Package gr-CyberRadio
       run: ./makedeb gr-CyberRadio
     - name: Save Debian Archive
