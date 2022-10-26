@@ -13,7 +13,8 @@ jobs:
       with:
         repository: CyberRadio/libcyberradio
         path: './libcyberradio'
-      run: ls -lha
+    - name: Test
+      run: ls -lah ./
     - name: Build and Install libcyberradio
       run: cd libcyberradio/libcyberradio && mkdir build && cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make -j && sudo make install
       
