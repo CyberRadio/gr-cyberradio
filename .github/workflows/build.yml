@@ -17,14 +17,15 @@ jobs:
       run: ls -lah ./
     - name: Install Build Deps
       run: sudo apt-get install libcurl4-openssl-dev libpcap-dev libjsoncpp-dev libboost-all-dev libvolk2-dev libvolk2.5 cmake
+    - name: Install Package Deps
+      run: sudo apt-get install build-essential devscripts debhelper doxygen dh-python cmake
     - name: Build and Install libcyberradio
-      run: cd libcyberradio/libcyberradio && mkdir build && cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make -j4 && sudo make install && cd -
+      run: cd libcyberradio/libcyberradio && ./makedeb libcyberradio && sudo dpkg -i *.deb
     - name: Get gr-CyberRadio
       uses: actions/checkout@v2
     - name: Build Deps for gr-Cyberradio
       run: sudo apt-get install gnuradio-dev
-    - name: Install Package Deps
-      run: sudo apt-get install build-essential devscripts debhelper doxygen dh-python cmake
+    
     - name: Build and Package gr-CyberRadio
       run: ./makedeb gr-CyberRadio
     - name: Save Debian Archive
