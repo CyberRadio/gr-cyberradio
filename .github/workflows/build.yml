@@ -8,9 +8,11 @@ jobs:
   build-ubuntu22-04:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v2
+    - name: Get Libcyberradio
+      uses: actions/checkout@v2
       with:
-        name: CyberRadio/libcyberradio
-        ref: refs/heads/main
+        repository: CyberRadio/libcyberradio
     - name: Build and Install libcyberradio
       run: cd libcyberradio/libcyberradio && mkdir build && cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make -j && sudo make install
+      
