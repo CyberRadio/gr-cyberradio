@@ -5,7 +5,7 @@ on:
     branches: [ main, test_workflow ]
 
 jobs:
-  build-ubuntu22.04:
+  build-ubuntu22-04:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@master
@@ -14,4 +14,3 @@ jobs:
         ref: refs/heads/main
     - name: Build and Install libcyberradio
       run: cd libcyberradio/libcyberradio && mkdir build && cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make -j && sudo make install
-      
