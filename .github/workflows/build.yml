@@ -23,9 +23,10 @@ jobs:
       run: cd libcyberradio && ./makedeb libcyberradio && sudo dpkg -i *.deb
     - name: Get gr-CyberRadio
       uses: actions/checkout@v2
+    - name: Get maint-3.10
+      run: git checkout maint-3.10
     - name: Build Deps for gr-Cyberradio
       run: sudo apt-get install gnuradio-dev
-    
     - name: Build and Package gr-CyberRadio
       run: ./makedeb gr-CyberRadio
     - name: Save Debian Archive
