@@ -6,8 +6,8 @@
 #
 # Author: DA
 # Company: CyberRadio Solutions, Inc.
-# Copyright: Copyright (c) 2015 CyberRadio Solutions, Inc.  All 
-#     rights reserved.
+# Copyright: Copyright (c) 2015-2022 CyberRadio Solutions, Inc.
+#     All rights reserved.
 #################################################################
 
 #################################################################
@@ -26,6 +26,10 @@
 #                                      SUBGROUP instead of everything
 # -n,--no-cleanup                      Do not clean up intermediate files
 #                                      after making the package
+# -2, --python2                        Force package to build under 
+#                                      Python 2
+# -3, --python3                        Force package to build under
+#                                      Python 3
 #  
 # Source folder MUST contain a "debian" sub-folder with package building 
 # information.
@@ -42,55 +46,59 @@
 
 print_usage()
 {
-	echo "usage: $0 {options} [Source folder name]"
-	echo " "
-	echo "-v [TAG],--version=[TAG]             Use version tag [TAG] rather than "
-	echo "                                     tagging with the default (either "
-	echo "                                     today's date or the version number "
-	echo "                                     from a setup.py/configure.ac file)"
-	echo "-x [INFO],--extra=[INFO]             Extra information to append to the "
-	echo "                                     version tag"
-	echo "-p [PACKAGE],--package=[PACKAGE]     Use PACKAGE as the package name "
-	echo "                                     instead of basing the package name "
-	echo "                                     off of the source folder name"
-	echo "-s [SUBGROUP],--subgroup=[SUBGROUP]  For source folders that support "
-	echo "                                     subgroups, build only subgroup "
-	echo "                                     SUBGROUP instead of everything"
-	echo "-n,--no-cleanup                      Do not clean up intermediate files "
-	echo "                                     after making the package"
-	echo " "
-	echo "Source folder MUST contain a \"debian\" sub-folder with package building "
-	echo "information."
-	echo " "
-	echo "The makedeb script can automatically determine package name and version"
-	echo "number from a variety of sources.  Sources are checked in the following"
-	echo "order:"
-	echo "(1) Version information file (version.txt)"
-	echo "(2) Python distutils setup file (setup.py)"
-	echo "(3) GNU Autotools configuration file (configure.ac)"
-	echo "(4) CMake lists file (CMakeLists.txt)"
-	echo " "
+    echo "usage: $0 {options} [Source folder name]"
+    echo " "
+    echo "-v [TAG],--version=[TAG]             Use version tag [TAG] rather than "
+    echo "                                     tagging with the default (either "
+    echo "                                     today's date or the version number "
+    echo "                                     from a setup.py/configure.ac file)"
+    echo "-x [INFO],--extra=[INFO]             Extra information to append to the "
+    echo "                                     version tag"
+    echo "-p [PACKAGE],--package=[PACKAGE]     Use PACKAGE as the package name "
+    echo "                                     instead of basing the package name "
+    echo "                                     off of the source folder name"
+    echo "-s [SUBGROUP],--subgroup=[SUBGROUP]  For source folders that support "
+    echo "                                     subgroups, build only subgroup "
+    echo "                                     SUBGROUP instead of everything"
+    echo "-n,--no-cleanup                      Do not clean up intermediate files "
+    echo "                                     after making the package"
+    echo "-2, --python2                        Force package to build under"
+    echo "                                     Python 2"
+    echo "-3, --python3                        Force package to build under"
+    echo "                                     Python 3"
+    echo " "
+    echo "Source folder MUST contain a \"debian\" sub-folder with package building "
+    echo "information."
+    echo " "
+    echo "The makedeb script can automatically determine package name and version"
+    echo "number from a variety of sources.  Sources are checked in the following"
+    echo "order:"
+    echo "(1) Version information file (version.txt)"
+    echo "(2) Python distutils setup file (setup.py)"
+    echo "(3) GNU Autotools configuration file (configure.ac)"
+    echo "(4) CMake lists file (CMakeLists.txt)"
+    echo " "
 }
 
 exit_with_usage()
 {
-	# $1: Exit code
-	# $2: Error message to display
-	echo "ERROR: $2"
-	echo " "
-	print_usage
-	exit $1
+    # $1: Exit code
+    # $2: Error message to display
+    echo "ERROR: $2"
+    echo " "
+    print_usage
+    exit $1
 }
 
 exit_if_error()
 {
-	# $1: Exit code from prior command
-	if [ $1 -ne 0 ]
-	then
-		echo "ERROR: Command returned error code: $1"
-		echo "ERROR condition detected.  Exiting script."
-		exit $1
-	fi
+    # $1: Exit code from prior command
+    if [ $1 -ne 0 ]
+    then
+        echo "ERROR: Command returned error code: $1"
+        echo "ERROR condition detected.  Exiting script."
+        exit $1
+    fi
 }
 
 #########################################################
@@ -99,6 +107,7 @@ exit_if_error()
 # SRC_FOLDER_NAME: Source folder name
 # DEB_PKG_NAME: Debian package name
 # DEB_PKG_VERSION: Debian package version
+# DEB_PKG_VERSION_MAJOR: Debian package major version
 # DEB_PKG_ARCH: Debian package architecture
 # DEB_PKG_ARCH_GNU: Debian package GNU system type
 # DEB_PKG_OS: Debian package OS name
@@ -113,41 +122,61 @@ DEB_PKG_OS=$(lsb_release -si)
 DEB_PKG_OS_VER=$(lsb_release -sr)
 CLEANUP=1
 DEB_PKG_SUBGROUP=ALL
+# Determine the default Python version (2 or 3) on the build machine.
+# -- NOTE that some OSes don't have /usr/bin/python at all.  In this
+#    case, fall back to /usr/bin/python3. -- DA
+for PY_EXEC in /usr/bin/python /usr/bin/python3
+do
+    if [ -e ${PY_EXEC} ]
+    then
+        PYTHON_EXECUTABLE=${PY_EXEC}
+        PYTHON_VERSION=$(${PY_EXEC} -V 2>&1 | cut -d. -f1)
+        break
+    fi
+done
 # Parse command-line options
-set -- `getopt -n $0 -o hv:x:p:s:n -l "help version: extra: package: subgroup: no-cleanup" -- "$@"`
+set -- `getopt -n $0 -o hv:x:p:s:n23 -l "help version: extra: package: subgroup: no-cleanup python2 python3" -- "$@"`
 while [ $# -gt 0 ]
 do
     case "$1" in
        -v|--version)
- 		DEB_PKG_VERSION=$(eval echo $2)
-		shift
-		;;
+        DEB_PKG_VERSION=$(eval echo $2)
+        shift
+        ;;
        -x|--extra)
- 		DEB_PKG_EXTRA=$(eval echo $2)
-		shift
-		;;
+        DEB_PKG_EXTRA=$(eval echo $2)
+        shift
+        ;;
        -p|--package)
-		DEB_PKG_NAME=$(eval echo $2)
-		shift
-		;;
+        DEB_PKG_NAME=$(eval echo $2)
+        shift
+        ;;
        -s|--subgroup)
-		DEB_PKG_SUBGROUP=$(eval echo $2)
-		shift
-		;;
+        DEB_PKG_SUBGROUP=$(eval echo $2)
+        shift
+        ;;
        -n|--no-cleanup)
-		CLEANUP=0
-		;;
+        CLEANUP=0
+        ;;
+       -2|--python2)
+        PYTHON_VERSION="Python 2"
+        PYTHON_EXECUTABLE=/usr/bin/python2
+        ;;
+       -3|--python3)
+        PYTHON_VERSION="Python 3"
+        PYTHON_EXECUTABLE=/usr/bin/python3
+        ;;
        -h|--help)
-		print_usage
-		exit 2
-		;;
+        print_usage
+        exit 2
+        ;;
        -*)
-		break
-		;;
+        break
+        ;;
        *)
-		SRC_FOLDER_NAME=$1
-		break
-		;;
+        SRC_FOLDER_NAME=$1
+        break
+        ;;
     esac
     shift
 done
@@ -156,65 +185,113 @@ done
 # or some other source)
 if [ $# -gt 1 ]
 then
-	SRC_FOLDER_NAME=$(eval echo $2)
-	SRC_FOLDER_NAME=${SRC_FOLDER_NAME%/}
-	# Sanity check: Make sure source folder provided is actually a folder
-	if [ ! -d "${SRC_FOLDER_NAME}" ]
-	then
-		echo "ERROR: Source folder name is not a directory or does not exist."
-		exit_if_error 1
-	fi
+    SRC_FOLDER_NAME=$(eval echo $2)
+    exit_if_error $? "Source folder name is not a directory or does not exist."
+    SRC_FOLDER_NAME=${SRC_FOLDER_NAME%/}
+    # Sanity check: Make sure source folder provided is actually a folder
+    if [ ! -d "${SRC_FOLDER_NAME}" ]
+    then
+        exit_if_error $? "Source folder name is not a directory or does not exist."
+    fi
+fi
+# Use the installed version of gnuradio-dev to determine build/runtime 
+# dependencies for packages involving GNU Radio
+GNURADIO_DEV_VERSION=$(dpkg -s gnuradio-dev 2>/dev/null | grep 'Version:' | sed -e 's/Version: //g')
+dpkg --compare-versions "${GNURADIO_DEV_VERSION}" "ge" "3.8"
+if [ $? -eq 0 ]
+then
+    DEB_GNURADIO_PKG_DEP="gnuradio (>= 3.8)"
+    DEB_GNURADIO_DEV_PKG_DEP="gnuradio-dev (>= 3.8)"
+else
+    DEB_GNURADIO_PKG_DEP="gnuradio (<< 3.8)"
+    DEB_GNURADIO_DEV_PKG_DEP="gnuradio-dev (<< 3.8)"
+fi
+# For GNU Radio out-of-tree module packages (that is, the source folder 
+# name starts with "gr-"), automatically target the Python version used by
+# whatever version of GNU Radio we are using
+if [[ $(basename ${SRC_FOLDER_NAME}) == gr-* ]]
+then
+    dpkg --compare-versions "${GNURADIO_DEV_VERSION}" "ge" "3.8"
+    if [ $? -eq 0 ]
+    then
+        PYTHON_VERSION="Python 3"
+    else
+        PYTHON_VERSION="Python 2"
+    fi
+fi
+# Set some configuration variables based on which Python version we are
+# using.
+DEB_PYTHON2_EXECUTABLE=/usr/bin/python2
+DEB_PYTHON3_EXECUTABLE=/usr/bin/python3
+if [ "${PYTHON_VERSION}" == "Python 3" ]
+then
+    DEB_PYTHON_EXECUTABLE=/usr/bin/python3
+    DEB_PYTHON_PKG_PREFIX=python3
+    DEB_PYTHON_PKG_DEP="python3 (>= 3.5)"
+    DEB_PYTHON_XPY_DEP="X-Python3-Version: >= 3.5"
+    DEB_PYTHON_DHPY=python3
+    DEB_TWISTD_EXECUTABLE=/usr/bin/twistd3
+else
+    DEB_PYTHON_EXECUTABLE=/usr/bin/python2
+    DEB_PYTHON_PKG_PREFIX=python
+    DEB_PYTHON_PKG_DEP="python (>= 2.7)"
+    DEB_PYTHON_XPY_DEP="X-Python-Version: >= 2.7"
+    DEB_PYTHON_DHPY=python2
+    DEB_TWISTD_EXECUTABLE=/usr/bin/twistd
 fi
 # If the source folder contains a version.txt file, extract the package
 # name and package version number from the file, if the user didn't 
 # override them on the command line
 if [ -e ${SRC_FOLDER_NAME}/version.txt ]
 then
-	QQQ=$(< ${SRC_FOLDER_NAME}/version.txt )
-	exit_if_error $?
-	eval ZZZ=(${QQQ})
-	if [ -z ${DEB_PKG_NAME} ]
-	then
-		DEB_PKG_NAME=${ZZZ[0]}
-	fi
-	if [ -z ${DEB_PKG_VERSION} ]
-	then
-		DEB_PKG_VERSION=${ZZZ[1]}
-	fi
+    QQQ=$(< ${SRC_FOLDER_NAME}/version.txt )
+    exit_if_error $? "Failed to obtain version info from version.txt."
+    eval ZZZ=(${QQQ})
+    exit_if_error $? "Failed to obtain version info from version.txt."
+    if [ -z ${DEB_PKG_NAME} ]
+    then
+        DEB_PKG_NAME=${ZZZ[0]}
+    fi
+    if [ -z ${DEB_PKG_VERSION} ]
+    then
+        DEB_PKG_VERSION=${ZZZ[1]}
+    fi
 # Or, if the source folder contains a setup.py file, use the
-# package name (prepending "python-") and package version 
-# number provided by the setup.py file, if the user didn't 
-# override them on the command line
+# package name (prepending "python-" or "python3-", depending on Python
+# version) and package version number provided by the setup.py file, if 
+# the user didn't override them on the command line
 elif [ -e ${SRC_FOLDER_NAME}/setup.py ]
 then
-	QQQ=$(python ${SRC_FOLDER_NAME}/setup.py --name --version)
-	exit_if_error $?
-	eval ZZZ=(${QQQ})
-	if [ -z ${DEB_PKG_NAME} ]
-	then
-		DEB_PKG_NAME=python-${ZZZ[0]}
-	fi
-	if [ -z ${DEB_PKG_VERSION} ]
-	then
-		DEB_PKG_VERSION=${ZZZ[1]}
-	fi
+    QQQ=$(${PYTHON_EXECUTABLE} ${SRC_FOLDER_NAME}/setup.py --name --version)
+    exit_if_error $? "Failed to obtain version info from setup.py."
+    eval ZZZ=(${QQQ})
+    exit_if_error $? "Failed to obtain version info from setup.py."
+    if [ -z ${DEB_PKG_NAME} ]
+    then
+        DEB_PKG_NAME=${DEB_PYTHON_PKG_PREFIX}-${ZZZ[0]}
+    fi
+    if [ -z ${DEB_PKG_VERSION} ]
+    then
+        DEB_PKG_VERSION=${ZZZ[1]}
+    fi
 # Or, if the source folder contains a configure.ac file, use the
 # package name and package version number provided by the AC_INIT line
 # in the setup.py file, if the user didn't override them on the command 
 # line
 elif [ -e ${SRC_FOLDER_NAME}/configure.ac ]
 then
-	QQQ=$($(grep '^AC_INIT' ${SRC_FOLDER_NAME}/configure.ac | sed -e 's/AC_INIT(//g' -e 's/)//g' -e 's/,//g'))
-	exit_if_error $?
-	eval ZZZ=(${QQQ})
-	if [ -z ${DEB_PKG_NAME} ]
-	then
-		DEB_PKG_NAME=${ZZZ[0]}
-	fi
-	if [ -z ${DEB_PKG_VERSION} ]
-	then
-		DEB_PKG_VERSION=${ZZZ[1]}
-	fi
+    QQQ=$($(grep '^AC_INIT' ${SRC_FOLDER_NAME}/configure.ac | sed -e 's/AC_INIT(//g' -e 's/)//g' -e 's/,//g'))
+    exit_if_error $? "Failed to obtain version info from configure.ac."
+    eval ZZZ=(${QQQ})
+    exit_if_error $? "Failed to obtain version info from configure.ac."
+    if [ -z ${DEB_PKG_NAME} ]
+    then
+        DEB_PKG_NAME=${ZZZ[0]}
+    fi
+    if [ -z ${DEB_PKG_VERSION} ]
+    then
+        DEB_PKG_VERSION=${ZZZ[1]}
+    fi
 # Or, if the source folder contains a CMakeLists.txt file, determine
 # the project name and project version from CMake cache variables, if 
 # the user didn't override them on the command line.
@@ -222,39 +299,41 @@ then
 # and PROJECT_VERSION are defined as cache variables.
 elif [ -e ${SRC_FOLDER_NAME}/CMakeLists.txt ]
 then
-	CMAKE_SRC=$(readlink -f ${SRC_FOLDER_NAME})
-	rm -rf /tmp/makedeb
-	mkdir -p /tmp/makedeb
-	pushd /tmp/makedeb >/dev/null 2>&1
-	cmake ${CMAKE_SRC} -L -DPACKAGE_SUBGROUP=${DEB_PKG_SUBGROUP} >cmake_results.txt
-	if [ -z ${DEB_PKG_NAME} ]
-	then
-		ZZZ=$(grep 'PROJECT_NAME' cmake_results.txt)
-		#exit_if_error $?
-		DEB_PKG_NAME=${ZZZ##PROJECT_NAME:STRING=}
-	fi
-	if [ -z ${DEB_PKG_VERSION} ]
-	then
-		ZZZ=$(grep 'PROJECT_VERSION' cmake_results.txt)
-		#exit_if_error $?
-		DEB_PKG_VERSION=${ZZZ##PROJECT_VERSION:STRING=}
-	fi
-	popd >/dev/null 2>&1
-	rm -rf /tmp/makedeb
+    CMAKE_SRC=$(readlink -f ${SRC_FOLDER_NAME})
+    exit_if_error $? "Failed to obtain version info from CMakeLists.txt."
+    rm -rf /tmp/makedeb
+    mkdir -p /tmp/makedeb
+    pushd /tmp/makedeb >/dev/null 2>&1
+    cmake ${CMAKE_SRC} -L -DPACKAGE_SUBGROUP=${DEB_PKG_SUBGROUP} >cmake_results.txt
+    exit_if_error $? "Failed to obtain version info from CMakeLists.txt."
+    if [ -z ${DEB_PKG_NAME} ]
+    then
+        ZZZ=$(grep 'PROJECT_NAME' cmake_results.txt)
+        #exit_if_error $?
+        DEB_PKG_NAME=${ZZZ##PROJECT_NAME:STRING=}
+    fi
+    if [ -z ${DEB_PKG_VERSION} ]
+    then
+        ZZZ=$(grep 'PROJECT_VERSION' cmake_results.txt)
+        #exit_if_error $?
+        DEB_PKG_VERSION=${ZZZ##PROJECT_VERSION:STRING=}
+    fi
+    popd >/dev/null 2>&1
+    rm -rf /tmp/makedeb
 fi
 # If the user did not specify a package name on the command line, 
 # and if the package name cannot be obtained from some other source, 
 # form the package name from the source folder name.
 if [ -z ${DEB_PKG_NAME} ]
 then
-	DEB_PKG_NAME=$(basename "${SRC_FOLDER_NAME}")
+    DEB_PKG_NAME=$(basename "${SRC_FOLDER_NAME}")
 fi
 # If the user did not specify a version number, and if
 # the version number cannot be obtained by some other
 # source, then use today's date for the version number
 if [ -z ${DEB_PKG_VERSION} ]
 then
-	DEB_PKG_VERSION=$(eval date +%y.%m.%d)
+    DEB_PKG_VERSION=$(eval date +%y.%m.%d)
 fi
 # Try to make the provided package name conform to Debian naming
 # conventions.
@@ -264,8 +343,10 @@ DEB_PKG_NAME=$(echo "${DEB_PKG_NAME}" | tr "[:upper:]" "[:lower:]" | tr "_" "-")
 # Append the extra info (if any) to the version number
 if [ ! -z ${DEB_PKG_EXTRA} ]
 then
-	DEB_PKG_VERSION=${DEB_PKG_VERSION}-${DEB_PKG_EXTRA}
+    DEB_PKG_VERSION=${DEB_PKG_VERSION}-${DEB_PKG_EXTRA}
 fi
+# Extract the package's major version number
+DEB_PKG_VERSION_MAJOR=$(cut -d"." -f1 <<<"${DEB_PKG_VERSION}")
 
 #########################################################
 # Build the Debian package
@@ -273,89 +354,154 @@ fi
 # Make sure the source folder has been specified
 if [ -z ${SRC_FOLDER_NAME} ]
 then
-	exit_with_usage 2 "Source folder was not provided"
+    exit_with_usage 2 "Source folder was not provided"
 else
-	echo "Debian package parameters:"
-	echo "* Source folder name: ${SRC_FOLDER_NAME}"
-	echo "* Debian package name: ${DEB_PKG_NAME}"
-	echo "* Debian package version: ${DEB_PKG_VERSION}"
-	echo "* Debian package architecture: ${DEB_PKG_ARCH}"
-	echo "* Debian package GNU system type: ${DEB_PKG_ARCH_GNU}"
-	echo "* Debian package OS: ${DEB_PKG_OS}"
-	echo "* Debian package OS version: ${DEB_PKG_OS_VER}"
-	echo "* Debian package subgroup: ${DEB_PKG_SUBGROUP}"
-	echo " "
-	# Create temporary build folder
-	DEB_BUILD_FOLDER_NAME=${DEB_PKG_NAME}-${DEB_PKG_VERSION}
-	echo "Creating temporary build folder: ${DEB_BUILD_FOLDER_NAME}"
-	if [ -e ${DEB_BUILD_FOLDER_NAME} ]
-	then
-		rm -rf ${DEB_BUILD_FOLDER_NAME}
-		exit_if_error $?
-	fi
-	mkdir -p ${DEB_BUILD_FOLDER_NAME}
-	exit_if_error $?
-	# Copy files from source folder into build folder
-	echo "Copying files: ${SRC_FOLDER_NAME} ==> ${DEB_BUILD_FOLDER_NAME}"
-	cp -rf ${SRC_FOLDER_NAME}/* ${DEB_BUILD_FOLDER_NAME}
-	exit_if_error $? "In copying files"
-	cp -rf ${SRC_FOLDER_NAME}/.[1-9a-zA-Z]* ${DEB_BUILD_FOLDER_NAME}
-	# For files in debian sub-folder, replace DEB_PKG_* placeholders
-	# with our parameters
-	echo "Versioning Debian package: ${DEB_PKG_NAME}"
-	for FNAME in $(find ${DEB_BUILD_FOLDER_NAME}/debian -type f)
-	do
-		#echo "* ${FNAME}"
-		sed -i -e '/^#[^!]/ d' \
-		    -e "s/DEB_PKG_NAME/${DEB_PKG_NAME}/g" \
-		    -e "s/DEB_PKG_VERSION/${DEB_PKG_VERSION}/g" \
-		    -e "s/DEB_PKG_ARCH_GNU/${DEB_PKG_ARCH_GNU}/g" \
-		    -e "s/DEB_PKG_ARCH/${DEB_PKG_ARCH}/g" \
-		    -e "s/DEB_PKG_OS_VER/${DEB_PKG_OS_VER}/g" \
-		    -e "s/DEB_PKG_OS/${DEB_PKG_OS}/g" \
-		    -e "s/DEB_PKG_SUBGROUP/${DEB_PKG_SUBGROUP}/g" \
-		    ${FNAME}
-		exit_if_error $? "In versioning file ${FNAME}"
-	done
-	# Build the Debian package
-	# -- Note that this Debian package will be an *unsigned* package.
-	# -- Also note that PYTHONPATH will be honored.  This is primarily
-	#    intended to support automated builds in Jenkins, but can easily
-	#    break things, so be VERY careful with this one.
-	echo "Building Debian package: ${DEB_PKG_NAME}"
-	cd ${DEB_BUILD_FOLDER_NAME}
-	debuild --preserve-envvar=PYTHONPATH --no-tgz-check --no-lintian -uc -us
-	exit_if_error $? "In building package"
-	cd ..
-	# Clean up
-	if [ ${CLEANUP} -eq 1 ]
-	then
-		echo "Cleaning up: ${DEB_PKG_NAME}"
-		for FEXT in build changes dsc tar.gz
-		do
-			#echo "rm -f ${DEB_PKG_NAME}_${DEB_PKG_VERSION}*.${FEXT}"
-			rm -f ${DEB_PKG_NAME}_${DEB_PKG_VERSION}*.${FEXT}
-		done
-		rm -rf ${DEB_BUILD_FOLDER_NAME}
-	else
-		echo "Not cleaning up at user request"
-	fi
-	# Rename Debian packages to reflect OS and GNU system type
-	echo "Renaming built packages"
-	for DEBPKG in $(ls *.deb)
-	do
-		if [[ "${DEBPKG}" == *"_all.deb" ]]
-		then
-			DEBPKGTGT=${DEBPKG/_all.deb/_${DEB_PKG_OS}-${DEB_PKG_OS_VER}-all.deb}
-			echo "* Arch-independent: ${DEBPKG} ==> ${DEBPKGTGT}"
-			mv ${DEBPKG} ${DEBPKGTGT}
-		elif [[ "${DEBPKG}" == *"_${DEB_PKG_ARCH}.deb" ]]
-		then
-			DEBPKGTGT=${DEBPKG/_${DEB_PKG_ARCH}.deb/_${DEB_PKG_OS}-${DEB_PKG_OS_VER}-${DEB_PKG_ARCH_GNU}.deb}
-			echo "* Arch-dependent: ${DEBPKG} ==> ${DEBPKGTGT}"
-			mv ${DEBPKG} ${DEBPKGTGT}
-		fi
-	done
-	echo "PACKAGE BUILD COMPLETE"
+    echo "Debian package parameters:"
+    echo "* Source folder name: ${SRC_FOLDER_NAME}"
+    echo "* Debian package name: ${DEB_PKG_NAME}"
+    echo "* Debian package version: ${DEB_PKG_VERSION}"
+    echo "* Debian package major version: ${DEB_PKG_VERSION_MAJOR}"
+    echo "* Debian package architecture: ${DEB_PKG_ARCH}"
+    echo "* Debian package GNU system type: ${DEB_PKG_ARCH_GNU}"
+    echo "* Debian package OS: ${DEB_PKG_OS}"
+    echo "* Debian package OS version: ${DEB_PKG_OS_VER}"
+    echo "* Debian package subgroup: ${DEB_PKG_SUBGROUP}"
+    echo "* Python version: ${PYTHON_VERSION}"
+    echo "* Python executable: ${DEB_PYTHON_EXECUTABLE}"
+    echo "* Debian Python package prefix: ${DEB_PYTHON_PKG_PREFIX}"
+    echo "* Debian Python package dependency: ${DEB_PYTHON_PKG_DEP}"
+    echo "* Debian Python X- spec: ${DEB_PYTHON_XPY_DEP}"
+    echo "* Debian dh_python version: ${DEB_PYTHON_DHPY}"
+    echo "* Debian twistd executable: ${DEB_TWISTD_EXECUTABLE}"
+    echo "* Debian GNU Radio package dependency: ${DEB_GNURADIO_PKG_DEP}"
+    echo "* Debian GNU Radio development package dependency: ${DEB_GNURADIO_DEV_PKG_DEP}"
+    # Create temporary build folder
+    DEB_BUILD_FOLDER_NAME=${DEB_PKG_NAME}-${DEB_PKG_VERSION}
+    echo "Creating temporary build folder: ${DEB_BUILD_FOLDER_NAME}"
+    if [ -e ${DEB_BUILD_FOLDER_NAME} ]
+    then
+        rm -rf ${DEB_BUILD_FOLDER_NAME}
+        exit_if_error $?
+    fi
+    mkdir -p ${DEB_BUILD_FOLDER_NAME}
+    exit_if_error $?
+    # Copy files from source folder into build folder
+    echo "Copying files: ${SRC_FOLDER_NAME} ==> ${DEB_BUILD_FOLDER_NAME}"
+    cp -rf ${SRC_FOLDER_NAME}/* ${DEB_BUILD_FOLDER_NAME}
+    exit_if_error $? "In copying files"
+    cp -rf ${SRC_FOLDER_NAME}/.[1-9a-zA-Z]* ${DEB_BUILD_FOLDER_NAME}
+    # [HACK] To get around Debian's "reproducible builds" hang-up,
+    # search for C/C++ sources and replace __DATE__, __TIME__, and
+    # __FILE__ directives as needed
+    DEB_BUILD_DATE=$(date +"%b %e %Y")
+    DEB_BUILD_TIME=$(date +"%H:%M:%S")
+    echo "Massaging C/C++ files in ${SRC_FOLDER_NAME}"
+    for CXXFILE in $(find ${DEB_BUILD_FOLDER_NAME} -type f \
+                     -name "*.c" -o -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" \
+                     -o -name "*.h" -o -name "*.hpp" -o -name "*.hxx")
+    do
+        sed -i -e "s|__DATE__|\"${DEB_BUILD_DATE}\"|g" -e "s|__TIME__|\"${DEB_BUILD_TIME}\"|g" \
+            -e "s|__FILE__|\"${CXXFILE}\"|g" ${CXXFILE}
+    done
+    # Python shebanging fixes for Python (since "/usr/bin/env python[3]" syntax is 
+    # deprecated)
+    # -- NOTE: Make sure that we ignore *this* script in all cases -- DA
+    grep -rlZ --exclude=makedeb "#!/usr/bin/twistd" ${DEB_BUILD_FOLDER_NAME} | \
+         xargs -0 -r sed -i -e "1 s|#!/usr/bin/twistd|#!${DEB_TWISTD_EXECUTABLE}|"
+    # -- Replace "#!/usr/bin/env python3" with the Python 3 executable
+    grep -rlZ "#!/usr/bin/env python3" ${DEB_BUILD_FOLDER_NAME} | \
+         xargs -0 -r sed -i -e "1 s|#!/usr/bin/env python3|#!${DEB_PYTHON3_EXECUTABLE}|"
+    # -- Replace "#!/usr/bin/env python2" with the Python 2 executable
+    grep -rlZ "#!/usr/bin/env python2" ${DEB_BUILD_FOLDER_NAME} | \
+         xargs -0 -r sed -i -e "1 s|#!/usr/bin/env python2|#!${DEB_PYTHON2_EXECUTABLE}|"
+    # -- Replace "#!/usr/bin/env python" with the Python executable for the
+    #    Python version we are building for
+    grep -rlZ "#!/usr/bin/env python" ${DEB_BUILD_FOLDER_NAME} | \
+         xargs -0 -r sed -i -e "1 s|#!/usr/bin/env python|#!${DEB_PYTHON_EXECUTABLE}|"
+    # Twisted daemon executable fixes
+    # -- NOTE: Make sure that we ignore *this* script in all cases -- DA
+    # -- Replace /usr/bin/twistd with /usr/bin/twistd3 if this is a Python 3
+    #    package
+    grep -rlZ --exclude=makedeb "/usr/bin/twistd" ${DEB_BUILD_FOLDER_NAME} | \
+         xargs -0 -r sed -i -e "s|/usr/bin/twistd|${DEB_TWISTD_EXECUTABLE}|g"
+    # For files in debian sub-folder, replace DEB_PKG_* placeholders
+    # with our parameters
+    echo "Versioning Debian package: ${DEB_PKG_NAME}"
+    for FNAME in $(find ${DEB_BUILD_FOLDER_NAME}/debian -type f)
+    do
+        #echo "* ${FNAME}"
+        sed -i -e '/^#[^!]/ d' \
+            -e "s|DEB_PKG_NAME|${DEB_PKG_NAME}|g" \
+            -e "s|DEB_PKG_VERSION_MAJOR|${DEB_PKG_VERSION_MAJOR}|g" \
+            -e "s|DEB_PKG_VERSION|${DEB_PKG_VERSION}|g" \
+            -e "s|DEB_PKG_ARCH_GNU|${DEB_PKG_ARCH_GNU}|g" \
+            -e "s|DEB_PKG_ARCH|${DEB_PKG_ARCH}|g" \
+            -e "s|DEB_PKG_OS_VER|${DEB_PKG_OS_VER}|g" \
+            -e "s|DEB_PKG_OS|${DEB_PKG_OS}|g" \
+            -e "s|DEB_PKG_SUBGROUP|${DEB_PKG_SUBGROUP}|g" \
+            -e "s|DEB_PYTHON_EXECUTABLE|${DEB_PYTHON_EXECUTABLE}|g" \
+            -e "s|DEB_PYTHON_PKG_PREFIX|${DEB_PYTHON_PKG_PREFIX}|g" \
+            -e "s|DEB_PYTHON_PKG_DEP|${DEB_PYTHON_PKG_DEP}|g" \
+            -e "s|DEB_PYTHON_XPY_DEP|${DEB_PYTHON_XPY_DEP}|g" \
+            -e "s|DEB_PYTHON_DHPY|${DEB_PYTHON_DHPY}|g" \
+            -e "s|DEB_TWISTD_EXECUTABLE|${DEB_TWISTD_EXECUTABLE}|g" \
+            -e "s|DEB_GNURADIO_PKG_DEP|${DEB_GNURADIO_PKG_DEP}|g" \
+            -e "s|DEB_GNURADIO_DEV_PKG_DEP|${DEB_GNURADIO_DEV_PKG_DEP}|g" \
+            ${FNAME}
+        exit_if_error $? "In versioning file ${FNAME}"
+    done
+
+    # Build the Debian package
+    # -- Note that this Debian package will be an *unsigned* package.
+    # -- Also note that PYTHONPATH will be honored.  This is primarily
+    #    intended to support automated builds in Jenkins, but can easily
+    #    break things, so be VERY careful with this one.
+    # -- We set DEB_BUILD_OPTIONS to "noautodbgsym" so that we don't 
+    #    generate debug symbol packages.  Not all Ubuntu versions 
+    #    support this, but it is ignored on the versions that don't.
+    echo "Building Debian package: ${DEB_PKG_NAME}"
+    cd ${DEB_BUILD_FOLDER_NAME}
+    DEB_BUILD_OPTIONS=noautodbgsym debuild --preserve-envvar=PYTHONPATH --no-tgz-check --no-lintian -uc -us
+    exit_if_error $? "In building package"
+    cd ..
+    # If the build process resulted in a documentation tarball, then
+    # move it into the current directory
+    echo "Preserving documentation tarballs"
+    DEB_DOCS_TARBALLS=$(find ${DEB_BUILD_FOLDER_NAME} -name "*-docs.tar.gz")
+    for DEB_DOC_TARBALL in ${DEB_DOCS_TARBALLS}
+    do
+        echo "* Doc tarball: ${DEB_DOC_TARBALL}"
+        mv ${DEB_DOC_TARBALL} .
+    done
+    # Clean up
+    if [ ${CLEANUP} -eq 1 ]
+    then
+        echo "Cleaning up: ${DEB_PKG_NAME}"
+        for FEXT in build changes dsc tar.gz tar.xz buildinfo ddeb
+        do
+            #echo "-- rm -fv ${DEB_PKG_NAME}_${DEB_PKG_VERSION}*.${FEXT}"
+            rm -fv ${DEB_PKG_NAME}_${DEB_PKG_VERSION}*.${FEXT}
+        done
+        rm -rf ${DEB_BUILD_FOLDER_NAME}
+    else
+        echo "Not cleaning up at user request"
+    fi
+    # Rename Debian packages to reflect OS and GNU system type
+    echo "Renaming built packages"
+    for DEBPKG in $(ls *.deb)
+    do
+        if [[ "${DEBPKG}" == *"_all.deb" ]]
+        then
+            DEBPKGTGT=${DEBPKG/_all.deb/_${DEB_PKG_OS}-${DEB_PKG_OS_VER}-all.deb}
+            echo "* Arch-independent: ${DEBPKG} ==> ${DEBPKGTGT}"
+            mv ${DEBPKG} ${DEBPKGTGT}
+        elif [[ "${DEBPKG}" == *"_${DEB_PKG_ARCH}.deb" ]]
+        then
+            DEBPKGTGT=${DEBPKG/_${DEB_PKG_ARCH}.deb/_${DEB_PKG_OS}-${DEB_PKG_OS_VER}-${DEB_PKG_ARCH_GNU}.deb}
+            echo "* Arch-dependent: ${DEBPKG} ==> ${DEBPKGTGT}"
+            mv ${DEBPKG} ${DEBPKGTGT}
+        fi
+    done
+    echo "PACKAGE BUILD COMPLETE"
 fi
 

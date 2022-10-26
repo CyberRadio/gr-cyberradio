@@ -60,3 +60,5 @@ endif
 # of the shared libraries is installed to satisfy dependencies.
 override_dh_makeshlibs:
 	dh_makeshlibs -V
+
+override_dh_usrlocal:
