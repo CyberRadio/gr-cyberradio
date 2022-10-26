@@ -21,6 +21,8 @@ jobs:
       run: cd libcyberradio/libcyberradio && mkdir build && cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make -j4 && sudo make install && cd -
     - name: Get gr-CyberRadio
       uses: actions/checkout@v2
+    - name: Build Deps for gr-Cyberradio
+      run: sudo apt-get install gnuradio-dev
     - name: Build and Package gr-CyberRadio
       run: ./makedeb gr-CyberRadio
     - name: Save Debian Archive
