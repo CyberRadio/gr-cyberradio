@@ -94,6 +94,11 @@ std::map<int, float> ndr358_551_ddc_map = {
     { 40, 128e6 }
 };
 
+std::map<int, int> ndr358_551_timestamp_diffs = {
+    {40, 2000} , {39, 4000} , {38, 8000} , {37, 8000} , {36, 16000},
+    {35, 16000}, {34, 16000}, {33, 32000}, {32, 32000}
+};
+
 void raise_error(std::string tag, int sock)
 {
     // see http://www.club.cc.cmu.edu/~cmccabe/blog_strerror.html for problems with
@@ -176,6 +181,7 @@ namespace gr {
       d_first_packet(true),
       d_packetCounter(0),
       d_buffer(),
+      d_frac_last_timestamp( 0 ),
       d_use_vector_output( vector_output )
     {
       if( this->d_use_vector_output )
@@ -390,12 +396,20 @@ namespace gr {
      *******************************************************************************/
     auto vita_udp_rx_impl::tag_packet(int stream, int offset) -> void
     {
+        uint32_t __ddc_filter = 0;
         if (d_tag_packets) {
             auto hdr = reinterpret_cast<V49_0_Header*>(d_buffer.data());
 
             uint64_t tag_item = nitems_written(0) + offset;
 
             // Note if we setup byte swap, it's already been done in place
+            {
+            // Moved so I have the information for DDC Rate
+                auto ddc_filter = ((hdr->ddc_2 >> 20) & 0x0FFF);
+                auto tag = pmt::from_float(ndr358_551_ddc_map.at(ddc_filter));
+                add_item_tag(stream, tag_item, pmt::mp("ddc_rate"), tag);
+                __ddc_filter = ddc_filter;
+            }
 
             // timestamp
             {
@@ -405,6 +419,20 @@ namespace gr {
                 auto tag = pmt::cons(pmt::from_long(hdr->int_timestamp),
                                     pmt::from_uint64(fractionalTs));
                 add_item_tag(stream, tag_item, pmt::mp("timestamp"), tag);
+
+                if( d_first_packet )
+                {
+                    d_frac_last_timestamp = fractionalTs;
+                } else {
+                    uint32_t expected_diff = ndr358_551_timestamp_diffs.at(__ddc_filter);
+                    if ( (fractionalTs - d_frac_last_timestamp) != expected_diff )
+                    {
+                        txStatusMsg();
+                        std::cout
+                            << "gr::CyberRadio::vita_udp_rx_impl: packet loss detected: expected "
+                            << expected_diff << ", received " << (fractionalTs - d_frac_last_timestamp) << std::endl;
+                    }
+                }
             }
 
             // stream id
@@ -429,12 +457,6 @@ namespace gr {
                     auto tag = pmt::from_long(ddc_offset);
                     add_item_tag(stream, tag_item, pmt::mp("ddc_offset"), tag);
                 }
-            }
-
-            {
-                auto ddc_filter = ((hdr->ddc_2 >> 20) & 0x0FFF);
-                auto tag = pmt::from_float(ndr358_551_ddc_map.at(ddc_filter));
-                add_item_tag(stream, tag_item, pmt::mp("ddc_rate"), tag);
             }
 
             {
