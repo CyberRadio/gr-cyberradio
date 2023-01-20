@@ -95,8 +95,8 @@ std::map<int, float> ndr358_551_ddc_map = {
 };
 
 std::map<int, int> ndr358_551_timestamp_diffs = {
-    {40, 2000} , {39, 4000} , {38, 8000} , {37, 8000} , {36, 16000},
-    {35, 16000}, {34, 16000}, {33, 32000}, {32, 32000}
+    {40, 2048} , {39, 4096} , {38, 8192} , {37, 8192} , {36, 16384},
+    {35, 16384}, {34, 16384}, {33, 32768}, {32, 32768}
 };
 
 void raise_error(std::string tag, int sock)
@@ -425,13 +425,25 @@ namespace gr {
                     d_frac_last_timestamp = fractionalTs;
                 } else {
                     uint32_t expected_diff = ndr358_551_timestamp_diffs.at(__ddc_filter);
-                    if ( (fractionalTs - d_frac_last_timestamp) != expected_diff )
+		    // wrapping at 1second.
+		    uint32_t diff = 0;
+		    if ( fractionalTs < d_frac_last_timestamp )
+		    {
+                        //d_logger->warn("frac = {}", fractionalTs);
+			// diff = (max - last) + current 
+			//d_logger->warn("({} - {}) + {}", 256000000ull,d_frac_last_timestamp,fractionalTs);
+			diff = (256000000ull - d_frac_last_timestamp) + fractionalTs;
+		    }
+		    else {
+		    	diff = fractionalTs - d_frac_last_timestamp;
+		    }
+                    if ( diff != expected_diff )
                     {
                         txStatusMsg();
-                        std::cout
-                            << "gr::CyberRadio::vita_udp_rx_impl: packet loss detected: expected "
-                            << expected_diff << ", received " << (fractionalTs - d_frac_last_timestamp) << std::endl;
+			d_logger->warn("gr::CyberRadio::vita_udp_rx_impl: packet loss detected: expected {}, recieved {}",
+					expected_diff, diff);
                     }
+		    d_frac_last_timestamp = fractionalTs;
                 }
             }
 
