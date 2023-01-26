@@ -404,7 +404,7 @@ namespace gr {
 
             // Note if we setup byte swap, it's already been done in place
             {
-            // Moved so I have the information for DDC Rate
+                // Moved so I have the information for DDC Rate
                 auto ddc_filter = ((hdr->ddc_2 >> 20) & 0x0FFF);
                 auto tag = pmt::from_float(ndr358_551_ddc_map.at(ddc_filter));
                 add_item_tag(stream, tag_item, pmt::mp("ddc_rate"), tag);
@@ -425,25 +425,20 @@ namespace gr {
                     d_frac_last_timestamp = fractionalTs;
                 } else {
                     uint32_t expected_diff = ndr358_551_timestamp_diffs.at(__ddc_filter);
-		    // wrapping at 1second.
-		    uint32_t diff = 0;
-		    if ( fractionalTs < d_frac_last_timestamp )
-		    {
-                        //d_logger->warn("frac = {}", fractionalTs);
-			// diff = (max - last) + current 
-			//d_logger->warn("({} - {}) + {}", 256000000ull,d_frac_last_timestamp,fractionalTs);
-			diff = (256000000ull - d_frac_last_timestamp) + fractionalTs;
-		    }
-		    else {
-		    	diff = fractionalTs - d_frac_last_timestamp;
-		    }
-                    if ( diff != expected_diff )
-                    {
-                        txStatusMsg();
-			d_logger->warn("gr::CyberRadio::vita_udp_rx_impl: packet loss detected: expected {}, recieved {}",
-					expected_diff, diff);
+                    // wrapping at 1second.
+                    uint32_t diff = 0;
+                    if ( fractionalTs < d_frac_last_timestamp ) {
+                        diff = (256000000ull - d_frac_last_timestamp) + fractionalTs;
                     }
-		    d_frac_last_timestamp = fractionalTs;
+                    else {
+                        diff = fractionalTs - d_frac_last_timestamp;
+                    }
+                    if ( diff != expected_diff ) {
+                        txStatusMsg();
+                        d_logger->warn("gr::CyberRadio::vita_udp_rx_impl: packet loss detected: expected {}, recieved {}",
+                                    expected_diff, diff);
+                    }
+                    d_frac_last_timestamp = fractionalTs;
                 }
             }
 
@@ -514,8 +509,13 @@ namespace gr {
             }
 
             {
-                auto tag = pmt::from_long(((hdr->ddc_4 >> 0) & 0x000007FF));
+                uint16_t valid_data_samples = ((hdr->ddc_4 >> 0) & 0x000007FF);
+                auto tag = pmt::from_long(valid_data_samples);
                 add_item_tag(stream, tag_item, pmt::mp("valid_data_count"), tag);
+                if( d_samples_per_packet != valid_data_samples ) {
+                    auto msg = pmt::cons(pmt::mp("valid data count < d_samples_per_packet"), pmt::PMT_NIL);
+                    message_port_pub(status_port, msg);
+                }
             }
 
             {
@@ -560,8 +560,7 @@ namespace gr {
      *******************************************************************************/
     void vita_udp_rx_impl::rxControlMsg(pmt::pmt_t msg)
     {
-        std::cout << "****    vita_udp_rx_impl::rxControlMsg: " << msg << "    ****"
-                  << std::endl;
+        d_logger->debug("vita_udp_rx_impl::rxControlMsg \"{}\"", pmt::symbol_to_string(msg));
         // What did we receive?
         pmt::pmt_t msgId = pmt::car(msg);
         pmt::pmt_t content = pmt::cdr(msg);
