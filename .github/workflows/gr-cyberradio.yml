@@ -9,15 +9,15 @@ jobs:
     if: github.ref_name == 'maint-3.7'
     runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - run: sudo apt-get -y install gnuradio-dev
     - run: mkdir build && cd build && cmake ../ && make -j 5
   build-ubuntu20-04:
-    if: github.ref_name == 'test-workflow'
+    if: github.ref_name == 'maint-3.8'
     runs-on: ubuntu-20.04
     steps:
     - name: Get Libcyberradio
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: CyberRadio/libcyberradio
         path: './libcyberradio'
@@ -30,7 +30,7 @@ jobs:
     - name: Build and Install libcyberradio
       run: cd libcyberradio && ./makedeb libcyberradio && sudo dpkg -i *.deb
     - name: Get gr-CyberRadio
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         ref: 'maint-3.8'
     - name: Build Deps for gr-Cyberradio
