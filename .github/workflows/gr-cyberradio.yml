@@ -6,7 +6,15 @@ on:
 
 jobs:
   build-ubuntu18-04:
+    if: github.ref_name == 'maint-3.7'
     runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - run: sudo apt-get -y install gnuradio-dev
+    - run: mkdir build && cd build && cmake ../ && make -j 5
+  build-ubuntu20-04:
+    if: github.ref_name == 'test-workflow'
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - run: sudo apt-get -y install gnuradio-dev
