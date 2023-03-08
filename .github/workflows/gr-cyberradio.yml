@@ -1,0 +1,13 @@
+name: gr-CyberRadio build
+
+on:
+  push:
+    branches: [ maint-3.8, maint-3.10, test-workflow ]
+
+jobs:
+  build-ubuntu18-04:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - run: sudo apt-get -y install gnuradio-dev
+    - run: mkdir build && cd build && cmake ../ && make -j 5
