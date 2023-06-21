@@ -83,8 +83,8 @@ set(Boost_ADDITIONAL_VERSIONS
     "1.65.0" "1.65" "1.66.0" "1.66" "1.67.0" "1.67" "1.68.0" "1.68" "1.69.0" "1.69"
 )
 # -- Make sure libboost_thread and its dependencies get linked in
-#find_package(Boost "1.53" COMPONENTS filesystem system thread)
-find_package(Boost "1.55" COMPONENTS filesystem system thread)
+find_package(Boost "1.53" COMPONENTS filesystem system thread)
+#find_package(Boost "1.55" COMPONENTS filesystem system thread)
 #find_package(Boost "1.60" COMPONENTS filesystem system thread)
 
 if(NOT Boost_FOUND)
