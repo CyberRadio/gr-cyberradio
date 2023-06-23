@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<block>
+  <name>[CyberRadio] Multiplexor</name>
+  <key>CyberRadioTest_mux</key>
+<category>[CyberRadio]/Test/Misc</category>
+  <import>import CyberRadio</import>
+  <make>CyberRadio.mux($vlen, $numInputs, $type.size, $input_index)</make>
+  
+<callback>set_input_index(int($input_index))</callback>
+
+<param>
+	<name>Type</name>
+	<key>type</key>
+	<type>enum</type>
+	<hide>part</hide>
+	<option>
+		<name>Complex</name>
+		<key>complex</key>
+		<opt>size:8</opt>
+	</option>
+	<option>
+		<name>Float</name>
+		<key>float</key>
+		<opt>size:4</opt>
+	</option>
+	<option>
+		<name>Int</name>
+		<key>int</key>
+		<opt>size:4</opt>
+	</option>
+	<option>
+		<name>Short</name>
+		<key>short</key>
+		<opt>size:2</opt>
+	</option>
+	<option>
+		<name>Byte</name>
+		<key>byte</key>
+		<opt>size:1</opt>
+	</option>
+</param>
+
+<param>
+	<name>Num Inputs</name>
+	<key>numInputs</key>
+	<value>2</value>
+	<type>int</type>
+	<hide>part</hide>
+</param>
+
+<param>
+	<name>Input Index</name>
+	<key>input_index</key>
+	<value>0</value>
+	<type>int</type>
+</param>
+
+<param>
+	<name>vlen</name>
+	<key>vlen</key>
+	<value>1</value>
+	<type>int</type>
+</param>
+
+
+  
+<sink>
+	<name>in</name>
+	<type>$type</type>
+	<vlen>$vlen</vlen>
+	<nports>$numInputs</nports>
+</sink>
+  <sink>
+    <name>control</name>
+    <type>message</type>
+    <optional>1</optional>
+  </sink>
+  
+<source>
+	<name>out</name>
+	<type>$type</type>
+	<vlen>$vlen</vlen>
+</source>
+  <source>
+    <name>status</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+
+
+  <doc>
+This is a n to 1 multiplexer. The difference with this block from the selector is it does not break during runtime with callbacks.
+  </doc>
+</block>

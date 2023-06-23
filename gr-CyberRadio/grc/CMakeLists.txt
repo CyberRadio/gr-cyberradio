@@ -53,5 +53,6 @@ install(FILES
     CyberRadio_py_peak_hold.xml
     CyberRadio_snapshot_vector_source_mk2.xml
     CyberRadio_wola_log_mag_fft.xml
-    CyberRadio_snapshot_fft_vector_source.xml DESTINATION share/gnuradio/grc/blocks
+    CyberRadio_snapshot_fft_vector_source.xml
+    CyberRadio_mux.xml DESTINATION share/gnuradio/grc/blocks
 )

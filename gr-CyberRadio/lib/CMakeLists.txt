@@ -43,7 +43,8 @@ list(APPEND CyberRadio_sources
     vector_mag_squared_log10_cf_impl.cc
     single_pole_iir_filter_ff_impl.cc
     snapshot_vector_source_mk2_impl.cc 
-    snapshot_fft_vector_source_impl.cc )
+    snapshot_fft_vector_source_impl.cc
+    mux_impl.cc )
 
 set(CyberRadio_sources "${CyberRadio_sources}" PARENT_SCOPE)
 if(NOT CyberRadio_sources)

@@ -37,5 +37,6 @@ install(FILES
     vector_mag_squared_log10_cf.h
     single_pole_iir_filter_ff.h
     snapshot_vector_source_mk2.h
-    snapshot_fft_vector_source.h DESTINATION include/CyberRadio
+    snapshot_fft_vector_source.h
+    mux.h DESTINATION include/CyberRadio
 )

@@ -24,6 +24,7 @@
 #include "CyberRadio/single_pole_iir_filter_ff.h"
 #include "CyberRadio/snapshot_vector_source_mk2.h"
 #include "CyberRadio/snapshot_fft_vector_source.h"
+#include "CyberRadio/mux.h"
 %}
 
 %include "CyberRadio/NDR651_duc_sink_mk2.h"
@@ -60,3 +61,5 @@ GR_SWIG_BLOCK_MAGIC2(CyberRadio, single_pole_iir_filter_ff);
 GR_SWIG_BLOCK_MAGIC2(CyberRadio, snapshot_vector_source_mk2);
 %include "CyberRadio/snapshot_fft_vector_source.h"
 GR_SWIG_BLOCK_MAGIC2(CyberRadio, snapshot_fft_vector_source);
+%include "CyberRadio/mux.h"
+GR_SWIG_BLOCK_MAGIC2(CyberRadio, mux);
