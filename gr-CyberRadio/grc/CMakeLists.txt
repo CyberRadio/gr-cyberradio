@@ -54,5 +54,6 @@ install(FILES
     CyberRadio_snapshot_vector_source_mk2.xml
     CyberRadio_wola_log_mag_fft.xml
     CyberRadio_snapshot_fft_vector_source.xml
-    CyberRadio_mux.xml DESTINATION share/gnuradio/grc/blocks
+    CyberRadio_mux.xml
+    CyberRadio_convert_dbfs_dbm.xml DESTINATION share/gnuradio/grc/blocks
 )

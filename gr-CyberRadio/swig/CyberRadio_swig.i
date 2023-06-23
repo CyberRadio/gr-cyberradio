@@ -25,6 +25,7 @@
 #include "CyberRadio/snapshot_vector_source_mk2.h"
 #include "CyberRadio/snapshot_fft_vector_source.h"
 #include "CyberRadio/mux.h"
+#include "CyberRadio/convert_dbfs_dbm.h"
 %}
 
 %include "CyberRadio/NDR651_duc_sink_mk2.h"
@@ -63,3 +64,5 @@ GR_SWIG_BLOCK_MAGIC2(CyberRadio, snapshot_vector_source_mk2);
 GR_SWIG_BLOCK_MAGIC2(CyberRadio, snapshot_fft_vector_source);
 %include "CyberRadio/mux.h"
 GR_SWIG_BLOCK_MAGIC2(CyberRadio, mux);
+%include "CyberRadio/convert_dbfs_dbm.h"
+GR_SWIG_BLOCK_MAGIC2(CyberRadio, convert_dbfs_dbm);
