@@ -46,7 +46,7 @@ jobs:
     - name: Test
       run: ls -lah ./
     - name: Install Build Deps
-      run: sudo apt-get install libcurl4-openssl-dev libpcap-dev libjsoncpp-dev libboost-all-dev libvolk-dev libvolk cmake
+      run: sudo apt-get install libcurl4-openssl-dev libpcap-dev libjsoncpp-dev libboost-all-dev libvolk-dev cmake
     - name: Install Package Deps
       run: sudo apt-get install build-essential devscripts debhelper doxygen dh-python cmake
     - name: Build and Install libcyberradio
