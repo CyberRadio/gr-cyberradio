@@ -42,3 +42,34 @@ jobs:
       with:
         name: gr-CyberRadio-Focal
         path: ./*.deb
+        
+  build-ubuntu24-04:
+    if: github.ref_name == 'maint-3.10'
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Get Libcyberradio
+      uses: actions/checkout@v3
+      with:
+        repository: CyberRadio/libcyberradio
+        path: './libcyberradio'
+    - name: Test
+      run: ls -lah ./
+    - name: Install Build Deps
+      run: sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libpcap-dev libjsoncpp-dev libboost-all-dev libvolk2-dev cmake liborc-0.4-dev
+    - name: Install Package Deps
+      run: sudo apt-get install build-essential devscripts debhelper doxygen dh-python cmake
+    - name: Build and Install libcyberradio
+      run: cd libcyberradio && ./makedeb libcyberradio && sudo dpkg -i *.deb
+    - name: Get gr-CyberRadio
+      uses: actions/checkout@v3
+      with:
+        ref: 'maint-3.10'
+    - name: Build Deps for gr-Cyberradio
+      run: sudo apt-get install gnuradio-dev
+    - name: Build and Package gr-CyberRadio
+      run: ./makedeb gr-CyberRadio
+    - name: Save Debian Archive
+      uses: actions/upload-artifact@v3
+      with:
+        name: gr-CyberRadio-Focal
+        path: ./*.deb
