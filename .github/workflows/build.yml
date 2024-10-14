@@ -62,6 +62,6 @@ jobs:
     - name: Save Debian Archive
       uses: actions/upload-artifact@v3
       with:
-        name: gr-CyberRadio-Jammy
+        name: gr-CyberRadio-Nobel
         path: ./*.deb
 
