@@ -49,7 +49,7 @@ void raise_error(std::string tag, int sock)
 namespace gr {
 namespace CyberRadio {
 
-using output_type = float;
+using output_type = gr_complex;
 NV800Source::sptr NV800Source::make(
     std::string src_ip, 
     unsigned short port)
