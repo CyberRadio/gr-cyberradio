@@ -14,5 +14,6 @@ install(FILES
     CyberRadio_log_mag_fft.block.yml 
     CyberRadio_variable_radio_object.block.yml
     CyberRadio_vector_nlog10_ff.block.yml
-    CyberRadio_single_pole_iir_filter_ff.block.yml DESTINATION share/gnuradio/grc/blocks
+    CyberRadio_single_pole_iir_filter_ff.block.yml
+    CyberRadio_NV800Source.block.yml DESTINATION share/gnuradio/grc/blocks
 )

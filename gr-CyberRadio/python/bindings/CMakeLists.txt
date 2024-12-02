@@ -32,7 +32,7 @@ list(APPEND CyberRadio_python_files
     snapshot_vector_source_python.cc
     vector_nlog10_ff_python.cc
     single_pole_iir_filter_ff_python.cc
-    python_bindings.cc)
+    NV800Source_python.cc python_bindings.cc)
 
 GR_PYBIND_MAKE_OOT(CyberRadio
    ../..

@@ -15,5 +15,5 @@ install(FILES
     snapshot_vector_source.h
     vector_nlog10_ff.h
     single_pole_iir_filter_ff.h
-    DESTINATION include/CyberRadio
+    NV800Source.h DESTINATION include/CyberRadio
 )

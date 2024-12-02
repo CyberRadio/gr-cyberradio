@@ -15,7 +15,7 @@ list(APPEND CyberRadio_sources
     snapshot_vector_source_impl.cc
     vector_nlog10_ff_impl.cc
     single_pole_iir_filter_ff_impl.cc
-    )
+    NV800Source_impl.cc )
 
 set(CyberRadio_sources "${CyberRadio_sources}" PARENT_SCOPE)
 if(NOT CyberRadio_sources)

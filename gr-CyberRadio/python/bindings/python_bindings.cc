@@ -25,6 +25,7 @@ namespace py = pybind11;
     void bind_snapshot_vector_source(py::module& m);
     void bind_vector_nlog10_ff(py::module& m);
     void bind_single_pole_iir_filter_ff(py::module& m);
+    void bind_NV800Source(py::module& m);
 // ) END BINDING_FUNCTION_PROTOTYPES
 
 
@@ -57,5 +58,6 @@ PYBIND11_MODULE(CyberRadio_python, m)
     bind_snapshot_vector_source(m);
     bind_vector_nlog10_ff(m);
     bind_single_pole_iir_filter_ff(m);
+    bind_NV800Source(m);
     // ) END BINDING_FUNCTION_CALLS
 }
