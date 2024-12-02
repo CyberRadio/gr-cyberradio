@@ -65,14 +65,14 @@ NV800Source_impl::NV800Source_impl(std::string src_ip, unsigned short port)
     : gr::block("NV800Source",
                      gr::io_signature::make(0, 0, 0),
                      gr::io_signature::make(1,1, sizeof(output_type))),
-    d_bytes_per_packet(8224),
+    d_bytes_per_packet(8216),
     d_src_ip( src_ip ),
     d_port( port ),
     d_sock(-1),
     d_swap_bytes( false ),
     d_swap_iq( false ),
-    d_samples_per_packet( 1024 ),
-    d_header_byte_offset( 24 )
+    d_samples_per_packet( 2048 ),
+    d_header_byte_offset( 20 )
 
 {
     d_buffer.reserve(d_bytes_per_packet);
