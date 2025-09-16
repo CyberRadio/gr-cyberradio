@@ -62,3 +62,8 @@ override_dh_makeshlibs:
 	dh_makeshlibs -V
 
 override_dh_usrlocal:
+    :
+
+# https://github.com/aptly-dev/aptly/issues/989
+override_dh_builddeb:
+	dh_builddeb -- -Zxz
