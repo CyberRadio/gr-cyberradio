@@ -49,6 +49,7 @@ namespace gr {
       bool d_first_packet;
       unsigned d_packetCounter : 4;
       bool d_use_vector_output;
+      uint64_t d_frac_last_timestamp;
 
       std::vector<uint8_t> d_buffer;
      protected:

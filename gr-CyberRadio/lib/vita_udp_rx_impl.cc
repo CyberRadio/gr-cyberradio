@@ -94,6 +94,11 @@ std::map<int, float> ndr358_551_ddc_map = {
     { 40, 128e6 }
 };
 
+std::map<int, int> ndr358_551_timestamp_diffs = {
+    {40, 2048} , {39, 4096} , {38, 8192} , {37, 8192} , {36, 16384},
+    {35, 16384}, {34, 16384}, {33, 32768}, {32, 32768}
+};
+
 void raise_error(std::string tag, int sock)
 {
     // see http://www.club.cc.cmu.edu/~cmccabe/blog_strerror.html for problems with
@@ -176,6 +181,7 @@ namespace gr {
       d_first_packet(true),
       d_packetCounter(0),
       d_buffer(),
+      d_frac_last_timestamp( 0 ),
       d_use_vector_output( vector_output )
     {
       if( this->d_use_vector_output )
@@ -390,12 +396,20 @@ namespace gr {
      *******************************************************************************/
     auto vita_udp_rx_impl::tag_packet(int stream, int offset) -> void
     {
+        uint32_t __ddc_filter = 0;
         if (d_tag_packets) {
             auto hdr = reinterpret_cast<V49_0_Header*>(d_buffer.data());
 
             uint64_t tag_item = nitems_written(0) + offset;
 
             // Note if we setup byte swap, it's already been done in place
+            {
+                // Moved so I have the information for DDC Rate
+                auto ddc_filter = ((hdr->ddc_2 >> 20) & 0x0FFF);
+                auto tag = pmt::from_float(ndr358_551_ddc_map.at(ddc_filter));
+                add_item_tag(stream, tag_item, pmt::mp("ddc_rate"), tag);
+                __ddc_filter = ddc_filter;
+            }
 
             // timestamp
             {
@@ -405,6 +419,27 @@ namespace gr {
                 auto tag = pmt::cons(pmt::from_long(hdr->int_timestamp),
                                     pmt::from_uint64(fractionalTs));
                 add_item_tag(stream, tag_item, pmt::mp("timestamp"), tag);
+
+                if( d_first_packet )
+                {
+                    d_frac_last_timestamp = fractionalTs;
+                } else {
+                    uint32_t expected_diff = ndr358_551_timestamp_diffs.at(__ddc_filter);
+                    // wrapping at 1second.
+                    uint32_t diff = 0;
+                    if ( fractionalTs < d_frac_last_timestamp ) {
+                        diff = (256000000ull - d_frac_last_timestamp) + fractionalTs;
+                    }
+                    else {
+                        diff = fractionalTs - d_frac_last_timestamp;
+                    }
+                    if ( diff != expected_diff ) {
+                        txStatusMsg();
+                        d_logger->warn("gr::CyberRadio::vita_udp_rx_impl: packet loss detected: expected {}, recieved {}",
+                                    expected_diff, diff);
+                    }
+                    d_frac_last_timestamp = fractionalTs;
+                }
             }
 
             // stream id
@@ -429,12 +464,6 @@ namespace gr {
                     auto tag = pmt::from_long(ddc_offset);
                     add_item_tag(stream, tag_item, pmt::mp("ddc_offset"), tag);
                 }
-            }
-
-            {
-                auto ddc_filter = ((hdr->ddc_2 >> 20) & 0x0FFF);
-                auto tag = pmt::from_float(ndr358_551_ddc_map.at(ddc_filter));
-                add_item_tag(stream, tag_item, pmt::mp("ddc_rate"), tag);
             }
 
             {
@@ -480,8 +509,13 @@ namespace gr {
             }
 
             {
-                auto tag = pmt::from_long(((hdr->ddc_4 >> 0) & 0x000007FF));
+                uint16_t valid_data_samples = ((hdr->ddc_4 >> 0) & 0x000007FF);
+                auto tag = pmt::from_long(valid_data_samples);
                 add_item_tag(stream, tag_item, pmt::mp("valid_data_count"), tag);
+                if( d_samples_per_packet != valid_data_samples ) {
+                    auto msg = pmt::cons(pmt::mp("valid data count < d_samples_per_packet"), pmt::PMT_NIL);
+                    message_port_pub(status_port, msg);
+                }
             }
 
             {
@@ -526,8 +560,7 @@ namespace gr {
      *******************************************************************************/
     void vita_udp_rx_impl::rxControlMsg(pmt::pmt_t msg)
     {
-        std::cout << "****    vita_udp_rx_impl::rxControlMsg: " << msg << "    ****"
-                  << std::endl;
+        d_logger->debug("vita_udp_rx_impl::rxControlMsg \"{}\"", pmt::symbol_to_string(msg));
         // What did we receive?
         pmt::pmt_t msgId = pmt::car(msg);
         pmt::pmt_t content = pmt::cdr(msg);
